@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Stethoscope, Baby, Heart, Globe, MessageSquare, Database } from "lucide-react";
+import { Stethoscope, Baby, Heart, Globe, MessageSquare, Database, Languages } from "lucide-react";
 import { useState } from "react";
 
 const getServices = (language: "en" | "es") => ({
@@ -25,6 +25,11 @@ const getServices = (language: "en" | "es") => ({
       description: "Monitor your pregnancy journey with our digital tools",
       icon: Database,
     },
+    {
+      title: "Real-Time Translation",
+      description: "Advanced translation tools ensuring clear and accurate communication during medical consultations",
+      icon: Languages,
+    }
   ],
   es: [
     {
@@ -47,6 +52,11 @@ const getServices = (language: "en" | "es") => ({
       description: "Monitoree su embarazo con nuestras herramientas digitales",
       icon: Database,
     },
+    {
+      title: "Traducción en Tiempo Real",
+      description: "Herramientas de traducción avanzadas que garantizan una comunicación clara y precisa durante las consultas médicas",
+      icon: Languages,
+    }
   ],
 });
 
@@ -70,7 +80,7 @@ export const Services = () => {
             {language === "en" ? "Español" : "English"}
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {services[language].map((service) => (
             <Card key={service.title} className="hover:shadow-lg transition-shadow">
               <CardHeader>
