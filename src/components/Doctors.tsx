@@ -4,6 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 import { useState } from "react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 const getDoctors = (language: "en" | "es") => ({
   en: [
@@ -13,13 +18,21 @@ const getDoctors = (language: "en" | "es") => ({
       languages: ["English", "Spanish"],
       image: "/placeholder.svg",
       description: "Specializing in maternal health with 10+ years of experience",
+      details: {
+        role: "OB/GYN Provider",
+        experience: "10+ years of practice",
+        practice: "Runs a clinic with minimal support",
+        goal: "Improve patient-provider communication and optimize clinic workflow",
+        challenge: "Struggling to provide individualized care",
+        story: "As a rural OB/GYN, I want tools that streamline patient communication and data management so I can focus on providing personalized care despite limited resources."
+      }
     },
     {
       name: "Dr. Michael Chen",
       specialty: "Pediatrics",
       languages: ["English", "Spanish", "Mandarin"],
       image: "/placeholder.svg",
-      description: "Specialized in comprehensive pediatric care",
+      description: "Specialized in comprehensive pediatric care"
     },
   ],
   es: [
@@ -29,13 +42,21 @@ const getDoctors = (language: "en" | "es") => ({
       languages: ["Inglés", "Español"],
       image: "/placeholder.svg",
       description: "Especializada en salud materna con más de 10 años de experiencia",
+      details: {
+        role: "Proveedora de Ginecología y Obstetricia",
+        experience: "Más de 10 años de práctica",
+        practice: "Dirige una clínica con apoyo mínimo",
+        goal: "Mejorar la comunicación paciente-proveedor y optimizar el flujo de trabajo de la clínica",
+        challenge: "Luchando por proporcionar atención individualizada",
+        story: "Como ginecóloga-obstetra rural, quiero herramientas que agilicen la comunicación con los pacientes y la gestión de datos para poder centrarme en proporcionar una atención personalizada a pesar de los recursos limitados."
+      }
     },
     {
       name: "Dr. Michael Chen",
       specialty: "Pediatría",
       languages: ["Inglés", "Español", "Mandarín"],
       image: "/placeholder.svg",
-      description: "Especializado en atención pediátrica integral",
+      description: "Especializado en atención pediátrica integral"
     },
   ],
 });
@@ -68,7 +89,27 @@ export const Doctors = () => {
                   <AvatarImage src={doctor.image} alt={doctor.name} />
                   <AvatarFallback>{doctor.name[0]}</AvatarFallback>
                 </Avatar>
-                <CardTitle>{doctor.name}</CardTitle>
+                {doctor.details ? (
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <CardTitle className="cursor-pointer hover:text-primary transition-colors">
+                        {doctor.name}
+                      </CardTitle>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-80 text-left">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-primary">{doctor.details.role}</h4>
+                        <p className="text-sm"><span className="font-medium">Experience:</span> {doctor.details.experience}</p>
+                        <p className="text-sm"><span className="font-medium">Practice:</span> {doctor.details.practice}</p>
+                        <p className="text-sm"><span className="font-medium">Goal:</span> {doctor.details.goal}</p>
+                        <p className="text-sm"><span className="font-medium">Challenge:</span> {doctor.details.challenge}</p>
+                        <p className="text-sm italic">{doctor.details.story}</p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                ) : (
+                  <CardTitle>{doctor.name}</CardTitle>
+                )}
                 <div className="flex flex-wrap gap-2 justify-center mt-2">
                   {doctor.languages.map((lang) => (
                     <Badge key={lang} variant="secondary" className="flex items-center gap-1">
