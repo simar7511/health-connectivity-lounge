@@ -29,7 +29,12 @@ export const Hero = () => {
   return (
     <div className="relative bg-gradient-to-r from-primary to-blue-400 py-20 text-white animate-fadeIn">
       <div className="container mx-auto px-6">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-between items-center mb-8">
+          <img
+            src="/placeholder.svg"
+            alt="Health Connectivity Lounge Logo"
+            className="h-16 w-auto"
+          />
           <Button
             variant="ghost"
             className="text-white hover:text-blue-200"
