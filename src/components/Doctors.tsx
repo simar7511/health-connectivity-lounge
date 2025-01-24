@@ -16,10 +16,10 @@ const getDoctors = (language: "en" | "es") => ({
     },
     {
       name: "Dr. Michael Chen",
-      specialty: "Family Medicine",
+      specialty: "Pediatrics",
       languages: ["English", "Spanish", "Mandarin"],
       image: "/placeholder.svg",
-      description: "Focused on comprehensive family healthcare",
+      description: "Specialized in comprehensive pediatric care",
     },
   ],
   es: [
@@ -32,10 +32,10 @@ const getDoctors = (language: "en" | "es") => ({
     },
     {
       name: "Dr. Michael Chen",
-      specialty: "Medicina Familiar",
+      specialty: "Pediatría",
       languages: ["Inglés", "Español", "Mandarín"],
       image: "/placeholder.svg",
-      description: "Enfocado en atención integral de la salud familiar",
+      description: "Especializado en atención pediátrica integral",
     },
   ],
 });
