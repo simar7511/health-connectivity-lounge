@@ -28,11 +28,19 @@ const getDoctors = (language: "en" | "es") => ({
       }
     },
     {
-      name: "Dr. Michael Chen",
+      name: "Dr. Alex Rivera",
       specialty: "Pediatrics",
-      languages: ["English", "Spanish", "Mandarin"],
+      languages: ["English", "Spanish"],
       image: "/placeholder.svg",
-      description: "Specialized in comprehensive pediatric care"
+      description: "Specialized in comprehensive pediatric care",
+      details: {
+        role: "Pediatrician",
+        experience: "7+ years of practice",
+        practice: "Runs a small pediatric clinic in a rural area",
+        goal: "Enhance communication with patients and families while improving the clinic's efficiency in managing care",
+        challenge: "Faces difficulties in providing personalized care due to a high patient volume and limited staff",
+        story: "As a rural pediatrician, I want tools that simplify patient communication and streamline care management so I can deliver high-quality, individualized care despite limited resources."
+      }
     },
   ],
   es: [
@@ -52,11 +60,19 @@ const getDoctors = (language: "en" | "es") => ({
       }
     },
     {
-      name: "Dr. Michael Chen",
+      name: "Dr. Alex Rivera",
       specialty: "Pediatría",
-      languages: ["Inglés", "Español", "Mandarín"],
+      languages: ["Inglés", "Español"],
       image: "/placeholder.svg",
-      description: "Especializado en atención pediátrica integral"
+      description: "Especializado en atención pediátrica integral",
+      details: {
+        role: "Pediatra",
+        experience: "Más de 7 años de práctica",
+        practice: "Dirige una pequeña clínica pediátrica en una zona rural",
+        goal: "Mejorar la comunicación con pacientes y familias mientras optimiza la eficiencia de la clínica en la gestión de la atención",
+        challenge: "Enfrenta dificultades para proporcionar atención personalizada debido al alto volumen de pacientes y personal limitado",
+        story: "Como pediatra rural, quiero herramientas que simplifiquen la comunicación con los pacientes y agilicen la gestión de la atención para poder brindar una atención individualizada de alta calidad a pesar de los recursos limitados."
+      }
     },
   ],
 });
