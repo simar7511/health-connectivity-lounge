@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Globe, MessageSquare } from "lucide-react";
-import { useState } from "react";
+import { Globe } from "lucide-react";
 
 export const Hero = ({ language, onLanguageChange }: { language: "en" | "es", onLanguageChange: (lang: "en" | "es") => void }) => {
   const navigate = useNavigate();
@@ -42,22 +41,12 @@ export const Hero = ({ language, onLanguageChange }: { language: "en" | "es", on
         <div className="max-w-3xl">
           <h1 className="text-5xl font-bold mb-6">{content[language].title}</h1>
           <p className="text-xl mb-8">{content[language].subtitle}</p>
-          <div className="flex gap-4">
-            <Button 
-              onClick={() => navigate("/book")} 
-              className="bg-secondary hover:bg-green-600 text-white px-8 py-6 text-lg rounded-full transition-all"
-            >
-              {content[language].buttonText}
-            </Button>
-            <Button
-              variant="outline"
-              className="text-white border-white hover:bg-white/10"
-              onClick={() => navigate("/chat")}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              {language === "en" ? "Chat with Doctor" : "Chatear con el Doctor"}
-            </Button>
-          </div>
+          <Button 
+            onClick={() => navigate("/book")} 
+            className="bg-secondary hover:bg-green-600 text-white px-8 py-6 text-lg rounded-full transition-all"
+          >
+            {content[language].buttonText}
+          </Button>
         </div>
       </div>
     </div>
