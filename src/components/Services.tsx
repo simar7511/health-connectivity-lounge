@@ -18,8 +18,8 @@ const services = [
     icon: Database,
   },
   {
-    title: "Real-Time Translation",
-    description: "Advanced translation tools ensuring clear and accurate communication during medical consultations",
+    title: "Real-Time Medical Interpretation",
+    description: "Live medical interpreters ensuring accurate and culturally sensitive communication between providers and patients",
     icon: Languages,
   }
 ];
