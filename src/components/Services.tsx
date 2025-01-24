@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Baby, MessageSquare, Database, Languages, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { MedicalChat } from "./MedicalChat";
 
 const services = {
   en: [
@@ -96,7 +97,10 @@ export const Services = ({ language }: { language: "en" | "es" }) => {
                 <p className="text-gray-600 mb-4">{service.description}</p>
                 {expandedService === service.title && (
                   <div className="mt-4 pt-4 border-t border-gray-200 animate-fadeIn">
-                    <p className="text-gray-700">{service.details}</p>
+                    <p className="text-gray-700 mb-4">{service.details}</p>
+                    {service.icon === Languages && (
+                      <MedicalChat language={language} />
+                    )}
                   </div>
                 )}
               </CardContent>
