@@ -8,7 +8,7 @@ const services = [
     icon: Baby,
   },
   {
-    title: "Virtual Consultations",
+    title: "On Demand Virtual Consultations",
     description: "Connect with your doctor from the comfort of your home",
     icon: MessageSquare,
   },
