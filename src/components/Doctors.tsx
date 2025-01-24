@@ -8,7 +8,7 @@ import { useState } from "react";
 const getDoctors = (language: "en" | "es") => ({
   en: [
     {
-      name: "Dr. Sarah Johnson",
+      name: "Dr. Sarah Smith",
       specialty: "OB/GYN",
       languages: ["English", "Spanish"],
       image: "/placeholder.svg",
@@ -24,7 +24,7 @@ const getDoctors = (language: "en" | "es") => ({
   ],
   es: [
     {
-      name: "Dra. Sarah Johnson",
+      name: "Dra. Sarah Smith",
       specialty: "Ginecología y Obstetricia",
       languages: ["Inglés", "Español"],
       image: "/placeholder.svg",
