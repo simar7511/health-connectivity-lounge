@@ -32,7 +32,7 @@ const getDoctors = (language: "en" | "es") => ({
       specialty: "Pediatrics",
       languages: ["English", "Spanish"],
       image: "/placeholder.svg",
-      description: "Specialized in comprehensive pediatric care",
+      description: "Specialized in comprehensive pediatric care for 7+ years",
       details: {
         role: "Pediatrician",
         experience: "7+ years of practice",
@@ -64,7 +64,7 @@ const getDoctors = (language: "en" | "es") => ({
       specialty: "Pediatría",
       languages: ["Inglés", "Español"],
       image: "/placeholder.svg",
-      description: "Especializado en atención pediátrica integral",
+      description: "Especializado en atención pediátrica integral con más de 7 años de experiencia",
       details: {
         role: "Pediatra",
         experience: "Más de 7 años de práctica",

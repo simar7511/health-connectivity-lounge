@@ -10,9 +10,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white">
       <Hero language={language} onLanguageChange={setLanguage} />
-      <MissionStatement language={language} />
-      <Services language={language} />
-      <Doctors language={language} />
+      <MissionStatement language={language} onLanguageChange={setLanguage} />
+      <Services language={language} onLanguageChange={setLanguage} />
+      <Doctors />
     </div>
   );
 };
