@@ -15,13 +15,6 @@ const getDoctors = (language: "en" | "es") => ({
       description: "Specializing in maternal health with 10+ years of experience",
     },
     {
-      name: "Dr. Maria Rodriguez",
-      specialty: "OB/GYN",
-      languages: ["Spanish", "English"],
-      image: "/placeholder.svg",
-      description: "Expert in high-risk pregnancies and prenatal care",
-    },
-    {
       name: "Dr. Michael Chen",
       specialty: "Family Medicine",
       languages: ["English", "Spanish", "Mandarin"],
@@ -36,13 +29,6 @@ const getDoctors = (language: "en" | "es") => ({
       languages: ["Inglés", "Español"],
       image: "/placeholder.svg",
       description: "Especializada en salud materna con más de 10 años de experiencia",
-    },
-    {
-      name: "Dra. Maria Rodriguez",
-      specialty: "Ginecología y Obstetricia",
-      languages: ["Español", "Inglés"],
-      image: "/placeholder.svg",
-      description: "Experta en embarazos de alto riesgo y atención prenatal",
     },
     {
       name: "Dr. Michael Chen",
@@ -74,7 +60,7 @@ export const Doctors = () => {
             {language === "en" ? "Español" : "English"}
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {doctors[language].map((doctor) => (
             <Card key={doctor.name} className="text-center hover:shadow-lg transition-shadow">
               <CardHeader>
