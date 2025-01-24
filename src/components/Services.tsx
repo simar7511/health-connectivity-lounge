@@ -3,8 +3,8 @@ import { Baby, Globe, MessageSquare, Database, Languages } from "lucide-react";
 
 const services = [
   {
-    title: "Prenatal Care",
-    description: "Comprehensive prenatal care and monitoring for expectant mothers",
+    title: "Prenatal Health Literacy Support",
+    description: "Transformation of complex medical terms into culturally sensitive, patient-friendly content",
     icon: Baby,
   },
   {
