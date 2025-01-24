@@ -8,10 +8,10 @@ const Index = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <Hero language={language} onLanguageChange={setLanguage} />
-      <MissionStatement language={language} onLanguageChange={setLanguage} />
-      <Services language={language} onLanguageChange={setLanguage} />
+      <MissionStatement language={language} />
+      <Services language={language} />
       <Doctors />
     </div>
   );
