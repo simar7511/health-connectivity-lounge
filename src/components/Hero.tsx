@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Globe, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
-export const Hero = () => {
+export const Hero = ({ language, onLanguageChange }: { language: "en" | "es", onLanguageChange: (lang: "en" | "es") => void }) => {
   const navigate = useNavigate();
-  const [language, setLanguage] = useState<"en" | "es">("en");
 
   const content = {
     en: {
@@ -22,10 +21,6 @@ export const Hero = () => {
     }
   };
 
-  const toggleLanguage = () => {
-    setLanguage(language === "en" ? "es" : "en");
-  };
-
   return (
     <div className="relative bg-gradient-to-r from-primary to-blue-400 py-20 text-white animate-fadeIn">
       <div className="container mx-auto px-6">
@@ -38,7 +33,7 @@ export const Hero = () => {
           <Button
             variant="ghost"
             className="text-white hover:text-blue-200"
-            onClick={toggleLanguage}
+            onClick={() => onLanguageChange(language === "en" ? "es" : "en")}
           >
             <Globe className="mr-2 h-4 w-4" />
             {content[language].languageText}

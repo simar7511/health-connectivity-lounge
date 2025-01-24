@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Baby, Globe, MessageSquare, Database, Languages } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { Baby, MessageSquare, Database, Languages } from "lucide-react";
 
 const services = {
   en: [
@@ -50,28 +48,14 @@ const services = {
   ]
 };
 
-export const Services = () => {
-  const [language, setLanguage] = useState<"en" | "es">("en");
-
-  const toggleLanguage = () => {
-    setLanguage(language === "en" ? "es" : "en");
-  };
-
+export const Services = ({ language }: { language: "en" | "es" }) => {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-6">
-        <div className="mb-12 flex justify-between items-center">
+        <div className="mb-12">
           <h2 className="text-3xl font-bold">
             {language === "en" ? "Our Services" : "Nuestros Servicios"}
           </h2>
-          <Button
-            variant="ghost"
-            className="text-primary hover:text-primary/80"
-            onClick={toggleLanguage}
-          >
-            <Globe className="mr-2 h-4 w-4" />
-            {language === "en" ? "Español" : "English"}
-          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {services[language].map((service) => (

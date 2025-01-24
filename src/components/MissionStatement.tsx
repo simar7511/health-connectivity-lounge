@@ -1,7 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { HeartHandshake, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { HeartHandshake } from "lucide-react";
 
 const content = {
   en: {
@@ -16,29 +14,13 @@ const content = {
   }
 };
 
-export const MissionStatement = () => {
-  const [language, setLanguage] = useState<"en" | "es">("en");
-
-  const toggleLanguage = () => {
-    setLanguage(language === "en" ? "es" : "en");
-  };
-
+export const MissionStatement = ({ language }: { language: "en" | "es" }) => {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-6">
         <div className="flex flex-col items-center text-center mb-8">
           <HeartHandshake className="w-12 h-12 text-primary mb-4" />
-          <div className="flex items-center gap-4">
-            <h2 className="text-3xl font-bold">{content[language].title}</h2>
-            <Button
-              variant="ghost"
-              className="text-primary hover:text-primary/80"
-              onClick={toggleLanguage}
-            >
-              <Globe className="mr-2 h-4 w-4" />
-              {language === "en" ? "Español" : "English"}
-            </Button>
-          </div>
+          <h2 className="text-3xl font-bold">{content[language].title}</h2>
         </div>
         <Card className="max-w-4xl mx-auto">
           <CardContent className="pt-6">
