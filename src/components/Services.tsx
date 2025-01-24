@@ -13,8 +13,8 @@ const services = [
     icon: MessageSquare,
   },
   {
-    title: "Health Tracking",
-    description: "Monitor your pregnancy journey with our digital tools",
+    title: "Personalized Health Monitoring",
+    description: "Focuses on individualized tracking of health metrics",
     icon: Database,
   },
   {
