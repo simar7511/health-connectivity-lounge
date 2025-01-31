@@ -13,65 +13,65 @@ import {
 const getDoctors = (language: "en" | "es") => ({
   en: [
     {
-      name: "Dr. Sarah Smith",
+      name: "Dr. Emily Smith",
       specialty: "OB/GYN",
       languages: ["English", "Spanish"],
       image: "/placeholder.svg",
-      description: "Specializing in maternal health with 10+ years of experience",
+      description: "Over 10 years of experience in women's health and prenatal care",
       details: {
         role: "OB/GYN Provider",
         experience: "10+ years of practice",
-        practice: "Runs a clinic with minimal support",
-        goal: "Improve patient-provider communication and optimize clinic workflow",
-        challenge: "Struggling to provide individualized care",
-        story: "As a rural OB/GYN, I want tools that streamline patient communication and data management so I can focus on providing personalized care despite limited resources."
+        practice: "Specializes in maternal health services and improving healthcare access for underserved communities",
+        goal: "Dedicated to providing comprehensive women's health services with a focus on accessibility",
+        challenge: "Working to overcome barriers to healthcare access",
+        story: "As an OB/GYN committed to serving underserved communities, I strive to provide culturally sensitive care while ensuring all patients receive the highest quality of maternal health services."
       }
     },
     {
-      name: "Dr. Alex Rivera",
+      name: "Dr. Michael Reyes",
       specialty: "Pediatrics",
       languages: ["English", "Spanish"],
       image: "/placeholder.svg",
-      description: "Specialized in comprehensive pediatric care for 7+ years",
+      description: "8+ years specializing in child healthcare and developmental screenings",
       details: {
         role: "Pediatrician",
-        experience: "7+ years of practice",
-        practice: "Runs a small pediatric clinic in a rural area",
-        goal: "Enhance communication with patients and families while improving the clinic's efficiency in managing care",
-        challenge: "Faces difficulties in providing personalized care due to a high patient volume and limited staff",
-        story: "As a rural pediatrician, I want tools that simplify patient communication and streamline care management so I can deliver high-quality, individualized care despite limited resources."
+        experience: "8+ years of practice",
+        practice: "Specializes in treating underserved and migrant populations",
+        goal: "Provide culturally sensitive pediatric care while ensuring accessibility",
+        challenge: "Breaking down cultural and economic barriers to healthcare",
+        story: "With extensive experience in serving diverse communities, I focus on providing comprehensive pediatric care that respects cultural differences while ensuring optimal health outcomes for all children."
       }
     },
   ],
   es: [
     {
-      name: "Dra. Sarah Smith",
+      name: "Dra. Emily Smith",
       specialty: "Ginecología y Obstetricia",
       languages: ["Inglés", "Español"],
       image: "/placeholder.svg",
-      description: "Especializada en salud materna con más de 10 años de experiencia",
+      description: "Más de 10 años de experiencia en salud de la mujer y atención prenatal",
       details: {
         role: "Proveedora de Ginecología y Obstetricia",
         experience: "Más de 10 años de práctica",
-        practice: "Dirige una clínica con apoyo mínimo",
-        goal: "Mejorar la comunicación paciente-proveedor y optimizar el flujo de trabajo de la clínica",
-        challenge: "Luchando por proporcionar atención individualizada",
-        story: "Como ginecóloga-obstetra rural, quiero herramientas que agilicen la comunicación con los pacientes y la gestión de datos para poder centrarme en proporcionar una atención personalizada a pesar de los recursos limitados."
+        practice: "Especializada en servicios de salud materna y mejora del acceso a la atención médica para comunidades desatendidas",
+        goal: "Dedicada a proporcionar servicios integrales de salud para la mujer con enfoque en la accesibilidad",
+        challenge: "Trabajando para superar las barreras al acceso a la atención médica",
+        story: "Como ginecóloga-obstetra comprometida con las comunidades desatendidas, me esfuerzo por brindar atención culturalmente sensible mientras aseguro que todas las pacientes reciban servicios de salud materna de la más alta calidad."
       }
     },
     {
-      name: "Dr. Alex Rivera",
+      name: "Dr. Michael Reyes",
       specialty: "Pediatría",
       languages: ["Inglés", "Español"],
       image: "/placeholder.svg",
-      description: "Especializado en atención pediátrica integral con más de 7 años de experiencia",
+      description: "Más de 8 años especializado en salud infantil y evaluaciones del desarrollo",
       details: {
         role: "Pediatra",
-        experience: "Más de 7 años de práctica",
-        practice: "Dirige una pequeña clínica pediátrica en una zona rural",
-        goal: "Mejorar la comunicación con pacientes y familias mientras optimiza la eficiencia de la clínica en la gestión de la atención",
-        challenge: "Enfrenta dificultades para proporcionar atención personalizada debido al alto volumen de pacientes y personal limitado",
-        story: "Como pediatra rural, quiero herramientas que simplifiquen la comunicación con los pacientes y agilicen la gestión de la atención para poder brindar una atención individualizada de alta calidad a pesar de los recursos limitados."
+        experience: "Más de 8 años de práctica",
+        practice: "Especializado en atender a poblaciones desatendidas y migrantes",
+        goal: "Brindar atención pediátrica culturalmente sensible garantizando la accesibilidad",
+        challenge: "Rompiendo barreras culturales y económicas en la atención médica",
+        story: "Con amplia experiencia en servir a comunidades diversas, me enfoco en brindar atención pediátrica integral que respeta las diferencias culturales mientras aseguro resultados óptimos de salud para todos los niños."
       }
     },
   ],

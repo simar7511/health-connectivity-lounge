@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { LockIcon, MailIcon } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ProviderLoginProps {
@@ -17,30 +17,31 @@ export const ProviderLogin = ({ language, onBack }: ProviderLoginProps) => {
 
   const content = {
     en: {
-      title: "Healthcare Provider Login",
-      emailLabel: "Email",
-      passwordLabel: "Password",
+      title: "Provider Login",
+      emailLabel: "Enter your email",
+      passwordLabel: "Enter your password",
       login: "Login",
       back: "Back",
-      twoFactor: "Two-factor authentication will be required",
+      needHelp: "Need help? Chat with our AI assistant",
     },
     es: {
-      title: "Acceso para Proveedores de Salud",
-      emailLabel: "Correo electrónico",
-      passwordLabel: "Contraseña",
-      login: "Iniciar sesión",
+      title: "Acceso para Proveedores",
+      emailLabel: "Ingrese su correo electrónico",
+      passwordLabel: "Ingrese su contraseña",
+      login: "Ingresar",
       back: "Volver",
-      twoFactor: "Se requerirá autenticación de dos factores",
+      needHelp: "¿Necesita ayuda? Chatee con nuestro asistente AI",
     },
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: language === "en" ? "2FA Required" : "2FA Requerido",
-      description: language === "en" 
-        ? "Please check your email for the verification code" 
-        : "Por favor revise su correo para el código de verificación",
+      title: language === "en" ? "Login successful" : "Inicio de sesión exitoso",
+      description:
+        language === "en"
+          ? "Welcome back to your provider dashboard"
+          : "Bienvenido de nuevo a su panel de proveedor",
     });
   };
 
@@ -51,34 +52,36 @@ export const ProviderLogin = ({ language, onBack }: ProviderLoginProps) => {
           {content[language].title}
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={content[language].emailLabel}
-              className="text-lg py-6"
-              icon={<MailIcon className="w-5 h-5" />}
+              className="pl-10 text-lg py-6"
             />
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
             <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={content[language].passwordLabel}
-              className="text-lg py-6"
-              icon={<LockIcon className="w-5 h-5" />}
+              className="pl-10 text-lg py-6"
             />
           </div>
           <Button type="submit" className="w-full text-lg py-6">
             {content[language].login}
           </Button>
         </form>
-        <p className="text-sm text-center text-muted-foreground">
-          {content[language].twoFactor}
-        </p>
       </Card>
       <Button variant="ghost" onClick={onBack}>
         {content[language].back}
+      </Button>
+      <Button variant="link" className="text-primary">
+        {content[language].needHelp}
       </Button>
     </div>
   );
