@@ -36,6 +36,8 @@ export const PatientDashboard = ({ language }: PatientDashboardProps) => {
       upcoming: "Upcoming Appointments",
       reschedule: "Reschedule",
       aiChat: "Ask AI Assistant",
+      appointmentIn: "Your appointment is in",
+      hours: "hours",
     },
     es: {
       greeting: "¡Bienvenida, Maria! Estás en tu tercer trimestre",
@@ -46,14 +48,44 @@ export const PatientDashboard = ({ language }: PatientDashboardProps) => {
       upcoming: "Próximas Citas",
       reschedule: "Reagendar",
       aiChat: "Preguntar al Asistente AI",
+      appointmentIn: "Tu cita es en",
+      hours: "horas",
     },
   };
 
   const healthMetrics = [
-    { icon: <HeartPulse className="w-6 h-6" />, label: "BP", value: "120/80" },
-    { icon: <Droplet className="w-6 h-6" />, label: "Glucose", value: "95 mg/dL" },
-    { icon: <Scale className="w-6 h-6" />, label: "Weight", value: "68 kg" },
-    { icon: <Baby className="w-6 h-6" />, label: "Movements", value: "Active" },
+    { 
+      icon: <HeartPulse className="w-6 h-6" />, 
+      label: "BP", 
+      value: "120/80",
+      status: "normal", // could be 'normal', 'warning', or 'alert'
+      bgColor: "bg-green-100", // dynamic background based on status
+      textColor: "text-green-700"
+    },
+    { 
+      icon: <Droplet className="w-6 h-6" />, 
+      label: "Glucose", 
+      value: "95 mg/dL",
+      status: "normal",
+      bgColor: "bg-green-100",
+      textColor: "text-green-700"
+    },
+    { 
+      icon: <Scale className="w-6 h-6" />, 
+      label: "Weight", 
+      value: "68 kg",
+      status: "normal",
+      bgColor: "bg-blue-100",
+      textColor: "text-blue-700"
+    },
+    { 
+      icon: <Baby className="w-6 h-6" />, 
+      label: "Movements", 
+      value: "Active",
+      status: "normal",
+      bgColor: "bg-green-100",
+      textColor: "text-green-700"
+    },
   ];
 
   return (
@@ -63,13 +95,22 @@ export const PatientDashboard = ({ language }: PatientDashboardProps) => {
           <h1 className="text-2xl font-bold text-primary">
             {content[language].greeting}
           </h1>
-          <Button
-            variant="ghost"
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="text-primary"
-          >
-            {isDarkMode ? "☀️" : "🌙"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="text-primary"
+            >
+              {isDarkMode ? "☀️" : "🌙"}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => toast({ title: "Language changed" })}
+            >
+              {language === "en" ? "🇪🇸 Español" : "🇺🇸 English"}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -103,11 +144,14 @@ export const PatientDashboard = ({ language }: PatientDashboardProps) => {
           <h2 className="text-xl font-semibold mb-4">{content[language].vitals}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {healthMetrics.map((metric, index) => (
-              <div key={index} className="flex items-center space-x-2 p-2 bg-primary/10 rounded-lg">
-                {metric.icon}
+              <div 
+                key={index} 
+                className={`flex items-center space-x-2 p-3 rounded-lg transition-colors ${metric.bgColor}`}
+              >
+                <div className={metric.textColor}>{metric.icon}</div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{metric.label}</div>
-                  <div className="font-semibold">{metric.value}</div>
+                  <div className="text-sm font-medium">{metric.label}</div>
+                  <div className={`font-semibold ${metric.textColor}`}>{metric.value}</div>
                 </div>
               </div>
             ))}
@@ -117,12 +161,20 @@ export const PatientDashboard = ({ language }: PatientDashboardProps) => {
         <Card className="p-4">
           <h2 className="text-xl font-semibold mb-4">{content[language].upcoming}</h2>
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-2 bg-secondary/10 rounded-lg">
-              <div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-secondary/10 rounded-lg gap-4">
+              <div className="space-y-2">
                 <div className="font-semibold">Dr. Alex Rivera</div>
                 <div className="text-sm text-muted-foreground">Tomorrow, 10:00 AM</div>
+                <div className="text-sm font-medium text-primary">
+                  {content[language].appointmentIn} 12 {content[language].hours}
+                </div>
               </div>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="secondary" 
+                size="lg"
+                className="w-full md:w-auto flex items-center gap-2"
+              >
+                <Calendar className="w-5 h-5" />
                 {content[language].reschedule}
               </Button>
             </div>
