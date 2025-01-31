@@ -15,7 +15,6 @@ import {
   TestTube,
   DollarSign,
   AlertOctagon,
-  WhatsApp,
   MessageCircle,
 } from "lucide-react";
 import { MedicalChat } from "./MedicalChat";
@@ -41,7 +40,6 @@ export const PatientDashboard = ({ language }: PatientDashboardProps) => {
       aiChat: "Ask AI Assistant",
       appointmentIn: "Your appointment is in",
       hours: "hours",
-      whatsapp: "Schedule via WhatsApp",
       sms: "Schedule via SMS",
       lowCost: "Low-Cost Options Available",
       aiTriage: "AI Symptom Check",
@@ -57,7 +55,6 @@ export const PatientDashboard = ({ language }: PatientDashboardProps) => {
       aiChat: "Preguntar al Asistente AI",
       appointmentIn: "Tu cita es en",
       hours: "horas",
-      whatsapp: "Agendar por WhatsApp",
       sms: "Agendar por SMS",
       lowCost: "Opciones de Bajo Costo Disponibles",
       aiTriage: "Evaluación de Síntomas por AI",
@@ -137,14 +134,6 @@ export const PatientDashboard = ({ language }: PatientDashboardProps) => {
           <Card className="p-4">
             <h2 className="text-xl font-semibold mb-4">{content[language].book}</h2>
             <div className="space-y-4">
-              <Button
-                variant="outline"
-                className="w-full flex items-center gap-2 py-6"
-                onClick={() => handleBooking("WhatsApp")}
-              >
-                <WhatsApp className="w-6 h-6" />
-                {content[language].whatsapp}
-              </Button>
               <Button
                 variant="outline"
                 className="w-full flex items-center gap-2 py-6"

@@ -10,6 +10,28 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
+interface DoctorDetails {
+  role: string;
+  experience: string;
+  practice: string;
+  goal: string;
+  challenge: string;
+  story: string;
+}
+
+interface Doctor {
+  name: string;
+  specialty: string;
+  languages: string[];
+  image: string;
+  description: string;
+  details: DoctorDetails;
+}
+
+interface DoctorsProps {
+  language: "en" | "es";
+}
+
 const getDoctors = (language: "en" | "es") => ({
   en: [
     {
@@ -77,26 +99,15 @@ const getDoctors = (language: "en" | "es") => ({
   ],
 });
 
-export const Doctors = () => {
-  const [language, setLanguage] = useState<"en" | "es">("en");
+export const Doctors = ({ language }: DoctorsProps) => {
   const doctors = getDoctors(language);
 
   return (
     <section className="py-16">
       <div className="container mx-auto px-6">
-        <div className="flex justify-between items-center mb-12">
-          <h2 className="text-3xl font-bold">
-            {language === "en" ? "Meet Our Doctors" : "Conozca a Nuestros Médicos"}
-          </h2>
-          <Button
-            variant="ghost"
-            onClick={() => setLanguage(language === "en" ? "es" : "en")}
-            className="text-primary"
-          >
-            <Globe className="mr-2 h-4 w-4" />
-            {language === "en" ? "Español" : "English"}
-          </Button>
-        </div>
+        <h2 className="text-3xl font-bold mb-12">
+          {language === "en" ? "Meet Our Doctors" : "Conozca a Nuestros Médicos"}
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {doctors[language].map((doctor) => (
             <Card key={doctor.name} className="text-center hover:shadow-lg transition-shadow">
