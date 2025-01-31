@@ -2,12 +2,9 @@ import { useState } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import { PatientLogin } from "@/components/PatientLogin";
 import { ProviderLogin } from "@/components/ProviderLogin";
-import { Hero } from "@/components/Hero";
-import { MissionStatement } from "@/components/MissionStatement";
-import { Services } from "@/components/Services";
-import { Doctors } from "@/components/Doctors";
+import { PatientDashboard } from "@/components/PatientDashboard";
 
-type LoginState = "select" | "patient" | "provider" | "main";
+type LoginState = "select" | "patient" | "provider" | "dashboard";
 
 const Index = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
@@ -27,6 +24,7 @@ const Index = () => {
       <PatientLogin
         language={language}
         onBack={() => setLoginState("select")}
+        onLogin={() => setLoginState("dashboard")}
       />
     );
   }
@@ -40,14 +38,15 @@ const Index = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen">
-      <Hero language={language} onLanguageChange={setLanguage} />
-      <MissionStatement language={language} />
-      <Services language={language} />
-      <Doctors />
-    </div>
-  );
+  if (loginState === "dashboard") {
+    return (
+      <PatientDashboard
+        language={language}
+      />
+    );
+  }
+
+  return null;
 };
 
 export default Index;

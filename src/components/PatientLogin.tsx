@@ -8,9 +8,10 @@ import { useToast } from "@/components/ui/use-toast";
 interface PatientLoginProps {
   language: "en" | "es";
   onBack: () => void;
+  onLogin: () => void;
 }
 
-export const PatientLogin = ({ language, onBack }: PatientLoginProps) => {
+export const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const { toast } = useToast();
 
@@ -41,6 +42,7 @@ export const PatientLogin = ({ language, onBack }: PatientLoginProps) => {
         ? "Please check your phone for the verification code" 
         : "Por favor revise su teléfono para el código de verificación",
     });
+    onLogin();
   };
 
   return (
@@ -50,14 +52,14 @@ export const PatientLogin = ({ language, onBack }: PatientLoginProps) => {
           {content[language].title}
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+          <div className="relative">
+            <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
             <Input
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder={content[language].phoneLabel}
-              className="text-lg py-6"
-              icon={<PhoneIcon className="w-5 h-5" />}
+              className="pl-10 text-lg py-6"
             />
           </div>
           <Button type="submit" className="w-full text-lg py-6">
@@ -74,6 +76,7 @@ export const PatientLogin = ({ language, onBack }: PatientLoginProps) => {
                 ? "You can now access basic services" 
                 : "Ahora puede acceder a servicios básicos",
             });
+            onLogin();
           }}
         >
           <UserIcon className="mr-2" />
