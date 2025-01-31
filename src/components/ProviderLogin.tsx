@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Mail, Lock, KeyRound } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useNavigate } from "react-router-dom";
 
 interface ProviderLoginProps {
   language: "en" | "es";
@@ -17,6 +18,7 @@ export const ProviderLogin = ({ language, onBack }: ProviderLoginProps) => {
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOTP] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const content = {
     en: {
@@ -53,13 +55,25 @@ export const ProviderLogin = ({ language, onBack }: ProviderLoginProps) => {
             : "Por favor revise su correo electrónico para el código de verificación",
       });
     } else {
-      toast({
-        title: language === "en" ? "Login successful" : "Inicio de sesión exitoso",
-        description:
-          language === "en"
-            ? "Welcome back to your provider dashboard"
-            : "Bienvenido de nuevo a su panel de proveedor",
-      });
+      if (otp.length === 6) {
+        toast({
+          title: language === "en" ? "Login successful" : "Inicio de sesión exitoso",
+          description:
+            language === "en"
+              ? "Welcome back to your provider dashboard"
+              : "Bienvenido de nuevo a su panel de proveedor",
+        });
+        navigate("/provider/dashboard");
+      } else {
+        toast({
+          variant: "destructive",
+          title: language === "en" ? "Invalid code" : "Código inválido",
+          description:
+            language === "en"
+              ? "Please enter a valid 6-digit code"
+              : "Por favor ingrese un código válido de 6 dígitos",
+        });
+      }
     }
   };
 
@@ -110,7 +124,7 @@ export const ProviderLogin = ({ language, onBack }: ProviderLoginProps) => {
                   render={({ slots }) => (
                     <InputOTPGroup className="gap-2">
                       {slots.map((slot, idx) => (
-                        <InputOTPSlot key={idx} {...slot} index={idx} />
+                        <InputOTPSlot key={idx} {...slot} />
                       ))}
                     </InputOTPGroup>
                   )}

@@ -16,7 +16,6 @@ import {
   ChartLine,
   Languages,
 } from "lucide-react";
-import { ChartContainer } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 interface ProviderDashboardProps {
@@ -238,7 +237,7 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
                     <h3 className="font-medium">
                       {content[language].vitals[key as keyof typeof content.en.vitals]}
                     </h3>
-                    <ChartContainer className="h-[200px]">
+                    <div className="h-[200px]">
                       <ResponsiveContainer>
                         <LineChart data={values.map((value, index) => ({ name: index, value }))}>
                           <XAxis dataKey="name" />
@@ -251,7 +250,7 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
                           />
                         </LineChart>
                       </ResponsiveContainer>
-                    </ChartContainer>
+                    </div>
                   </div>
                 ))}
                 
