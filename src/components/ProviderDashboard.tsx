@@ -1,45 +1,13 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Calendar,
-  MessageSquare,
-  Video,
-  Phone,
-  Globe,
-  FileText,
-  PlusCircle,
-  Pill,
-  TestTube,
-  AlertTriangle,
-  ChartLine,
-  Languages,
-} from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { AppointmentsList } from "./dashboard/AppointmentsList";
+import { MessagingInbox } from "./dashboard/MessagingInbox";
+import { PatientTrends } from "./dashboard/PatientTrends";
+import { QuickDocumentation } from "./dashboard/QuickDocumentation";
+import { Patient } from "@/types/patient";
 
 interface ProviderDashboardProps {
   language: "en" | "es";
-}
-
-interface Patient {
-  id: string;
-  name: string;
-  language: "en" | "es";
-  nextAppointment: string;
-  demographics: {
-    age: number;
-    preferredLanguage: "en" | "es";
-    insuranceStatus: "insured" | "uninsured";
-  };
-  vitals: {
-    bp: number[];
-    glucose: number[];
-    weight: number[];
-    fetalMovements?: number[];
-  };
-  risks: string[];
-  recentSymptoms: string[];
 }
 
 const mockPatients: Patient[] = [
@@ -68,64 +36,13 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const { toast } = useToast();
 
-  const content = {
-    en: {
-      title: "Provider Dashboard",
-      appointments: "Upcoming Appointments",
-      messages: "Secure Messages",
-      trends: "Patient Trends",
-      documentation: "Documentation",
-      startConsultation: "Start Consultation",
-      video: "Video Call",
-      audio: "Audio Call",
-      chat: "Secure Chat",
-      translate: "Auto-Translate",
-      prescriptions: "E-Prescriptions",
-      labs: "Lab Orders",
-      risks: "Risk Alerts",
-      aiSummary: "AI Summary",
-      demographics: "Patient Demographics",
-      symptoms: "Recent Symptoms",
-      vitals: {
-        bp: "Blood Pressure",
-        glucose: "Glucose",
-        weight: "Weight",
-        fetalMovements: "Fetal Movements"
-      }
-    },
-    es: {
-      title: "Panel del Proveedor",
-      appointments: "Próximas Citas",
-      messages: "Mensajes Seguros",
-      trends: "Tendencias del Paciente",
-      documentation: "Documentación",
-      startConsultation: "Iniciar Consulta",
-      video: "Videollamada",
-      audio: "Llamada de Audio",
-      chat: "Chat Seguro",
-      translate: "Auto-Traducir",
-      prescriptions: "Recetas Electrónicas",
-      labs: "Órdenes de Laboratorio",
-      risks: "Alertas de Riesgo",
-      aiSummary: "Resumen IA",
-      demographics: "Datos Demográficos",
-      symptoms: "Síntomas Recientes",
-      vitals: {
-        bp: "Presión Arterial",
-        glucose: "Glucosa",
-        weight: "Peso",
-        fetalMovements: "Movimientos Fetales"
-      }
-    },
-  };
-
-  const handleStartConsultation = (type: "video" | "audio" | "chat") => {
+  const handleStartChat = () => {
     toast({
-      title: language === "en" ? "Starting consultation" : "Iniciando consulta",
+      title: language === "en" ? "Starting chat" : "Iniciando chat",
       description:
         language === "en"
-          ? `Preparing ${type} consultation...`
-          : `Preparando consulta por ${type}...`,
+          ? "Preparing secure chat..."
+          : "Preparando chat seguro...",
     });
   };
 
@@ -139,189 +56,30 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     });
   };
 
-  const getVitalStatus = (type: keyof typeof mockPatients[0]["vitals"], value: number) => {
-    const thresholds = {
-      bp: { low: 90, high: 140 },
-      glucose: { low: 70, high: 130 },
-      weight: { low: 45, high: 100 },
-      fetalMovements: { low: 5, high: 25 }
-    };
-    
-    const threshold = thresholds[type];
-    if (value < threshold.low) return "text-blue-500";
-    if (value > threshold.high) return "text-red-500";
-    return "text-green-500";
-  };
-
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold mb-8">{content[language].title}</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        {language === "en" ? "Provider Dashboard" : "Panel del Proveedor"}
+      </h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Upcoming Appointments */}
-        <Card className="col-span-1 lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {content[language].appointments}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockPatients.map((patient) => (
-                <div
-                  key={patient.id}
-                  className="p-4 border rounded-lg hover:bg-accent cursor-pointer"
-                  onClick={() => setSelectedPatient(patient)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium">{patient.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(patient.nextAppointment).toLocaleString()}
-                      </p>
-                      {patient.demographics.preferredLanguage === "es" && (
-                        <span className="inline-flex items-center text-sm text-blue-600">
-                          <Languages className="h-4 w-4 mr-1" />
-                          Español
-                        </span>
-                      )}
-                    </div>
-                    {patient.risks.length > 0 && (
-                      <AlertTriangle className="h-5 w-5 text-destructive" />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Secure Messages */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              {content[language].messages}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {selectedPatient && (
-                <Button
-                  variant="outline"
-                  className="w-full flex items-center gap-2"
-                  onClick={() => handleStartConsultation("chat")}
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  {content[language].chat}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Patient Trends */}
-        <Card className="col-span-1 lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ChartLine className="h-5 w-5" />
-              {content[language].trends}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedPatient && (
-              <div className="space-y-6">
-                {Object.entries(selectedPatient.vitals).map(([key, values]) => (
-                  <div key={key} className="space-y-2">
-                    <h3 className="font-medium">
-                      {content[language].vitals[key as keyof typeof content.en.vitals]}
-                    </h3>
-                    <div className="h-[200px]">
-                      <ResponsiveContainer>
-                        <LineChart data={values.map((value, index) => ({ name: index, value }))}>
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Line
-                            type="monotone"
-                            dataKey="value"
-                            stroke={getVitalStatus(key as keyof typeof mockPatients[0]["vitals"], values[values.length - 1])}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Patient Demographics and Risks */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-medium mb-2">{content[language].demographics}</h3>
-                    <p>Age: {selectedPatient.demographics.age}</p>
-                    <p>Language: {selectedPatient.demographics.preferredLanguage === "es" ? "Spanish" : "English"}</p>
-                    <p>Insurance: {selectedPatient.demographics.insuranceStatus}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium mb-2">{content[language].symptoms}</h3>
-                    <ul className="list-disc list-inside">
-                      {selectedPatient.recentSymptoms.map((symptom, index) => (
-                        <li key={index}>{symptom}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{content[language].documentation}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              variant="outline"
-              className="w-full flex items-center gap-2"
-              onClick={() => handleStartConsultation("video")}
-            >
-              <Video className="h-5 w-5" />
-              {content[language].video}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full flex items-center gap-2"
-              onClick={() => handleStartConsultation("audio")}
-            >
-              <Phone className="h-5 w-5" />
-              {content[language].audio}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full flex items-center gap-2"
-              onClick={handleTranslate}
-            >
-              <Globe className="h-5 w-5" />
-              {content[language].translate}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full flex items-center gap-2"
-            >
-              <Pill className="h-5 w-5" />
-              {content[language].prescriptions}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full flex items-center gap-2"
-            >
-              <TestTube className="h-5 w-5" />
-              {content[language].labs}
-            </Button>
-          </CardContent>
-        </Card>
+        <AppointmentsList
+          language={language}
+          patients={mockPatients}
+          onSelectPatient={setSelectedPatient}
+        />
+        <MessagingInbox
+          language={language}
+          onStartChat={handleStartChat}
+        />
+        <PatientTrends
+          language={language}
+          patient={selectedPatient}
+        />
+        <QuickDocumentation
+          language={language}
+          onTranslate={handleTranslate}
+        />
       </div>
     </div>
   );
