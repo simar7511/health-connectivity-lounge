@@ -87,6 +87,12 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       aiSummary: "AI Summary",
       demographics: "Patient Demographics",
       symptoms: "Recent Symptoms",
+      vitals: {
+        bp: "Blood Pressure",
+        glucose: "Glucose",
+        weight: "Weight",
+        fetalMovements: "Fetal Movements"
+      }
     },
     es: {
       title: "Panel del Proveedor",
@@ -105,6 +111,12 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       aiSummary: "Resumen IA",
       demographics: "Datos Demográficos",
       symptoms: "Síntomas Recientes",
+      vitals: {
+        bp: "Presión Arterial",
+        glucose: "Glucosa",
+        weight: "Peso",
+        fetalMovements: "Movimientos Fetales"
+      }
     },
   };
 
@@ -126,6 +138,20 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
           ? "Translating content..."
           : "Traduciendo contenido...",
     });
+  };
+
+  const getVitalStatus = (type: keyof typeof mockPatients[0]["vitals"], value: number) => {
+    const thresholds = {
+      bp: { low: 90, high: 140 },
+      glucose: { low: 70, high: 130 },
+      weight: { low: 45, high: 100 },
+      fetalMovements: { low: 5, high: 25 }
+    };
+    
+    const threshold = thresholds[type];
+    if (value < threshold.low) return "text-blue-500";
+    if (value > threshold.high) return "text-red-500";
+    return "text-green-500";
   };
 
   return (
@@ -181,7 +207,18 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Message preview list */}
+            <div className="space-y-4">
+              {selectedPatient && (
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center gap-2"
+                  onClick={() => handleStartConsultation("chat")}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  {content[language].chat}
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -196,14 +233,27 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
           <CardContent>
             {selectedPatient && (
               <div className="space-y-6">
-                <ChartContainer className="h-[300px]" config={{}}>
-                  <LineChart data={selectedPatient.vitals.bp.map((value, index) => ({ name: index, value }))}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="value" stroke="#2B6CB0" />
-                  </LineChart>
-                </ChartContainer>
+                {Object.entries(selectedPatient.vitals).map(([key, values]) => (
+                  <div key={key} className="space-y-2">
+                    <h3 className="font-medium">
+                      {content[language].vitals[key as keyof typeof content.en.vitals]}
+                    </h3>
+                    <ChartContainer className="h-[200px]">
+                      <ResponsiveContainer>
+                        <LineChart data={values.map((value, index) => ({ name: index, value }))}>
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            stroke={getVitalStatus(key as keyof typeof mockPatients[0]["vitals"], values[values.length - 1])}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                ))}
                 
                 {/* Patient Demographics and Risks */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
