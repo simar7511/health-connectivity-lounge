@@ -4,6 +4,8 @@ import { AppointmentsList } from "./dashboard/AppointmentsList";
 import { MessagingInbox } from "./dashboard/MessagingInbox";
 import { PatientTrends } from "./dashboard/PatientTrends";
 import { QuickDocumentation } from "./dashboard/QuickDocumentation";
+import { Button } from "@/components/ui/button";
+import { Globe } from "lucide-react";
 import { Patient } from "@/types/patient";
 
 interface ProviderDashboardProps {
@@ -16,6 +18,7 @@ const mockPatients: Patient[] = [
     name: "Maria Garcia",
     language: "es",
     nextAppointment: "2024-03-20T10:00:00",
+    reasonForVisit: "Prenatal checkup - 28 weeks",
     demographics: {
       age: 28,
       preferredLanguage: "es",
@@ -58,9 +61,19 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold mb-8">
-        {language === "en" ? "Provider Dashboard" : "Panel del Proveedor"}
-      </h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">
+          {language === "en" ? "Provider Dashboard" : "Panel del Proveedor"}
+        </h1>
+        <Button
+          variant="outline"
+          className="flex items-center gap-2"
+          onClick={handleTranslate}
+        >
+          <Globe className="h-4 w-4" />
+          {language === "en" ? "Translate" : "Traducir"}
+        </Button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <AppointmentsList

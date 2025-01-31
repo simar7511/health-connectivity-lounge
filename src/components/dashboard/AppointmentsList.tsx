@@ -11,9 +11,13 @@ interface AppointmentsListProps {
 const content = {
   en: {
     title: "Upcoming Appointments",
+    reasonForVisit: "Reason for Visit",
+    preferredLanguage: "Preferred Language",
   },
   es: {
     title: "Próximas Citas",
+    reasonForVisit: "Motivo de la Visita",
+    preferredLanguage: "Idioma Preferido",
   },
 };
 
@@ -30,14 +34,20 @@ export const AppointmentsList = ({ language, patients, onSelectPatient }: Appoin
         {patients.map((patient) => (
           <div
             key={patient.id}
-            className="p-4 border rounded-lg hover:bg-accent cursor-pointer"
+            className="p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
             onClick={() => onSelectPatient(patient)}
           >
-            <div className="flex justify-between items-center">
-              <div>
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
                 <p className="font-medium">{patient.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {new Date(patient.nextAppointment).toLocaleString()}
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">
+                    {content[language].reasonForVisit}:
+                  </span>{" "}
+                  {patient.reasonForVisit}
                 </p>
                 {patient.demographics.preferredLanguage === "es" && (
                   <span className="inline-flex items-center text-sm text-blue-600">
@@ -47,7 +57,7 @@ export const AppointmentsList = ({ language, patients, onSelectPatient }: Appoin
                 )}
               </div>
               {patient.risks.length > 0 && (
-                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
               )}
             </div>
           </div>

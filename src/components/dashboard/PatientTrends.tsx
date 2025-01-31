@@ -16,6 +16,11 @@ const content = {
       glucose: "Glucose",
       weight: "Weight",
       fetalMovements: "Fetal Movements"
+    },
+    status: {
+      normal: "Normal",
+      warning: "Warning",
+      critical: "Critical"
     }
   },
   es: {
@@ -25,6 +30,11 @@ const content = {
       glucose: "Glucosa",
       weight: "Peso",
       fetalMovements: "Movimientos Fetales"
+    },
+    status: {
+      normal: "Normal",
+      warning: "Advertencia",
+      critical: "Crítico"
     }
   }
 };
@@ -38,7 +48,7 @@ const getVitalStatus = (type: keyof Patient["vitals"], value: number) => {
   };
   
   const threshold = thresholds[type];
-  if (value < threshold.low) return "text-blue-500";
+  if (value < threshold.low) return "text-yellow-500";
   if (value > threshold.high) return "text-red-500";
   return "text-green-500";
 };
@@ -56,8 +66,11 @@ export const PatientTrends = ({ language, patient }: PatientTrendsProps) => (
         <div className="space-y-6">
           {Object.entries(patient.vitals).map(([key, values]) => (
             <div key={key} className="space-y-2">
-              <h3 className="font-medium">
+              <h3 className="font-medium flex items-center gap-2">
                 {content[language].vitals[key as keyof typeof content.en.vitals]}
+                <span className={getVitalStatus(key as keyof Patient["vitals"], values[values.length - 1])}>
+                  ●
+                </span>
               </h3>
               <div className="h-[200px]">
                 <ResponsiveContainer>

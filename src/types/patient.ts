@@ -3,6 +3,7 @@ export interface Patient {
   name: string;
   language: "en" | "es";
   nextAppointment: string;
+  reasonForVisit: string;
   demographics: {
     age: number;
     preferredLanguage: "en" | "es";
