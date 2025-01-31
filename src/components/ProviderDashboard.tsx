@@ -10,10 +10,11 @@ import {
   Globe,
   FileText,
   PlusCircle,
-  Prescription,
+  Pill,
   TestTube,
   AlertTriangle,
   ChartLine,
+  Languages,
 } from "lucide-react";
 import { ChartContainer } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -27,6 +28,11 @@ interface Patient {
   name: string;
   language: "en" | "es";
   nextAppointment: string;
+  demographics: {
+    age: number;
+    preferredLanguage: "en" | "es";
+    insuranceStatus: "insured" | "uninsured";
+  };
   vitals: {
     bp: number[];
     glucose: number[];
@@ -34,6 +40,7 @@ interface Patient {
     fetalMovements?: number[];
   };
   risks: string[];
+  recentSymptoms: string[];
 }
 
 const mockPatients: Patient[] = [
@@ -42,6 +49,11 @@ const mockPatients: Patient[] = [
     name: "Maria Garcia",
     language: "es",
     nextAppointment: "2024-03-20T10:00:00",
+    demographics: {
+      age: 28,
+      preferredLanguage: "es",
+      insuranceStatus: "uninsured"
+    },
     vitals: {
       bp: [120, 122, 118, 121],
       glucose: [95, 98, 92, 96],
@@ -49,8 +61,8 @@ const mockPatients: Patient[] = [
       fetalMovements: [10, 12, 8, 15],
     },
     risks: ["High blood pressure", "Gestational diabetes risk"],
+    recentSymptoms: ["Mild headache", "Swollen ankles"]
   },
-  // ... Add more mock patients
 ];
 
 export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
@@ -68,11 +80,13 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       video: "Video Call",
       audio: "Audio Call",
       chat: "Secure Chat",
-      translate: "Translate",
+      translate: "Auto-Translate",
       prescriptions: "E-Prescriptions",
       labs: "Lab Orders",
       risks: "Risk Alerts",
       aiSummary: "AI Summary",
+      demographics: "Patient Demographics",
+      symptoms: "Recent Symptoms",
     },
     es: {
       title: "Panel del Proveedor",
@@ -84,11 +98,13 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       video: "Videollamada",
       audio: "Llamada de Audio",
       chat: "Chat Seguro",
-      translate: "Traducir",
+      translate: "Auto-Traducir",
       prescriptions: "Recetas Electrónicas",
       labs: "Órdenes de Laboratorio",
       risks: "Alertas de Riesgo",
       aiSummary: "Resumen IA",
+      demographics: "Datos Demográficos",
+      symptoms: "Síntomas Recientes",
     },
   };
 
@@ -139,6 +155,12 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
                       <p className="text-sm text-muted-foreground">
                         {new Date(patient.nextAppointment).toLocaleString()}
                       </p>
+                      {patient.demographics.preferredLanguage === "es" && (
+                        <span className="inline-flex items-center text-sm text-blue-600">
+                          <Languages className="h-4 w-4 mr-1" />
+                          Español
+                        </span>
+                      )}
                     </div>
                     {patient.risks.length > 0 && (
                       <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -173,14 +195,34 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
           </CardHeader>
           <CardContent>
             {selectedPatient && (
-              <ChartContainer className="h-[300px]" config={{}}>
-                <LineChart data={selectedPatient.vitals.bp.map((value, index) => ({ name: index, value }))}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="value" stroke="#2B6CB0" />
-                </LineChart>
-              </ChartContainer>
+              <div className="space-y-6">
+                <ChartContainer className="h-[300px]" config={{}}>
+                  <LineChart data={selectedPatient.vitals.bp.map((value, index) => ({ name: index, value }))}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="value" stroke="#2B6CB0" />
+                  </LineChart>
+                </ChartContainer>
+                
+                {/* Patient Demographics and Risks */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">{content[language].demographics}</h3>
+                    <p>Age: {selectedPatient.demographics.age}</p>
+                    <p>Language: {selectedPatient.demographics.preferredLanguage === "es" ? "Spanish" : "English"}</p>
+                    <p>Insurance: {selectedPatient.demographics.insuranceStatus}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">{content[language].symptoms}</h3>
+                    <ul className="list-disc list-inside">
+                      {selectedPatient.recentSymptoms.map((symptom, index) => (
+                        <li key={index}>{symptom}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -210,7 +252,7 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
             <Button
               variant="outline"
               className="w-full flex items-center gap-2"
-              onClick={() => handleTranslate}
+              onClick={handleTranslate}
             >
               <Globe className="h-5 w-5" />
               {content[language].translate}
@@ -219,7 +261,7 @@ export const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
               variant="outline"
               className="w-full flex items-center gap-2"
             >
-              <Prescription className="h-5 w-5" />
+              <Pill className="h-5 w-5" />
               {content[language].prescriptions}
             </Button>
             <Button
