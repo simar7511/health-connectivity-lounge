@@ -1,12 +1,20 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const mockPatients: Patient[] = [
   {
@@ -49,6 +57,7 @@ const PatientOverviewPage = () => {
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [otherExam, setOtherExam] = useState("");
   const [customExams, setCustomExams] = useState<string[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
 
   if (!patient) {
     return <div>Patient not found</div>;
@@ -80,11 +89,6 @@ const PatientOverviewPage = () => {
       return;
     }
 
-    const standardExams = selectedExams
-      .map(id => commonExams.find(e => e.id === id)?.name)
-      .filter(Boolean)
-      .join(", ");
-
     const allExams = [
       ...selectedExams.map(id => commonExams.find(e => e.id === id)?.name).filter(Boolean),
       ...customExams
@@ -94,6 +98,50 @@ const PatientOverviewPage = () => {
       title: "Exam Request Ordered",
       description: `Ordered the following exams for ${patient.name}: ${allExams}`,
     });
+  };
+
+  const handleSendResult = (examId: string) => {
+    const exam = commonExams.find(e => e.id === examId);
+    if (exam) {
+      toast({
+        title: "Results Sent",
+        description: `${exam.name} results have been sent to ${patient.name}'s patient portal.`,
+      });
+    }
+  };
+
+  const handleGeneratePDF = (examId: string, language: string) => {
+    const exam = commonExams.find(e => e.id === examId);
+    if (exam) {
+      toast({
+        title: "PDF Generated",
+        description: `${exam.name} report has been generated in ${language === 'es' ? 'Spanish' : 'English'}.`,
+      });
+    }
+  };
+
+  const getStatusBadge = (results: string) => {
+    if (results.toLowerCase().includes("normal")) {
+      return (
+        <Badge className="bg-[#F2FCE2] text-green-700 flex items-center gap-1">
+          <CheckCircle className="h-4 w-4" />
+          Normal
+        </Badge>
+      );
+    } else if (results.toLowerCase().includes("high") || results.toLowerCase().includes("risk")) {
+      return (
+        <Badge className="bg-[#FEF7CD] text-yellow-700 flex items-center gap-1">
+          <AlertCircle className="h-4 w-4" />
+          Needs Monitoring
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="destructive" className="flex items-center gap-1">
+        <XCircle className="h-4 w-4" />
+        Critical
+      </Badge>
+    );
   };
 
   return (
@@ -139,6 +187,53 @@ const PatientOverviewPage = () => {
                   <li key={index}>{symptom}</li>
                 ))}
               </ul>
+            </div>
+          </div>
+
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Exam Results</h2>
+            <div className="space-y-6">
+              {commonExams.map((exam) => (
+                <div key={exam.id} className="p-4 border rounded-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-medium">{exam.name}</h3>
+                      <p className="text-sm text-muted-foreground">{exam.purpose}</p>
+                    </div>
+                    {getStatusBadge(exam.results)}
+                  </div>
+                  <p className="text-sm mb-4">{exam.results}</p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSendResult(exam.id)}
+                      className="flex items-center"
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      Send to Patient
+                    </Button>
+                    <Select
+                      value={selectedLanguage}
+                      onValueChange={(value) => {
+                        setSelectedLanguage(value);
+                        handleGeneratePDF(exam.id, value);
+                      }}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <Button variant="outline" size="sm" className="w-full flex items-center">
+                          <FileText className="mr-2 h-4 w-4" />
+                          Generate PDF
+                        </Button>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
