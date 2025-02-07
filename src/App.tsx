@@ -15,6 +15,7 @@ import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import SymptomCheckerPage from "./pages/SymptomCheckerPage";
 import PatientOverviewPage from "./pages/PatientOverviewPage";
 import { VoiceTranslator } from "./components/VoiceTranslator";
+import { ChatPage } from "./pages/ChatPage";
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
@@ -38,6 +39,7 @@ const App = () => {
         <Route path="/provider/login" element={<ProviderLogin language={language} onLogin={() => {}} />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
         <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
+        <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
       </Routes>
 
