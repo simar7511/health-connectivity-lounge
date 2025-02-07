@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { jsPDF } from "jspdf";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
+import { Mic, StopCircle } from "lucide-react";
 
 interface Provider {
   id: string;
@@ -27,16 +29,8 @@ interface SymptomCheckerPageProps {
 
 const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onProceed, appointmentDetails }) => {
   const [symptoms, setSymptoms] = useState("");
-  const [providerPhone, setProviderPhone] = useState(appointmentDetails?.provider?.phone || "");
   const [isRecording, setIsRecording] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState(appointmentDetails?.provider?.name || "");
-
-  // ✅ Simulated list of providers (Can be fetched from API later)
-  const providers = [
-    { name: "Dr. Maria Rodriguez", phone: "+1234567890" },
-    { name: "Dr. James Smith", phone: "+1987654321" },
-    { name: "Dr. Aisha Patel", phone: "+1122334455" },
-  ];
+  const { toast } = useToast();
 
   const handleVoiceInput = () => {
     const recognition = new (window as any).webkitSpeechRecognition();
@@ -50,11 +44,27 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
       const transcript = event.results[0][0].transcript;
       setSymptoms(transcript);
       setIsRecording(false);
+      
+      // Show confirmation toast
+      toast({
+        title: language === "en" ? "Symptoms Recorded" : "Síntomas Registrados",
+        description: language === "en" 
+          ? "Your symptoms have been successfully recorded" 
+          : "Sus síntomas han sido registrados exitosamente",
+      });
     };
 
     recognition.onerror = (event: Event) => {
       console.error("Speech recognition error:", event);
       setIsRecording(false);
+      
+      toast({
+        title: language === "en" ? "Error" : "Error",
+        description: language === "en" 
+          ? "Failed to record symptoms. Please try again." 
+          : "Error al grabar síntomas. Por favor intente nuevamente.",
+        variant: "destructive"
+      });
     };
 
     recognition.onend = () => {
@@ -64,50 +74,49 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
     recognition.start();
   };
 
-  // ✅ Generates a PDF of the symptoms report
-  const generatePDF = () => {
+  const generateAndSendReport = () => {
     if (!symptoms.trim()) {
-      alert(language === "en" ? "No symptoms to generate a report!" : "¡No hay síntomas para generar un informe!");
+      toast({
+        title: language === "en" ? "No Symptoms" : "Sin Síntomas",
+        description: language === "en" 
+          ? "Please record your symptoms before generating a report" 
+          : "Por favor registre sus síntomas antes de generar el informe",
+        variant: "destructive"
+      });
       return;
     }
 
+    // Generate PDF
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
     doc.text("Symptom Report", 10, 10);
     doc.setFont("helvetica", "normal");
-    doc.text(`📅 Date: ${new Date().toLocaleDateString()}`, 10, 20);
+    doc.text(`📅 Date: ${format(new Date(), "PPP")}`, 10, 20);
     doc.text(`⏰ Time: ${new Date().toLocaleTimeString()}`, 10, 30);
-    doc.text(`👩‍⚕️ Provider: ${selectedProvider || providerPhone || "Not provided"}`, 10, 40);
-    doc.text("📝 Symptoms:", 10, 50);
-    doc.text(symptoms, 10, 60, { maxWidth: 180 });
+    doc.text(`👩‍⚕️ Provider: ${appointmentDetails?.provider.name || "Not assigned"}`, 10, 40);
+    doc.text(`🏥 Appointment Type: ${appointmentDetails?.type || "Not specified"}`, 10, 50);
+    doc.text(`📅 Appointment Date: ${appointmentDetails?.date ? format(appointmentDetails.date, "PPP") : "Not specified"}`, 10, 60);
+    doc.text(`⏰ Appointment Time: ${appointmentDetails?.time || "Not specified"}`, 10, 70);
+    doc.text("📝 Symptoms:", 10, 80);
+    doc.text(symptoms, 10, 90, { maxWidth: 180 });
 
+    // Save PDF
     doc.save("Symptom_Report.pdf");
-  };
 
-  // ✅ Handle Provider Selection
-  const handleProviderSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = providers.find((p) => p.name === e.target.value);
-    setSelectedProvider(selected?.name || "");
-    setProviderPhone(selected?.phone || "");
-  };
-
-  // ✅ Placeholder function to simulate sending SMS/WhatsApp (Backend can be added later)
-  const sendMessage = (type: "sms" | "whatsapp") => {
-    if (!providerPhone || !symptoms) {
-      alert(language === "en" ? "Enter provider phone number and symptoms before sending!" : "Ingrese el número de teléfono del proveedor y los síntomas antes de enviar.");
-      return;
-    }
-
-    if (type === "sms") {
-      alert(`📩 SMS sent to ${providerPhone} with message: ${symptoms}`);
-    } else {
-      alert(`📲 WhatsApp message sent to ${providerPhone} with message: ${symptoms}`);
-    }
+    // Simulate sending to provider
+    toast({
+      title: language === "en" ? "Report Sent" : "Informe Enviado",
+      description: language === "en"
+        ? `Report has been sent to ${appointmentDetails?.provider.name}`
+        : `El informe ha sido enviado a ${appointmentDetails?.provider.name}`,
+    });
   };
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">🩺 {language === "en" ? "Symptom Checker" : "Verificador de Síntomas"}</h1>
+      <h1 className="text-3xl font-bold mb-4">
+        🩺 {language === "en" ? "Symptom Checker" : "Verificador de Síntomas"}
+      </h1>
       
       {appointmentDetails && (
         <Card className="mb-6">
@@ -123,64 +132,62 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
         </Card>
       )}
 
-      <p className="mb-4">{language === "en" ? "Describe your symptoms, and we'll send them to the provider." : "Describa sus síntomas y le proporcionaremos orientación."}</p>
+      <div className="space-y-4">
+        <p className="mb-4">
+          {language === "en" 
+            ? "Please describe your symptoms. Click the microphone button and speak clearly." 
+            : "Por favor describa sus síntomas. Haga clic en el botón del micrófono y hable claramente."}
+        </p>
 
-      {/* ✅ Symptom Input */}
-      <textarea
-        className="w-full p-2 border rounded"
-        placeholder={language === "en" ? "Type or speak your symptoms here..." : "Escriba o diga sus síntomas aquí..."}
-        value={symptoms}
-        onChange={(e) => setSymptoms(e.target.value)}
-      ></textarea>
+        {/* Voice Input Button */}
+        <Button 
+          className="w-full py-6" 
+          onClick={handleVoiceInput} 
+          disabled={isRecording}
+        >
+          {isRecording ? (
+            <>
+              <StopCircle className="mr-2 h-4 w-4" />
+              {language === "en" ? "Recording..." : "Grabando..."}
+            </>
+          ) : (
+            <>
+              <Mic className="mr-2 h-4 w-4" />
+              {language === "en" ? "Record Symptoms" : "Grabar Síntomas"}
+            </>
+          )}
+        </Button>
 
-      {/* ✅ Voice Input Button */}
-      <Button className="w-full py-6 bg-blue-500 text-white mt-2" onClick={handleVoiceInput} disabled={isRecording}>
-        {isRecording ? "🎤 Listening..." : "🎤 Speak Symptoms"}
-      </Button>
+        {/* Symptoms Display */}
+        {symptoms && (
+          <div className="p-4 bg-secondary/10 rounded-lg mt-4">
+            <h3 className="font-semibold mb-2">
+              {language === "en" ? "Recorded Symptoms:" : "Síntomas Registrados:"}
+            </h3>
+            <p>{symptoms}</p>
+          </div>
+        )}
 
-      {/* ✅ Provider Selection Dropdown */}
-      <select
-        className="w-full p-2 mt-2 border rounded"
-        value={selectedProvider}
-        onChange={handleProviderSelect}
-      >
-        <option value="">{language === "en" ? "Select Provider (Optional)" : "Seleccionar proveedor (Opcional)"}</option>
-        {providers.map((provider) => (
-          <option key={provider.phone} value={provider.name}>
-            {provider.name}
-          </option>
-        ))}
-      </select>
+        {/* Generate Report Button */}
+        <Button 
+          className="w-full py-6 mt-4" 
+          onClick={generateAndSendReport}
+          disabled={!symptoms.trim()}
+        >
+          {language === "en" ? "Generate and Send Report" : "Generar y Enviar Informe"}
+        </Button>
 
-      {/* ✅ Manual Provider Input */}
-      <Input
-        type="tel"
-        value={providerPhone}
-        onChange={(e) => setProviderPhone(e.target.value)}
-        placeholder={language === "en" ? "Enter provider's phone number" : "Ingrese el número de teléfono del proveedor"}
-        className="mt-2"
-      />
-
-      {/* ✅ Send Message Buttons */}
-      <Button className="mt-4 bg-blue-500 text-white w-full" onClick={() => sendMessage("sms")}>
-        📩 {language === "en" ? "Send SMS" : "Enviar SMS"}
-      </Button>
-
-      <Button className="mt-2 bg-green-500 text-white w-full" onClick={() => sendMessage("whatsapp")}>
-        📲 {language === "en" ? "Send WhatsApp" : "Enviar WhatsApp"}
-      </Button>
-
-      {/* ✅ Download Report Button */}
-      <Button className="mt-2 bg-gray-700 text-white w-full" onClick={generatePDF}>
-        📄 {language === "en" ? "Download Symptom Report" : "Descargar Informe de Síntomas"}
-      </Button>
-
-      {/* ✅ Proceed Button */}
-      <Button className="mt-4 w-full py-6 bg-green-500 text-white" onClick={onProceed}>
-        {language === "en" ? "Proceed to Transportation" : "Proceder al Transporte"}
-      </Button>
+        {/* Proceed Button */}
+        <Button 
+          className="w-full py-6 mt-4 bg-green-500 hover:bg-green-600" 
+          onClick={onProceed}
+        >
+          {language === "en" ? "Proceed to Transportation" : "Proceder al Transporte"}
+        </Button>
+      </div>
     </div>
   );
 };
 
 export default SymptomCheckerPage;
+
