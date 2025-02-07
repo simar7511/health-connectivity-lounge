@@ -5,16 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { auth, setUpRecaptcha } from "@/lib/firebase";
-import { signInWithPhoneNumber, RecaptchaVerifier, ConfirmationResult } from "firebase/auth";
+import { signInWithPhoneNumber } from "firebase/auth";
 
 // Add type declaration for global grecaptcha
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
-    confirmationResult: ConfirmationResult;
-    grecaptcha: {
-      reset: (widgetId: string) => void;
-    };
+    grecaptcha: any;
+    recaptchaVerifier: any;
+    confirmationResult: any;
   }
 }
 
@@ -27,7 +25,7 @@ interface PatientLoginProps {
 const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,8 +62,8 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
       toast({ title: "Error", description: error.message || "Failed to send OTP. Try again." });
 
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.render().then((widgetId: string) => {
-          window.grecaptcha.reset(widgetId);
+        window.recaptchaVerifier.render().then((widgetId: any) => {
+          grecaptcha.reset(widgetId);
         });
       }
     }
@@ -141,4 +139,3 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
 };
 
 export default PatientLogin;
-

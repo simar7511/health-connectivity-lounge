@@ -1,12 +1,11 @@
-
 import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier, ConfirmationResult } from "firebase/auth";
+import { getAuth, RecaptchaVerifier } from "firebase/auth";
 
 // Extend the Window interface for TypeScript
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
-    confirmationResult: ConfirmationResult;
+    recaptchaVerifier?: RecaptchaVerifier;
+    confirmationResult?: any;
   }
 }
 
