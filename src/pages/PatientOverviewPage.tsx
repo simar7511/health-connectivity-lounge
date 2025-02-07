@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lu
 import { Patient } from "@/types/patient";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { generateBloodPressureReport } from "@/utils/bloodPressureReport";
@@ -125,19 +125,21 @@ const PatientOverviewPage = () => {
       ...customExams
     ].join(", ");
 
-    // First show a toast about the order being sent
+    // Show first toast immediately
     toast({
       title: "Exam Request Sent",
       description: `The exam request has been sent to the provider. You will be notified when it's reviewed.`,
+      duration: 3000, // Show for 3 seconds
     });
 
-    // Then show the confirmation toast with exam details
+    // Show second toast after a delay
     setTimeout(() => {
       toast({
         title: "Exam Request Details",
         description: `Ordered the following exams for ${patient.name}: ${allExams}`,
+        duration: 4000, // Show for 4 seconds
       });
-    }, 1500);
+    }, 3500); // Wait until after first toast is gone
   };
 
   const handleSendResult = (examId: string) => {
