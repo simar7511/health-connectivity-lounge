@@ -9,6 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { generateBloodPressureReport } from "@/utils/bloodPressureReport";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -80,6 +86,8 @@ const PatientOverviewPage = () => {
   const [otherExam, setOtherExam] = useState("");
   const [customExams, setCustomExams] = useState<string[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [currentReport, setCurrentReport] = useState("");
 
   if (!patient) {
     return <div>Patient not found</div>;
@@ -143,19 +151,16 @@ const PatientOverviewPage = () => {
       };
       
       const report = generateBloodPressureReport(reportData, language as 'en' | 'es');
+      setCurrentReport(report);
+      setReportDialogOpen(true);
       
-      // In a real application, you would use a PDF generation library here
-      // For now, we'll just show a toast
       toast({
-        title: "PDF Generated",
+        title: "Report Generated",
         description: `Blood pressure report has been generated in ${language === 'es' ? 'Spanish' : 'English'}.`,
       });
-      
-      // For demonstration, log the report to console
-      console.log("Generated Report:", report);
     } else {
       toast({
-        title: "PDF Generated",
+        title: "Report Generated",
         description: `${exam?.name} report has been generated in ${language === 'es' ? 'Spanish' : 'English'}.`,
       });
     }
@@ -319,6 +324,15 @@ const PatientOverviewPage = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Blood Pressure Report</DialogTitle>
+          </DialogHeader>
+          <div className="whitespace-pre-wrap font-mono">{currentReport}</div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
