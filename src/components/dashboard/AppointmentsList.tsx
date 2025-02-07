@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Languages } from "lucide-react";
+import { Calendar, Languages, AlertTriangle } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useNavigate } from "react-router-dom";
 
@@ -38,8 +38,8 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
           {patients.map((patient) => (
             <div
               key={patient.id}
-              className="p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-              onClick={() => navigate(`/provider/appointments/${patient.id}`)}
+              className="p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+              onClick={() => navigate(`/patient/${patient.id}`)}
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
@@ -60,6 +60,9 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
                     </span>
                   )}
                 </div>
+                {patient.risks.length > 0 && (
+                  <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+                )}
               </div>
             </div>
           ))}
@@ -68,4 +71,3 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
     </Card>
   );
 };
-
