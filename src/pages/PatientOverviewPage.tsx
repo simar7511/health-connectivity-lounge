@@ -1,3 +1,4 @@
+
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
@@ -49,6 +50,9 @@ const commonExams = [
   { id: "hiv", name: "HIV Test", purpose: "Screen for HIV infection", results: "Non-reactive" },
   { id: "iron", name: "Iron Studies", purpose: "Check iron levels and storage", results: "Normal ferritin levels" },
 ];
+
+// Only show the first three exams in results
+const displayedExams = commonExams.slice(0, 3);
 
 const PatientOverviewPage = () => {
   const { patientId } = useParams();
@@ -260,7 +264,7 @@ const PatientOverviewPage = () => {
           <div className="p-6 bg-white rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Exam Results</h2>
             <div className="space-y-6">
-              {commonExams.map((exam) => (
+              {displayedExams.map((exam) => (
                 <div key={exam.id} className="p-4 border rounded-lg">
                   <div className="flex items-start justify-between mb-2">
                     <div>
