@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Paperclip, Circle } from "lucide-react";
+import { MessageSquare, Circle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface MessagingInboxProps {
@@ -13,13 +13,11 @@ const content = {
   en: {
     title: "Secure Messages",
     chat: "Secure Chat",
-    attach: "Attach Files",
     unread: "unread messages",
   },
   es: {
     title: "Mensajes Seguros",
     chat: "Chat Seguro",
-    attach: "Adjuntar Archivos",
     unread: "mensajes sin leer",
   },
 };
@@ -42,20 +40,14 @@ export const MessagingInbox = ({ language }: MessagingInboxProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="flex-1 flex items-center gap-2"
-              onClick={() => navigate("/chat")}
-            >
-              <MessageSquare className="h-4 w-4" />
-              {content[language].chat}
-            </Button>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Paperclip className="h-4 w-4" />
-              {content[language].attach}
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2"
+            onClick={() => navigate("/chat")}
+          >
+            <MessageSquare className="h-4 w-4" />
+            {content[language].chat}
+          </Button>
           
           <div className="space-y-2">
             {mockMessages.map((message) => (

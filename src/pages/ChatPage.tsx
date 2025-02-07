@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Send } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Card } from "@/components/ui/card";
 
 interface Message {
   id: string;
@@ -13,6 +14,11 @@ interface Message {
   sender: "user" | "provider";
   timestamp: Date;
 }
+
+const mockRecipients = [
+  { id: 1, name: "Maria Garcia" },
+  { id: 2, name: "John Smith" },
+];
 
 export const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,13 +49,37 @@ export const ChatPage = () => {
     }).format(date);
   };
 
+  if (!patientName) {
+    return (
+      <div className="flex flex-col h-screen bg-background p-4">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="ml-4 text-xl font-semibold">Select Patient</h1>
+        </div>
+        <div className="grid gap-4">
+          {mockRecipients.map((recipient) => (
+            <Card
+              key={recipient.id}
+              className="p-4 cursor-pointer hover:bg-accent transition-colors"
+              onClick={() => navigate(`/chat/${recipient.name}`)}
+            >
+              <p className="font-medium">{recipient.name}</p>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-background">
       <div className="flex items-center p-4 border-b">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="ml-4 text-xl font-semibold">{patientName || "Chat"}</h1>
+        <h1 className="ml-4 text-xl font-semibold">{patientName}</h1>
       </div>
 
       <ScrollArea className="flex-1 p-4">
