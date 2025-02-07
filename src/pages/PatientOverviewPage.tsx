@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
@@ -40,9 +39,9 @@ const mockPatients: Patient[] = [
 ];
 
 const commonExams = [
+  { id: "bp", name: "Blood Pressure Check", purpose: "Monitor for preeclampsia risk", results: "High BP (Critical: 150/95)" },
   { id: "ultrasound", name: "Ultrasound", purpose: "Check baby's growth, placenta health", results: "Normal growth, possible abnormalities" },
   { id: "gtt", name: "Glucose Tolerance Test (GTT)", purpose: "Screen for gestational diabetes", results: "Normal, High sugar levels (diabetes risk)" },
-  { id: "bp", name: "Blood Pressure Check", purpose: "Monitor for preeclampsia risk", results: "High BP (Critical: 150/95)" },
   { id: "cbc", name: "Complete Blood Count", purpose: "Check for anemia and infection", results: "Normal blood cell counts" },
   { id: "urine", name: "Urine Analysis", purpose: "Check for protein, bacteria, and sugar", results: "Normal levels" },
   { id: "thyroid", name: "Thyroid Function Test", purpose: "Monitor thyroid hormone levels", results: "Within normal range" },
