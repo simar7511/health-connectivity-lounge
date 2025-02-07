@@ -1,65 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Languages, AlertTriangle, Plus } from "lucide-react";
+import { Calendar, Languages } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useState } from "react";
-import { PrenatalExam } from "@/types/exam";
-import { useToast } from "@/components/ui/use-toast";
-
-// Mock exam data
-const prenatalExams: PrenatalExam[] = [
-  {
-    id: "ultrasound",
-    name: "Ultrasound",
-    purpose: "Check baby's growth, placenta health",
-    possibleResults: ["Normal growth", "Possible abnormalities"],
-  },
-  {
-    id: "gtt",
-    name: "Glucose Tolerance Test (GTT)",
-    purpose: "Screen for gestational diabetes",
-    possibleResults: ["Normal", "High sugar levels (diabetes risk)"],
-  },
-  {
-    id: "gbs",
-    name: "Group B Strep Test",
-    purpose: "Check for bacterial infection in mother",
-    possibleResults: ["Negative", "Positive (requires antibiotics)"],
-  },
-  {
-    id: "bp",
-    name: "Blood Pressure Check",
-    purpose: "Monitor for preeclampsia risk",
-    possibleResults: ["Normal", "High BP (risk of complications)"],
-  },
-  {
-    id: "urine",
-    name: "Urine Test",
-    purpose: "Check for infections and protein levels",
-    possibleResults: ["Normal", "Protein found (preeclampsia risk)"],
-  },
-  {
-    id: "nst",
-    name: "Non-Stress Test (NST)",
-    purpose: "Monitor baby's heart rate & movement",
-    possibleResults: ["Normal", "Irregular heartbeat (further tests needed)"],
-  },
-  {
-    id: "cbc",
-    name: "Complete Blood Count (CBC)",
-    purpose: "Detect anemia or infections",
-    possibleResults: ["Normal", "Low iron (anemia risk)"],
-  },
-];
 
 interface AppointmentsListProps {
   language: "en" | "es";
@@ -71,43 +14,16 @@ const content = {
     title: "Upcoming Appointments",
     reasonForVisit: "Reason for Visit",
     preferredLanguage: "Preferred Language",
-    recommendExam: "Recommend Exam",
-    selectExam: "Select an exam",
-    examRecommended: "Exam recommended successfully",
-    examDetails: "Exam Details",
-    purpose: "Purpose",
-    possibleResults: "Possible Results",
   },
   es: {
     title: "Próximas Citas",
     reasonForVisit: "Motivo de la Visita",
     preferredLanguage: "Idioma Preferido",
-    recommendExam: "Recomendar Examen",
-    selectExam: "Seleccionar un examen",
-    examRecommended: "Examen recomendado exitosamente",
-    examDetails: "Detalles del Examen",
-    purpose: "Propósito",
-    possibleResults: "Resultados Posibles",
   },
 };
 
 export const AppointmentsList = ({ language, patients }: AppointmentsListProps) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [selectedExam, setSelectedExam] = useState<string | null>(null);
-  const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
-
-  const handleExamSelect = (patientId: string, examId: string) => {
-    const exam = prenatalExams.find((e) => e.id === examId);
-    if (exam) {
-      setSelectedExam(examId);
-      setExpandedPatient(patientId);
-      toast({
-        title: content[language].examRecommended,
-        description: exam.name,
-      });
-    }
-  };
 
   return (
     <Card className="col-span-1 lg:col-span-2">
@@ -122,7 +38,8 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
           {patients.map((patient) => (
             <div
               key={patient.id}
-              className="p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+              className="p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+              onClick={() => navigate(`/provider/appointments/${patient.id}`)}
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
@@ -142,61 +59,7 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
                       Español
                     </span>
                   )}
-                  
-                  <div className="mt-4">
-                    <Select
-                      onValueChange={(value) => handleExamSelect(patient.id, value)}
-                    >
-                      <SelectTrigger className="w-full md:w-[300px]">
-                        <SelectValue placeholder={content[language].selectExam} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {prenatalExams.map((exam) => (
-                          <SelectItem key={exam.id} value={exam.id}>
-                            {exam.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {expandedPatient === patient.id && selectedExam && (
-                    <div className="mt-4 p-4 bg-secondary rounded-lg">
-                      <h4 className="font-medium mb-2">
-                        {content[language].examDetails}
-                      </h4>
-                      {(() => {
-                        const exam = prenatalExams.find(
-                          (e) => e.id === selectedExam
-                        );
-                        if (!exam) return null;
-                        return (
-                          <div className="space-y-2">
-                            <p className="text-sm">
-                              <span className="font-medium">
-                                {content[language].purpose}:
-                              </span>{" "}
-                              {exam.purpose}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-medium">
-                                {content[language].possibleResults}:
-                              </span>
-                              <ul className="list-disc ml-4">
-                                {exam.possibleResults.map((result, index) => (
-                                  <li key={index}>{result}</li>
-                                ))}
-                              </ul>
-                            </p>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
                 </div>
-                {patient.risks.length > 0 && (
-                  <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
-                )}
               </div>
             </div>
           ))}
