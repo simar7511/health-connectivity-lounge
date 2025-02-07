@@ -48,29 +48,21 @@ const mockPatients: Patient[] = [
 
 const commonExams = [
   { 
-    id: "bp1", 
-    name: "Blood Pressure Check 1", 
+    id: "bp", 
+    name: "Blood Pressure Check", 
     purpose: "Monitor for preeclampsia risk", 
     results: "High BP (Critical: 150/95)",
     date: "2024-03-15",
     values: { systolic: 150, diastolic: 95 }
   },
-  { 
-    id: "bp2", 
-    name: "Blood Pressure Check 2", 
-    purpose: "Follow-up BP check", 
-    results: "Elevated BP (135/85)",
-    date: "2024-03-10",
-    values: { systolic: 135, diastolic: 85 }
-  },
-  { 
-    id: "bp3", 
-    name: "Blood Pressure Check 3", 
-    purpose: "Regular BP monitoring", 
-    results: "Normal BP (118/75)",
-    date: "2024-03-05",
-    values: { systolic: 118, diastolic: 75 }
-  },
+  { id: "ultrasound", name: "Ultrasound", purpose: "Check baby's growth, placenta health", results: "Normal growth, possible abnormalities" },
+  { id: "gtt", name: "Glucose Tolerance Test (GTT)", purpose: "Screen for gestational diabetes", results: "Normal, High sugar levels (diabetes risk)" },
+  { id: "cbc", name: "Complete Blood Count", purpose: "Check for anemia and infection", results: "Normal blood cell counts" },
+  { id: "urine", name: "Urine Analysis", purpose: "Check for protein, bacteria, and sugar", results: "Normal levels" },
+  { id: "thyroid", name: "Thyroid Function Test", purpose: "Monitor thyroid hormone levels", results: "Within normal range" },
+  { id: "strep", name: "Group B Strep Culture", purpose: "Screen for bacterial infection", results: "Negative for GBS" },
+  { id: "hiv", name: "HIV Test", purpose: "Screen for HIV infection", results: "Non-reactive" },
+  { id: "iron", name: "Iron Studies", purpose: "Check iron levels and storage", results: "Normal ferritin levels" },
 ];
 
 // Only show the first three exams in results
@@ -151,7 +143,7 @@ const PatientOverviewPage = () => {
 
   const handleGeneratePDF = (examId: string, language: string) => {
     const exam = commonExams.find(e => e.id === examId);
-    if (exam && exam.id.startsWith("bp") && patient) {
+    if (exam && exam.id === "bp" && patient) {
       const reportData = {
         patientName: patient.name,
         examDate: exam.date,
