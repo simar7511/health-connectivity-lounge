@@ -25,12 +25,22 @@ const App = () => {
     {
       id: "1",
       name: "Jane Doe",
+      language: "en" as const,
       nextAppointment: "2024-03-20T10:00:00",
       reasonForVisit: "Regular checkup",
       demographics: {
-        preferredLanguage: "es"
+        age: 28,
+        preferredLanguage: "es" as const,
+        insuranceStatus: "insured" as const
       },
-      risks: []
+      vitals: {
+        bp: [120, 80],
+        glucose: [98],
+        weight: [150],
+        fetalMovements: [10]
+      },
+      risks: [],
+      recentSymptoms: []
     }
   ];
 
@@ -65,3 +75,4 @@ const App = () => {
 };
 
 export default App;
+
