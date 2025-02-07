@@ -155,17 +155,44 @@ const PatientOverviewPage = () => {
       setCurrentReport(report);
       setReportDialogOpen(true);
       
-      // Generate PDF
+      // Generate PDF with proper formatting
       const pdf = new jsPDF();
       const splitReport = report.split('\n');
-      let yOffset = 10;
+      let yOffset = 20;
+      
+      // Add hospital logo or header
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(language === 'es' ? 'INFORME MÉDICO' : 'MEDICAL REPORT', 105, 10, { align: 'center' });
+      
+      // Reset font for content
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
       
       splitReport.forEach((line) => {
         if (line.trim()) {
-          pdf.text(line, 10, yOffset);
-          yOffset += 7;
+          if (line.includes('----------------------------------------')) {
+            // Draw a line instead of dashes
+            pdf.line(10, yOffset - 2, 200, yOffset - 2);
+            yOffset += 5;
+          } else if (line === (language === 'es' ? 'INFORME DE PRESIÓN ARTERIAL' : 'BLOOD PRESSURE REPORT')) {
+            // Make titles bold
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(line, 10, yOffset);
+            pdf.setFont('helvetica', 'normal');
+            yOffset += 10;
+          } else {
+            // Regular text
+            pdf.text(line, 10, yOffset);
+            yOffset += 7;
+          }
         }
       });
+      
+      // Add footer
+      pdf.setFontSize(8);
+      const currentDate = new Date().toLocaleDateString();
+      pdf.text(`Generated on: ${currentDate}`, 10, pdf.internal.pageSize.height - 10);
       
       // Save the PDF
       pdf.save(`blood_pressure_report_${patient.name.replace(/\s+/g, '_')}.pdf`);
