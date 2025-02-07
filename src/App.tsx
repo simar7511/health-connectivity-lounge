@@ -1,5 +1,7 @@
+
+import * as React from "react";
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 import Index from "./pages/Index";
@@ -11,6 +13,9 @@ import AppointmentPage from "./pages/AppointmentPage";
 import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import SymptomCheckerPage from "./pages/SymptomCheckerPage";
+import PatientOverviewPage from "./pages/PatientOverviewPage";
+import { VoiceTranslator } from "./components/VoiceTranslator";
+import { ChatPage } from "./pages/ChatPage";
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
@@ -31,10 +36,17 @@ const App = () => {
         <Route path="/transportation" element={<TransportationPage />} />
         <Route path="/free-clinic" element={<ClinicLocatorPage />} />
         <Route path="/symptoms" element={<SymptomCheckerPage />} />
-        <Route path="/provider/login" element={<ProviderLogin language={language} />} />
+        <Route path="/provider/login" element={<ProviderLogin language={language} onLogin={() => {}} />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
+        <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/chat/:patientName" element={<ChatPage />} />
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
       </Routes>
+
+      <div className="fixed bottom-4 right-4">
+        <VoiceTranslator language={language} />
+      </div>
     </BrowserRouter>
   );
 };

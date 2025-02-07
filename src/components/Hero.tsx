@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Globe } from "lucide-react";
+import { Languages } from "lucide-react";
 
 export const Hero = ({ language, onLanguageChange }: { language: "en" | "es", onLanguageChange: (lang: "en" | "es") => void }) => {
   const navigate = useNavigate();
@@ -31,10 +32,10 @@ export const Hero = ({ language, onLanguageChange }: { language: "en" | "es", on
           />
           <Button
             variant="ghost"
-            className="text-white hover:text-blue-200"
+            className="text-white hover:text-blue-200 flex items-center gap-2"
             onClick={() => onLanguageChange(language === "en" ? "es" : "en")}
           >
-            <Globe className="mr-2 h-4 w-4" />
+            <Languages className="h-5 w-5" />
             {content[language].languageText}
           </Button>
         </div>
