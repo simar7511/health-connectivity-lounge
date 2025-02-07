@@ -1,7 +1,7 @@
 
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { 
   Select,
@@ -57,13 +57,6 @@ const PatientOverviewPage = () => {
     return <div>Patient not found</div>;
   }
 
-  const handleUpdateDetails = () => {
-    toast({
-      title: "Update Details",
-      description: "This feature will be implemented soon.",
-    });
-  };
-
   const handleExamSelect = (examId: string) => {
     setSelectedExam(examId);
     const exam = commonExams.find(e => e.id === examId);
@@ -87,48 +80,13 @@ const PatientOverviewPage = () => {
       </Button>
 
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">{patient.name}</h1>
-          <Button 
-            onClick={handleUpdateDetails}
-            className="flex items-center gap-2"
-          >
-            <Pencil className="h-4 w-4" />
-            Update Details
-          </Button>
-        </div>
+        <h1 className="text-3xl font-bold">{patient.name}</h1>
         
         <div className="grid gap-6">
           <div className="p-6 bg-white rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Appointment Details</h2>
             <p><strong>Date:</strong> {new Date(patient.nextAppointment).toLocaleString()}</p>
             <p><strong>Reason:</strong> {patient.reasonForVisit}</p>
-
-            <div className="mt-4">
-              <h3 className="font-semibold mb-2">Recommend Exam</h3>
-              <Select onValueChange={handleExamSelect} value={selectedExam}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an exam to recommend" />
-                </SelectTrigger>
-                <SelectContent>
-                  {commonExams.map((exam) => (
-                    <SelectItem key={exam.id} value={exam.id}>
-                      {exam.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {selectedExam && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-semibold mb-2">
-                    {commonExams.find(e => e.id === selectedExam)?.name}
-                  </h4>
-                  <p><strong>Purpose:</strong> {commonExams.find(e => e.id === selectedExam)?.purpose}</p>
-                  <p><strong>Possible Results:</strong> {commonExams.find(e => e.id === selectedExam)?.results}</p>
-                </div>
-              )}
-            </div>
           </div>
 
           <div className="p-6 bg-white rounded-lg shadow">
@@ -154,6 +112,32 @@ const PatientOverviewPage = () => {
                 ))}
               </ul>
             </div>
+          </div>
+
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Recommended Exams</h2>
+            <Select onValueChange={handleExamSelect} value={selectedExam}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select an exam to recommend" />
+              </SelectTrigger>
+              <SelectContent>
+                {commonExams.map((exam) => (
+                  <SelectItem key={exam.id} value={exam.id}>
+                    {exam.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {selectedExam && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold mb-2">
+                  {commonExams.find(e => e.id === selectedExam)?.name}
+                </h4>
+                <p><strong>Purpose:</strong> {commonExams.find(e => e.id === selectedExam)?.purpose}</p>
+                <p><strong>Possible Results:</strong> {commonExams.find(e => e.id === selectedExam)?.results}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
