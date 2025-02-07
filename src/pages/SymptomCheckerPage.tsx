@@ -5,6 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, StopCircle } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import 'regenerator-runtime/runtime';
 
 interface Provider {
@@ -124,7 +126,55 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
     }
   };
 
-  const generateAndSendReport = () => {
+  const saveReportToFirestore = async () => {
+    if (!symptoms.trim() || !appointmentDetails?.provider) {
+      toast({
+        title: language === "en" ? "Error" : "Error",
+        description: language === "en" 
+          ? "Missing symptoms or provider information" 
+          : "Faltan síntomas o información del proveedor",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const reportData = {
+        symptoms,
+        patientId: auth.currentUser?.uid,
+        providerId: appointmentDetails.provider.id,
+        providerName: appointmentDetails.provider.name,
+        appointmentType: appointmentDetails.type,
+        appointmentDate: appointmentDetails.date,
+        appointmentTime: appointmentDetails.time,
+        createdAt: serverTimestamp(),
+        status: 'pending'
+      };
+
+      const docRef = await addDoc(collection(db, "symptom_reports"), reportData);
+
+      toast({
+        title: language === "en" ? "Report Saved" : "Informe Guardado",
+        description: language === "en"
+          ? "Your symptom report has been saved and shared with your provider"
+          : "Su informe de síntomas ha sido guardado y compartido con su proveedor",
+      });
+
+      return docRef.id;
+    } catch (error) {
+      console.error("Error saving report:", error);
+      toast({
+        title: language === "en" ? "Error" : "Error",
+        description: language === "en"
+          ? "Failed to save report. Please try again."
+          : "Error al guardar el informe. Por favor intente nuevamente.",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
+  const generateAndSendReport = async () => {
     if (!symptoms.trim()) {
       toast({
         title: language === "en" ? "No Symptoms" : "Sin Síntomas",
@@ -150,16 +200,15 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
     doc.text("📝 Symptoms:", 10, 80);
     doc.text(symptoms, 10, 90, { maxWidth: 180 });
 
-    // Save PDF
+    // Save PDF locally
     doc.save("Symptom_Report.pdf");
 
-    // Simulate sending to provider
-    toast({
-      title: language === "en" ? "Report Sent" : "Informe Enviado",
-      description: language === "en"
-        ? `Report has been sent to ${appointmentDetails?.provider.name}`
-        : `El informe ha sido enviado a ${appointmentDetails?.provider.name}`,
-    });
+    // Save to Firestore
+    const reportId = await saveReportToFirestore();
+    
+    if (reportId) {
+      onProceed(); // Only proceed if save was successful
+    }
   };
 
   return (

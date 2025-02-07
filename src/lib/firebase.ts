@@ -8,7 +8,8 @@ import {
 import { 
   getFirestore, 
   collection, 
-  addDoc 
+  addDoc,
+  serverTimestamp
 } from "firebase/firestore";
 
 // Firebase Configuration
@@ -26,7 +27,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-auth.useDeviceLanguage(); // Ensures Firebase auth respects user language settings
+auth.useDeviceLanguage();
 
 // Setup reCAPTCHA verification
 const setUpRecaptcha = () => {
@@ -39,15 +40,14 @@ const setUpRecaptcha = () => {
       "expired-callback": () => {
         console.warn("⚠️ reCAPTCHA expired, reloading...");
         window.recaptchaVerifier?.clear();
-        setUpRecaptcha(); // Reinitialize if expired
+        setUpRecaptcha();
       },
     });
 
-    // Ensure reCAPTCHA is fully rendered
     window.recaptchaVerifier.render().catch((error) => {
       console.error("❌ Error rendering reCAPTCHA:", error);
     });
   }
 };
 
-export { auth, setUpRecaptcha };
+export { auth, db, setUpRecaptcha };

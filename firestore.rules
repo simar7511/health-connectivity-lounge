@@ -1,7 +1,16 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /symptom_reports/{reportId} {
+      // Allow patients to create their own reports
+      allow create: if request.auth != null;
+      // Allow providers to read reports assigned to them
+      allow read: if request.auth != null && 
+        resource.data.providerId == request.auth.uid;
+    }
+    // Default deny
     match /{document=**} {
       allow read, write: if false;
     }
