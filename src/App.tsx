@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import AppointmentPage from "./pages/AppointmentPage";
 import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import SymptomCheckerPage from "./pages/SymptomCheckerPage";
+import PatientOverviewPage from "./pages/PatientOverviewPage";
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
@@ -33,6 +35,7 @@ const App = () => {
         <Route path="/symptoms" element={<SymptomCheckerPage />} />
         <Route path="/provider/login" element={<ProviderLogin language={language} />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
+        <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
       </Routes>
     </BrowserRouter>

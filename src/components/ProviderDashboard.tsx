@@ -1,8 +1,8 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
 import { MessagingInbox } from "./dashboard/MessagingInbox";
-import { PatientTrends } from "./dashboard/PatientTrends";
 import { QuickDocumentation } from "./dashboard/QuickDocumentation";
 import { Button } from "@/components/ui/button";
 import { Globe, MessageCircle } from "lucide-react";
@@ -12,7 +12,7 @@ interface ProviderDashboardProps {
   language: "en" | "es";
 }
 
-// ✅ Mock Patient Data
+// Mock Patient Data
 const mockPatients: Patient[] = [
   {
     id: "1",
@@ -37,10 +37,8 @@ const mockPatients: Patient[] = [
 ];
 
 const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const { toast } = useToast();
 
-  // ✅ Handle chat session
   const handleStartChat = () => {
     toast({
       title: language === "en" ? "Starting chat" : "Iniciando chat",
@@ -51,7 +49,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     });
   };
 
-  // ✅ Handle language toggle
   const handleTranslate = () => {
     toast({
       title: language === "en" ? "Translated to Spanish" : "Traducido al inglés",
@@ -60,7 +57,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* 🔹 Dashboard Header */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">
           {language === "en" ? "Provider Dashboard" : "Panel del Proveedor"}
@@ -75,45 +71,23 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
         </Button>
       </div>
 
-      {/* 🔹 Dashboard Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* 🔹 Appointment List */}
         <AppointmentsList
           language={language}
           patients={mockPatients}
-          onSelectPatient={setSelectedPatient}
         />
 
-        {/* 🔹 Messaging Inbox */}
         <MessagingInbox
           language={language}
           onStartChat={handleStartChat}
         />
 
-        {/* 🔹 Patient Trends (if selected) */}
-        {selectedPatient ? (
-          <PatientTrends
-            language={language}
-            patient={selectedPatient}
-          />
-        ) : (
-          <div className="p-6 bg-gray-100 text-center rounded-lg">
-            <p className="text-gray-600">
-              {language === "en"
-                ? "Select a patient to view trends."
-                : "Seleccione un paciente para ver tendencias."}
-            </p>
-          </div>
-        )}
-
-        {/* 🔹 Quick Documentation (✅ Fixed `onTranslate` prop) */}
         <QuickDocumentation
           language={language}
-          onTranslate={handleTranslate} // ✅ Pass `handleTranslate` function
+          onTranslate={handleTranslate}
         />
       </div>
 
-      {/* 🔹 Start Chat Button */}
       <div className="flex justify-center mt-6">
         <Button
           variant="secondary"
@@ -128,6 +102,4 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   );
 };
 
-export default ProviderDashboard; // ✅ Ensured default export is used!
-
-
+export default ProviderDashboard;
