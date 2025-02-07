@@ -1,10 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Mic, StopCircle } from "lucide-react";
 
 interface Provider {
@@ -31,47 +31,98 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
   const [symptoms, setSymptoms] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    // Initialize speech recognition
+    if (window.SpeechRecognition || (window as any).webkitSpeechRecognition) {
+      const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const newRecognition = new SpeechRecognition();
+      
+      newRecognition.continuous = true;
+      newRecognition.interimResults = true;
+      newRecognition.lang = language === "en" ? "en-US" : "es-ES";
+
+      newRecognition.onresult = (event: SpeechRecognitionEvent) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        if (finalTranscript) {
+          setSymptoms(prev => prev + finalTranscript);
+        }
+      };
+
+      newRecognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error("Speech recognition error:", event);
+        setIsRecording(false);
+        
+        toast({
+          title: language === "en" ? "Error" : "Error",
+          description: language === "en" 
+            ? "Failed to record symptoms. Please check your microphone and try again." 
+            : "Error al grabar síntomas. Por favor verifique su micrófono e intente nuevamente.",
+          variant: "destructive"
+        });
+      };
+
+      newRecognition.onend = () => {
+        setIsRecording(false);
+        if (symptoms.trim()) {
+          toast({
+            title: language === "en" ? "Recording Complete" : "Grabación Completa",
+            description: language === "en" 
+              ? "Your symptoms have been recorded. You can now generate the report." 
+              : "Sus síntomas han sido registrados. Ahora puede generar el informe.",
+          });
+        }
+      };
+
+      setRecognition(newRecognition);
+    } else {
+      toast({
+        title: language === "en" ? "Not Supported" : "No Soportado",
+        description: language === "en" 
+          ? "Speech recognition is not supported in your browser" 
+          : "El reconocimiento de voz no está soportado en su navegador",
+        variant: "destructive"
+      });
+    }
+
+    return () => {
+      if (recognition) {
+        recognition.stop();
+      }
+    };
+  }, [language]);
 
   const handleVoiceInput = () => {
-    const recognition = new (window as any).webkitSpeechRecognition();
-    recognition.lang = language === "en" ? "en-US" : "es-ES";
-    recognition.interimResults = false;
-    recognition.continuous = false;
-
-    setIsRecording(true);
-
-    recognition.onresult = (event: Event & { results: SpeechRecognitionResultList }) => {
-      const transcript = event.results[0][0].transcript;
-      setSymptoms(transcript);
-      setIsRecording(false);
-      
-      // Show confirmation toast
-      toast({
-        title: language === "en" ? "Symptoms Recorded" : "Síntomas Registrados",
-        description: language === "en" 
-          ? "Your symptoms have been successfully recorded" 
-          : "Sus síntomas han sido registrados exitosamente",
-      });
-    };
-
-    recognition.onerror = (event: Event) => {
-      console.error("Speech recognition error:", event);
-      setIsRecording(false);
-      
+    if (!recognition) {
       toast({
         title: language === "en" ? "Error" : "Error",
         description: language === "en" 
-          ? "Failed to record symptoms. Please try again." 
-          : "Error al grabar síntomas. Por favor intente nuevamente.",
+          ? "Speech recognition is not available" 
+          : "El reconocimiento de voz no está disponible",
         variant: "destructive"
       });
-    };
+      return;
+    }
 
-    recognition.onend = () => {
+    if (isRecording) {
+      recognition.stop();
       setIsRecording(false);
-    };
-
-    recognition.start();
+    } else {
+      setIsRecording(true);
+      recognition.start();
+    }
   };
 
   const generateAndSendReport = () => {
@@ -142,18 +193,17 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
         {/* Voice Input Button */}
         <Button 
           className="w-full py-6" 
-          onClick={handleVoiceInput} 
-          disabled={isRecording}
+          onClick={handleVoiceInput}
         >
           {isRecording ? (
             <>
               <StopCircle className="mr-2 h-4 w-4" />
-              {language === "en" ? "Recording..." : "Grabando..."}
+              {language === "en" ? "Stop Recording" : "Detener Grabación"}
             </>
           ) : (
             <>
               <Mic className="mr-2 h-4 w-4" />
-              {language === "en" ? "Record Symptoms" : "Grabar Síntomas"}
+              {language === "en" ? "Start Recording" : "Comenzar Grabación"}
             </>
           )}
         </Button>
