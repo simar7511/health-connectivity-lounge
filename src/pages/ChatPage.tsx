@@ -1,11 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Send } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 
 interface Message {
@@ -13,6 +13,10 @@ interface Message {
   content: string;
   sender: "user" | "provider";
   timestamp: Date;
+}
+
+interface LocationState {
+  initialMessage?: string;
 }
 
 const mockRecipients = [
@@ -26,6 +30,23 @@ export const ChatPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { patientName } = useParams();
+  const location = useLocation();
+  const state = location.state as LocationState;
+
+  useEffect(() => {
+    // If there's an initial message from exam results, send it automatically
+    if (state?.initialMessage) {
+      const message: Message = {
+        id: Date.now().toString(),
+        content: state.initialMessage,
+        sender: "provider",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, message]);
+      // Clear the location state after using it
+      window.history.replaceState({}, document.title);
+    }
+  }, [state?.initialMessage]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +119,7 @@ export const ChatPage = () => {
                     : "bg-muted"
                 }`}
               >
-                <p>{message.content}</p>
+                <p className="whitespace-pre-wrap">{message.content}</p>
                 <p className="text-xs mt-1 opacity-70">
                   {formatTime(message.timestamp)}
                 </p>

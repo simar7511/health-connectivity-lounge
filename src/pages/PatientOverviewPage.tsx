@@ -1,3 +1,4 @@
+
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
@@ -170,9 +171,28 @@ const PatientOverviewPage = () => {
   const handleSendResult = (examId: string) => {
     const exam = commonExams.find(e => e.id === examId);
     if (exam) {
+      // Create a formatted message for the exam result
+      let resultMessage = "";
+      
+      if (exam.id === "bp") {
+        resultMessage = `Blood Pressure Results:\nDate: ${exam.date}\nReading: ${exam.values.systolic}/${exam.values.diastolic} mmHg\nStatus: ${exam.results}`;
+      } 
+      else if (exam.id === "ultrasound") {
+        resultMessage = `Ultrasound Results:\nDate: ${exam.date}\nFetal Heart Rate: ${exam.values.fetalHeartRate} bpm\nEstimated Fetal Weight: ${exam.values.fetalWeight}\nPlacental Position: ${exam.values.placentaPosition}\nStatus: ${exam.results}`;
+      }
+      else if (exam.id === "gtt") {
+        resultMessage = `Glucose Tolerance Test Results:\nDate: ${exam.date}\nFasting: ${exam.values.fasting} mg/dL\n1 Hour: ${exam.values.oneHour} mg/dL\n2 Hour: ${exam.values.twoHour} mg/dL\nStatus: ${exam.results}`;
+      }
+      else {
+        resultMessage = `${exam.name} Results:\nDate: ${exam.date}\nResults: ${exam.results}`;
+      }
+
+      // Navigate to chat with the specific patient and pre-filled message
+      navigate(`/chat/Maria Garcia`, { state: { initialMessage: resultMessage } });
+      
       toast({
-        title: "Results Sent",
-        description: `${exam.name} results have been sent to ${patient.name}'s patient portal.`,
+        title: "Result Sent",
+        description: `${exam.name} results have been sent to ${patient.name}'s chat.`,
       });
     }
   };
