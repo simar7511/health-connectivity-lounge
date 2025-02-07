@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Send } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -19,6 +19,7 @@ export const ChatPage = () => {
   const [newMessage, setNewMessage] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { patientName } = useParams();
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +49,7 @@ export const ChatPage = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="ml-4 text-xl font-semibold">Dr. Maria Garcia</h1>
+        <h1 className="ml-4 text-xl font-semibold">{patientName || "Chat"}</h1>
       </div>
 
       <ScrollArea className="flex-1 p-4">

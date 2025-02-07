@@ -40,6 +40,7 @@ const App = () => {
         <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
         <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/chat/:patientName" element={<ChatPage />} />
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
       </Routes>
 

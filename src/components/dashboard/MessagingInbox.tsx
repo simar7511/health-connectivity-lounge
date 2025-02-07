@@ -25,8 +25,8 @@ const content = {
 };
 
 const mockMessages = [
-  { id: 1, unread: true, from: "Dr. Maria Garcia", preview: "Lab results attached" },
-  { id: 2, unread: true, from: "Dr. John Doe", preview: "Follow-up question" },
+  { id: 1, unread: true, from: "Maria Garcia", preview: "Lab results attached" },
+  { id: 2, unread: true, from: "John Smith", preview: "Follow-up question" },
 ];
 
 export const MessagingInbox = ({ language }: MessagingInboxProps) => {
@@ -62,7 +62,7 @@ export const MessagingInbox = ({ language }: MessagingInboxProps) => {
               <div
                 key={message.id}
                 className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                onClick={() => navigate("/chat")}
+                onClick={() => navigate(`/chat/${message.from}`)}
               >
                 <div className="flex items-start gap-2">
                   {message.unread && (
