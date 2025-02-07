@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
-import { PatientLogin } from "@/components/PatientLogin";
-import { ProviderLogin } from "@/components/ProviderLogin";
-import { PatientDashboard } from "@/components/PatientDashboard";
-import { ProviderDashboard } from "@/components/ProviderDashboard";
+import PatientLogin from "@/components/PatientLogin"; // ✅ Ensure default import
+import ProviderLogin from "@/components/ProviderLogin"; // ✅ Ensure default import
+import PatientDashboard from "@/components/PatientDashboard"; // ✅ Ensure default import
+import ProviderDashboard from "@/components/ProviderDashboard"; // ✅ Ensure default import
 
 type LoginState = "select" | "patient" | "provider" | "patient-dashboard" | "provider-dashboard";
 
@@ -41,22 +41,15 @@ const Index = () => {
   }
 
   if (loginState === "patient-dashboard") {
-    return (
-      <PatientDashboard
-        language={language}
-      />
-    );
+    return <PatientDashboard language={language} />;
   }
 
   if (loginState === "provider-dashboard") {
-    return (
-      <ProviderDashboard
-        language={language}
-      />
-    );
+    return <ProviderDashboard language={language} />;
   }
 
   return null;
 };
 
 export default Index;
+

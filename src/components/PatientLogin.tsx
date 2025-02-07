@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { PhoneIcon, UserIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { auth, setUpRecaptcha } from "@/lib/firebase";
+import { signInWithPhoneNumber } from "firebase/auth";
 
 interface PatientLoginProps {
   language: "en" | "es";
@@ -11,87 +12,120 @@ interface PatientLoginProps {
   onLogin: () => void;
 }
 
-export const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
-  const [phoneNumber, setPhoneNumber] = useState("");
+const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const { toast } = useToast();
 
-  const content = {
-    en: {
-      title: "Patient Access",
-      phoneLabel: "Enter your phone number",
-      continueGuest: "Continue as Guest",
-      back: "Back",
-      privacy: "Your information is private and will not be shared with authorities.",
-      needHelp: "Need help? Chat with our AI assistant",
-    },
-    es: {
-      title: "Acceso para Pacientes",
-      phoneLabel: "Ingrese su número de teléfono",
-      continueGuest: "Continuar como Invitado",
-      back: "Volver",
-      privacy: "Su información es privada y no será compartida con las autoridades.",
-      needHelp: "¿Necesita ayuda? Chatee con nuestro asistente AI",
-    },
+  useEffect(() => {
+    setUpRecaptcha(); // Ensure reCAPTCHA is set up when the component mounts
+  }, []);
+
+  const formatPhoneNumber = (number: string) => {
+    return number.startsWith("+") ? number.trim() : `+1${number.trim()}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: language === "en" ? "Verification sent" : "Verificación enviada",
-      description: language === "en" 
-        ? "Please check your phone for the verification code" 
-        : "Por favor revise su teléfono para el código de verificación",
-    });
-    onLogin();
+  const sendOTP = async () => {
+    const formattedPhone = formatPhoneNumber(phone);
+
+    if (!/^\+\d{10,15}$/.test(formattedPhone)) {
+      toast({ title: "Invalid Phone Number", description: "Enter a valid phone number with country code." });
+      return;
+    }
+
+    try {
+      if (!window.recaptchaVerifier) {
+        toast({ title: "Error", description: "reCAPTCHA not initialized. Please refresh and try again." });
+        return;
+      }
+
+      console.log(`Sending OTP to: ${formattedPhone}`);
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
+      
+      setConfirmationResult(confirmation);
+      window.confirmationResult = confirmation; // Store globally for debugging
+
+      toast({ title: "OTP Sent", description: "Check your phone for the verification code." });
+    } catch (error: any) {
+      console.error("Error sending OTP:", error);
+      toast({ title: "Error", description: error.message || "Failed to send OTP. Try again." });
+
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.render().then((widgetId: any) => {
+          grecaptcha.reset(widgetId);
+        });
+      }
+    }
+  };
+
+  const verifyOTP = async () => {
+    if (!otp || otp.length !== 6) {
+      toast({ title: "Invalid OTP", description: "Enter a valid 6-digit OTP." });
+      return;
+    }
+
+    try {
+      if (!confirmationResult) {
+        toast({ title: "Error", description: "No OTP request found. Please try again." });
+        return;
+      }
+
+      console.log("Verifying OTP...");
+      await confirmationResult.confirm(otp);
+      toast({ title: "Login Successful" });
+      onLogin();
+    } catch (error: any) {
+      console.error("Error verifying OTP:", error);
+      toast({ title: "Error", description: "Invalid OTP. Try again." });
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 space-y-6 bg-gradient-to-b from-primary/20 to-background">
       <Card className="w-full max-w-md p-6 space-y-6">
         <h1 className="text-2xl font-bold text-center text-primary">
-          {content[language].title}
+          {language === "en" ? "Patient Login" : "Inicio de Sesión del Paciente"}
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+
+        <div id="recaptcha-container"></div>
+
+        {!confirmationResult ? (
+          <>
             <Input
               type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder={content[language].phoneLabel}
-              className="pl-10 text-lg py-6"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder={language === "en" ? "Enter your phone number" : "Ingrese su número de teléfono"}
+              className="text-lg py-6"
+              required
             />
-          </div>
-          <Button type="submit" className="w-full text-lg py-6">
-            {language === "en" ? "Continue" : "Continuar"}
-          </Button>
-        </form>
-        <Button 
-          variant="outline" 
-          className="w-full text-lg py-6"
-          onClick={() => {
-            toast({
-              title: language === "en" ? "Welcome" : "Bienvenido",
-              description: language === "en" 
-                ? "You can now access basic services" 
-                : "Ahora puede acceder a servicios básicos",
-            });
-            onLogin();
-          }}
-        >
-          <UserIcon className="mr-2" />
-          {content[language].continueGuest}
-        </Button>
-        <p className="text-sm text-center text-muted-foreground">
-          {content[language].privacy}
-        </p>
+            <Button className="w-full text-lg py-6" onClick={sendOTP}>
+              {language === "en" ? "Send OTP" : "Enviar OTP"}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder={language === "en" ? "Enter OTP" : "Ingrese el código OTP"}
+              className="text-lg py-6"
+              required
+            />
+            <Button className="w-full text-lg py-6" onClick={verifyOTP}>
+              {language === "en" ? "Verify OTP" : "Verificar OTP"}
+            </Button>
+          </>
+        )}
       </Card>
+
       <Button variant="ghost" onClick={onBack}>
-        {content[language].back}
-      </Button>
-      <Button variant="link" className="text-primary">
-        {content[language].needHelp}
+        {language === "en" ? "Back" : "Volver"}
       </Button>
     </div>
   );
 };
+
+export default PatientLogin;
