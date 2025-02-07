@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
@@ -5,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, StopCircle } from "lucide-react";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import 'regenerator-runtime/runtime';
 
@@ -142,6 +143,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
       const reportData = {
         symptoms,
         patientId: auth.currentUser?.uid,
+        patientName: auth.currentUser?.displayName || "Unknown Patient",
         providerId: appointmentDetails.provider.id,
         providerName: appointmentDetails.provider.name,
         appointmentType: appointmentDetails.type,
@@ -154,10 +156,10 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
       const docRef = await addDoc(collection(db, "symptom_reports"), reportData);
 
       toast({
-        title: language === "en" ? "Report Saved" : "Informe Guardado",
+        title: language === "en" ? "Report Sent" : "Informe Enviado",
         description: language === "en"
-          ? "Your symptom report has been saved and shared with your provider"
-          : "Su informe de síntomas ha sido guardado y compartido con su proveedor",
+          ? `Your symptom report has been sent to ${appointmentDetails.provider.name}`
+          : `Su informe de síntomas ha sido enviado a ${appointmentDetails.provider.name}`,
       });
 
       return docRef.id;
@@ -203,7 +205,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
     // Save PDF locally
     doc.save("Symptom_Report.pdf");
 
-    // Save to Firestore
+    // Save to Firestore and automatically send to provider
     const reportId = await saveReportToFirestore();
     
     if (reportId) {
@@ -266,7 +268,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
           </div>
         )}
 
-        {/* Generate Report Button */}
+        {/* Generate and Send Report Button */}
         <Button 
           className="w-full py-6 mt-4" 
           onClick={generateAndSendReport}
