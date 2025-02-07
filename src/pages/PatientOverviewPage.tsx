@@ -59,13 +59,25 @@ const commonExams = [
     id: "ultrasound", 
     name: "Ultrasound", 
     purpose: "Check baby's growth, placenta health", 
-    results: "Normal growth" 
+    results: "Normal growth",
+    date: "2024-03-14",
+    values: {
+      fetalHeartRate: 150,
+      fetalWeight: "1.2kg",
+      placentaPosition: "anterior"
+    }
   },
   { 
     id: "gtt", 
     name: "Glucose Tolerance Test (GTT)", 
     purpose: "Screen for gestational diabetes", 
-    results: "Normal" 
+    results: "Normal",
+    date: "2024-03-13",
+    values: {
+      fasting: 82,
+      oneHour: 125,
+      twoHour: 110
+    }
   },
   { id: "cbc", name: "Complete Blood Count", purpose: "Check for anemia and infection", results: "Normal blood cell counts" },
   { id: "urine", name: "Urine Analysis", purpose: "Check for protein, bacteria, and sugar", results: "Normal levels" },
@@ -75,7 +87,6 @@ const commonExams = [
   { id: "iron", name: "Iron Studies", purpose: "Check iron levels and storage", results: "Normal ferritin levels" },
 ];
 
-// Only show the first three exams in results
 const displayedExams = commonExams.slice(0, 3);
 
 const getStatusBadge = (results: string) => {
@@ -168,7 +179,18 @@ const PatientOverviewPage = () => {
 
   const handleGeneratePDF = (examId: string, language: string) => {
     const exam = commonExams.find(e => e.id === examId);
-    if (exam && exam.id === "bp" && patient) {
+    if (!exam) return;
+
+    const pdf = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+    
+    // Set up PDF header
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(language === 'es' ? 'INFORME MÉDICO' : 'MEDICAL REPORT', 105, 10, { align: 'center' });
+    pdf.setFontSize(12);
+    
+    if (exam.id === "bp") {
       const reportData = {
         patientName: patient.name,
         examDate: exam.date,
@@ -181,7 +203,6 @@ const PatientOverviewPage = () => {
       setReportDialogOpen(true);
       
       // Generate PDF with proper formatting
-      const pdf = new jsPDF();
       const splitReport = report.split('\n');
       let yOffset = 20;
       
@@ -212,7 +233,6 @@ const PatientOverviewPage = () => {
       });
       
       pdf.setFontSize(8);
-      const currentDate = new Date().toLocaleDateString();
       pdf.text(`Generated on: ${currentDate}`, 10, pdf.internal.pageSize.height - 10);
       
       pdf.save(`blood_pressure_report_${patient.name.replace(/\s+/g, '_')}_${language}.pdf`);
@@ -221,12 +241,79 @@ const PatientOverviewPage = () => {
         title: "Report Generated",
         description: `Blood pressure report has been generated in ${language === 'es' ? 'Spanish' : 'English'} and downloaded.`,
       });
-    } else {
-      toast({
-        title: "Report Generated",
-        description: `${exam?.name} report has been generated in ${language === 'es' ? 'Spanish' : 'English'}.`,
+    } 
+    else if (exam.id === "ultrasound") {
+      const title = language === 'es' ? 'INFORME DE ULTRASONIDO' : 'ULTRASOUND REPORT';
+      const report = [
+        title,
+        '----------------------------------------',
+        `${language === 'es' ? 'Paciente' : 'Patient'}: ${patient?.name}`,
+        `${language === 'es' ? 'Fecha' : 'Date'}: ${exam.date}`,
+        `${language === 'es' ? 'Ritmo Cardíaco Fetal' : 'Fetal Heart Rate'}: ${exam.values.fetalHeartRate} bpm`,
+        `${language === 'es' ? 'Peso Fetal Estimado' : 'Estimated Fetal Weight'}: ${exam.values.fetalWeight}`,
+        `${language === 'es' ? 'Posición de la Placenta' : 'Placental Position'}: ${exam.values.placentaPosition}`,
+        '----------------------------------------',
+        `${language === 'es' ? 'Resultado' : 'Result'}: ${exam.results}`
+      ].join('\n');
+
+      let yOffset = 20;
+      report.split('\n').forEach(line => {
+        if (line.includes('----------------------------------------')) {
+          pdf.line(10, yOffset - 2, 200, yOffset - 2);
+          yOffset += 5;
+        } else if (line === title) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(line, 10, yOffset);
+          pdf.setFont('helvetica', 'normal');
+          yOffset += 10;
+        } else {
+          pdf.text(line, 10, yOffset);
+          yOffset += 7;
+        }
       });
     }
+    else if (exam.id === "gtt") {
+      const title = language === 'es' ? 'INFORME DE PRUEBA DE TOLERANCIA A LA GLUCOSA' : 'GLUCOSE TOLERANCE TEST REPORT';
+      const report = [
+        title,
+        '----------------------------------------',
+        `${language === 'es' ? 'Paciente' : 'Patient'}: ${patient?.name}`,
+        `${language === 'es' ? 'Fecha' : 'Date'}: ${exam.date}`,
+        `${language === 'es' ? 'Glucosa en Ayunas' : 'Fasting Glucose'}: ${exam.values.fasting} mg/dL`,
+        `${language === 'es' ? 'Glucosa 1 Hora' : '1-Hour Glucose'}: ${exam.values.oneHour} mg/dL`,
+        `${language === 'es' ? 'Glucosa 2 Horas' : '2-Hour Glucose'}: ${exam.values.twoHour} mg/dL`,
+        '----------------------------------------',
+        `${language === 'es' ? 'Resultado' : 'Result'}: ${exam.results}`
+      ].join('\n');
+
+      let yOffset = 20;
+      report.split('\n').forEach(line => {
+        if (line.includes('----------------------------------------')) {
+          pdf.line(10, yOffset - 2, 200, yOffset - 2);
+          yOffset += 5;
+        } else if (line === title) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(line, 10, yOffset);
+          pdf.setFont('helvetica', 'normal');
+          yOffset += 10;
+        } else {
+          pdf.text(line, 10, yOffset);
+          yOffset += 7;
+        }
+      });
+    }
+
+    // Add footer
+    pdf.setFontSize(8);
+    pdf.text(`Generated on: ${currentDate}`, 10, pdf.internal.pageSize.height - 10);
+    
+    // Save the PDF
+    pdf.save(`${exam.id}_report_${patient?.name.replace(/\s+/g, '_')}_${language}.pdf`);
+    
+    toast({
+      title: "Report Generated",
+      description: `${exam.name} report has been generated in ${language === 'es' ? 'Spanish' : 'English'} and downloaded.`,
+    });
   };
 
   return (
@@ -364,24 +451,18 @@ const PatientOverviewPage = () => {
                       <Send className="mr-2 h-4 w-4" />
                       Send to Patient
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleGeneratePDF(exam.id, 'en')}
-                      className="flex items-center"
+                    <Select
+                      onValueChange={(value) => handleGeneratePDF(exam.id, value)}
                     >
-                      <FileText className="mr-2 h-4 w-4" />
-                      PDF (English)
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleGeneratePDF(exam.id, 'es')}
-                      className="flex items-center"
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      PDF (Spanish)
-                    </Button>
+                      <SelectTrigger className="w-[180px]">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Generate PDF
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               ))}
