@@ -1,25 +1,23 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { auth, setUpRecaptcha } from "@/lib/firebase";
-import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
+import { signInWithPhoneNumber } from "firebase/auth";
 
-// Add type declaration for global grecaptcha
-declare global {
-  interface Window {
-    grecaptcha: any;
-    recaptchaVerifier: any;
-    confirmationResult: any;
-  }
-}
-
-// ✅ Define Props for Language Support
 interface PatientLoginProps {
   language: "en" | "es";
   onBack: () => void;
   onLogin: () => void;
+}
+
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+    confirmationResult: any;
+  }
 }
 
 const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
@@ -49,18 +47,9 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
     try {
       if (!window.recaptchaVerifier) {
         toast({ title: "Error", description: "reCAPTCHA not initialized. Refresh and try again." });
-        setUpRecaptcha(); // Reinitialize reCAPTCHA
+        setUpRecaptcha();
         return;
       }
-
-      // Ensure reCAPTCHA is fully loaded before sending OTP
-      await new Promise((resolve) => {
-        if (window.grecaptcha) {
-          resolve(true);
-        } else {
-          setTimeout(resolve, 2000);
-        }
-      });
 
       console.log(`📩 Sending OTP to: ${formattedPhone}`);
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier!);
@@ -73,9 +62,10 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
       console.error("❌ Error sending OTP:", error);
       toast({ title: "Error", description: error.message || "Failed to send OTP. Try again." });
 
-      // Reset reCAPTCHA in case of failure
-      if (window.grecaptcha && typeof window.grecaptcha.reset === "function") {
-        window.grecaptcha.reset();
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
+        setUpRecaptcha();
       }
     }
   };

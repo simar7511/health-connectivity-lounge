@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
@@ -28,11 +27,6 @@ interface SymptomCheckerPageProps {
   appointmentDetails?: AppointmentDetails;
 }
 
-// Define WebkitSpeechRecognition for TypeScript
-interface IWindow extends Window {
-  webkitSpeechRecognition: any;
-}
-
 const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onProceed, appointmentDetails }) => {
   const [symptoms, setSymptoms] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -40,7 +34,6 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
   const [recognition, setRecognition] = useState<any>(null);
 
   useEffect(() => {
-    // Initialize speech recognition without reCAPTCHA interference
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     
     if (SpeechRecognition) {
@@ -246,4 +239,3 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
 };
 
 export default SymptomCheckerPage;
-
