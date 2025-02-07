@@ -125,10 +125,19 @@ const PatientOverviewPage = () => {
       ...customExams
     ].join(", ");
 
+    // First show a toast about the order being sent
     toast({
-      title: "Exam Request Ordered",
-      description: `Ordered the following exams for ${patient.name}: ${allExams}`,
+      title: "Exam Request Sent",
+      description: `The exam request has been sent to the provider. You will be notified when it's reviewed.`,
     });
+
+    // Then show the confirmation toast with exam details
+    setTimeout(() => {
+      toast({
+        title: "Exam Request Details",
+        description: `Ordered the following exams for ${patient.name}: ${allExams}`,
+      });
+    }, 1500);
   };
 
   const handleSendResult = (examId: string) => {
