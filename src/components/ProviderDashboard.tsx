@@ -36,22 +36,38 @@ const mockPatients: Patient[] = [
   },
 ];
 
+const translations = {
+  en: {
+    dashboard: "Provider Dashboard",
+    translate: "Translate",
+    startChat: "Start Chat",
+    preparingChat: "Preparing secure chat...",
+    translatedTo: "Translated to Spanish",
+  },
+  es: {
+    dashboard: "Panel del Proveedor",
+    translate: "Traducir",
+    startChat: "Iniciar Chat",
+    preparingChat: "Preparando chat seguro...",
+    translatedTo: "Traducido al inglés",
+  }
+};
+
 const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const { toast } = useToast();
+  const [currentLanguage, setCurrentLanguage] = useState(language);
 
   const handleStartChat = () => {
     toast({
-      title: language === "en" ? "Starting chat" : "Iniciando chat",
-      description:
-        language === "en"
-          ? "Preparing secure chat..."
-          : "Preparando chat seguro...",
+      title: translations[currentLanguage].startChat,
+      description: translations[currentLanguage].preparingChat,
     });
   };
 
   const handleTranslate = () => {
+    setCurrentLanguage((prev) => (prev === "en" ? "es" : "en"));
     toast({
-      title: language === "en" ? "Translated to Spanish" : "Traducido al inglés",
+      title: translations[currentLanguage].translatedTo,
     });
   };
 
@@ -59,7 +75,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">
-          {language === "en" ? "Provider Dashboard" : "Panel del Proveedor"}
+          {translations[currentLanguage].dashboard}
         </h1>
         <Button
           variant="outline"
@@ -67,23 +83,23 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
           onClick={handleTranslate}
         >
           <Globe className="h-5 w-5" />
-          {language === "en" ? "Translate" : "Traducir"}
+          {translations[currentLanguage].translate}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <AppointmentsList
-          language={language}
+          language={currentLanguage}
           patients={mockPatients}
         />
 
         <MessagingInbox
-          language={language}
+          language={currentLanguage}
           onStartChat={handleStartChat}
         />
 
         <QuickDocumentation
-          language={language}
+          language={currentLanguage}
           onTranslate={handleTranslate}
         />
       </div>
@@ -95,7 +111,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
           onClick={handleStartChat}
         >
           <MessageCircle className="h-5 w-5" />
-          {language === "en" ? "Start Chat" : "Iniciar Chat"}
+          {translations[currentLanguage].startChat}
         </Button>
       </div>
     </div>
@@ -103,3 +119,4 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 };
 
 export default ProviderDashboard;
+

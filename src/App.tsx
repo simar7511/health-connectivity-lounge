@@ -33,7 +33,7 @@ const App = () => {
         <Route path="/transportation" element={<TransportationPage />} />
         <Route path="/free-clinic" element={<ClinicLocatorPage />} />
         <Route path="/symptoms" element={<SymptomCheckerPage />} />
-        <Route path="/provider/login" element={<ProviderLogin language={language} />} />
+        <Route path="/provider/login" element={<ProviderLogin language={language} onLogin={() => {}} />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
         <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
@@ -43,3 +43,4 @@ const App = () => {
 };
 
 export default App;
+
