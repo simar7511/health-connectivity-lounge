@@ -1,11 +1,27 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { jsPDF } from "jspdf";
 
+interface Provider {
+  id: string;
+  name: string;
+  specialty: string;
+  availability: string[];
+}
+
+interface AppointmentDetails {
+  type: string;
+  date: Date;
+  time: string;
+  provider: Provider;
+}
+
 interface SymptomCheckerPageProps {
   language: "en" | "es";
   onProceed: () => void;
+  appointmentDetails?: AppointmentDetails;
 }
 
 const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onProceed }) => {

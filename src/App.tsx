@@ -19,6 +19,7 @@ import { ChatPage } from "./pages/ChatPage";
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
+  const [appointmentDetails, setAppointmentDetails] = useState<any>(null);
 
   return (
     <BrowserRouter>
@@ -32,10 +33,39 @@ const App = () => {
         <Route path="/" element={<Index />} />
         <Route path="/patient/login" element={<PatientLogin language={language} onBack={() => {}} onLogin={() => {}} />} />
         <Route path="/patient/dashboard" element={<PatientDashboard language={language} />} />
-        <Route path="/appointment" element={<AppointmentPage />} />
-        <Route path="/transportation" element={<TransportationPage />} />
+        <Route 
+          path="/appointment" 
+          element={
+            <AppointmentPage 
+              language={language} 
+              onProceed={(details) => {
+                setAppointmentDetails(details);
+                // Navigate to symptoms page
+                window.location.href = "/symptoms";
+              }} 
+            />
+          } 
+        />
+        <Route 
+          path="/transportation" 
+          element={
+            <TransportationPage 
+              language={language} 
+              onProceed={() => {}} 
+            />
+          } 
+        />
         <Route path="/free-clinic" element={<ClinicLocatorPage />} />
-        <Route path="/symptoms" element={<SymptomCheckerPage />} />
+        <Route 
+          path="/symptoms" 
+          element={
+            <SymptomCheckerPage 
+              language={language} 
+              onProceed={() => {}}
+              appointmentDetails={appointmentDetails}
+            />
+          } 
+        />
         <Route path="/provider/login" element={<ProviderLogin language={language} onLogin={() => {}} />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
         <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
