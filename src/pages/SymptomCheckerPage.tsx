@@ -1,8 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { jsPDF } from "jspdf";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { format } from "date-fns";
 
 interface Provider {
   id: string;
@@ -24,11 +25,11 @@ interface SymptomCheckerPageProps {
   appointmentDetails?: AppointmentDetails;
 }
 
-const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onProceed }) => {
+const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onProceed, appointmentDetails }) => {
   const [symptoms, setSymptoms] = useState("");
-  const [providerPhone, setProviderPhone] = useState("");
+  const [providerPhone, setProviderPhone] = useState(appointmentDetails?.provider?.phone || "");
   const [isRecording, setIsRecording] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState(appointmentDetails?.provider?.name || "");
 
   // ✅ Simulated list of providers (Can be fetched from API later)
   const providers = [
@@ -106,8 +107,23 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold">🩺 {language === "en" ? "Symptom Checker" : "Verificador de Síntomas"}</h1>
-      <p>{language === "en" ? "Describe your symptoms, and we'll send them to the provider." : "Describa sus síntomas y le proporcionaremos orientación."}</p>
+      <h1 className="text-3xl font-bold mb-4">🩺 {language === "en" ? "Symptom Checker" : "Verificador de Síntomas"}</h1>
+      
+      {appointmentDetails && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>{language === "en" ? "Your Appointment" : "Su Cita"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p><strong>{language === "en" ? "Type:" : "Tipo:"}</strong> {appointmentDetails.type}</p>
+            <p><strong>{language === "en" ? "Date:" : "Fecha:"}</strong> {format(appointmentDetails.date, "PPP")}</p>
+            <p><strong>{language === "en" ? "Time:" : "Hora:"}</strong> {appointmentDetails.time}</p>
+            <p><strong>{language === "en" ? "Provider:" : "Proveedor:"}</strong> {appointmentDetails.provider.name}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      <p className="mb-4">{language === "en" ? "Describe your symptoms, and we'll send them to the provider." : "Describa sus síntomas y le proporcionaremos orientación."}</p>
 
       {/* ✅ Symptom Input */}
       <textarea

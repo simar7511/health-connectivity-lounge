@@ -3,8 +3,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Clock } from "lucide-react";
+import { Clock, Edit2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface Provider {
   id: string;
@@ -27,6 +34,8 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
   const [selectedType, setSelectedType] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>("");
+  const [confirming, setConfirming] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const { toast } = useToast();
 
   // Simulated provider database - in a real app this would come from a backend
@@ -66,9 +75,38 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
     setSelectedType(type);
     setSelectedDate(undefined);
     setSelectedTime("");
+    setConfirming(false);
+    setSelectedProvider(null);
   };
 
-  const handleProceed = () => {
+  const checkProviderAvailability = () => {
+    if (!selectedType || !selectedDate || !selectedTime) return null;
+
+    // Find available provider based on specialty and time slot
+    const availableProvider = providers.find(p => 
+      p.specialty === selectedType && 
+      p.availability.includes(selectedTime)
+    );
+
+    if (!availableProvider) {
+      // Find next available slot
+      const typeProviders = providers.filter(p => p.specialty === selectedType);
+      const nextSlot = typeProviders.length > 0 ? typeProviders[0].availability[0] : null;
+
+      toast({
+        title: language === "en" ? "No Provider Available" : "No Hay Proveedor Disponible",
+        description: language === "en" 
+          ? `Next available slot: ${nextSlot || 'None found'}` 
+          : `Próximo horario disponible: ${nextSlot || 'No encontrado'}`,
+        variant: "destructive"
+      });
+      return null;
+    }
+
+    return availableProvider;
+  };
+
+  const handleConfirmSelection = () => {
     if (!selectedType || !selectedDate || !selectedTime) {
       toast({
         title: language === "en" ? "Missing Information" : "Información Faltante",
@@ -80,28 +118,69 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
       return;
     }
 
-    // Find available provider based on specialty
-    const availableProvider = providers.find(p => p.specialty === selectedType);
-    
-    if (!availableProvider) {
-      toast({
-        title: language === "en" ? "No Provider Available" : "No Hay Proveedor Disponible",
-        description: language === "en" 
-          ? "Please try a different time or date" 
-          : "Por favor intente otra hora o fecha",
-        variant: "destructive"
-      });
-      return;
+    const provider = checkProviderAvailability();
+    if (provider) {
+      setSelectedProvider(provider);
+      setConfirming(true);
     }
+  };
 
-    // Pass appointment details to next page
+  const handleModifySelection = () => {
+    setConfirming(false);
+    setSelectedProvider(null);
+  };
+
+  const handleProceed = () => {
+    if (!selectedProvider) return;
+
     onProceed({
       type: selectedType,
-      date: selectedDate,
+      date: selectedDate!,
       time: selectedTime,
-      provider: availableProvider
+      provider: selectedProvider
     });
   };
+
+  if (confirming && selectedProvider) {
+    return (
+      <div className="container mx-auto p-4">
+        <Card className="w-full max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>
+              {language === "en" ? "Confirm Your Appointment" : "Confirmar su Cita"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="font-semibold">{language === "en" ? "Type:" : "Tipo:"}</h3>
+              <p>{appointmentOptions.find(opt => opt.value === selectedType)?.label}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">{language === "en" ? "Date:" : "Fecha:"}</h3>
+              <p>{format(selectedDate!, "PPP")}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">{language === "en" ? "Time:" : "Hora:"}</h3>
+              <p>{selectedTime}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">{language === "en" ? "Provider:" : "Proveedor:"}</h3>
+              <p>{selectedProvider.name}</p>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={handleModifySelection}>
+              <Edit2 className="mr-2 h-4 w-4" />
+              {language === "en" ? "Modify" : "Modificar"}
+            </Button>
+            <Button onClick={handleProceed}>
+              {language === "en" ? "Proceed to Symptom Checker" : "Continuar al Verificador de Síntomas"}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -166,13 +245,13 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
         </div>
       )}
 
-      {/* Proceed Button */}
+      {/* Confirm Selection Button */}
       <Button 
         className="w-full py-6 mt-4" 
-        onClick={handleProceed}
+        onClick={handleConfirmSelection}
         disabled={!selectedType || !selectedDate || !selectedTime}
       >
-        {language === "en" ? "Proceed to Symptom Checker" : "Continuar al Verificador de Síntomas"}
+        {language === "en" ? "Check Availability" : "Verificar Disponibilidad"}
       </Button>
     </div>
   );
