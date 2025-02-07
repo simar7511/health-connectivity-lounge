@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, StopCircle } from "lucide-react";
+import 'regenerator-runtime/runtime';
 
 interface Provider {
   id: string;
@@ -27,23 +28,28 @@ interface SymptomCheckerPageProps {
   appointmentDetails?: AppointmentDetails;
 }
 
+// Define WebkitSpeechRecognition for TypeScript
+interface IWindow extends Window {
+  webkitSpeechRecognition: any;
+}
+
 const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onProceed, appointmentDetails }) => {
   const [symptoms, setSymptoms] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [recognition, setRecognition] = useState<any>(null);
 
   useEffect(() => {
-    // Initialize speech recognition
-    if (window.SpeechRecognition || (window as any).webkitSpeechRecognition) {
-      const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    // Initialize speech recognition without reCAPTCHA interference
+    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    
+    if (SpeechRecognition) {
       const newRecognition = new SpeechRecognition();
-      
       newRecognition.continuous = true;
       newRecognition.interimResults = true;
       newRecognition.lang = language === "en" ? "en-US" : "es-ES";
 
-      newRecognition.onresult = (event: SpeechRecognitionEvent) => {
+      newRecognition.onresult = (event: any) => {
         let finalTranscript = '';
         let interimTranscript = '';
 
@@ -61,7 +67,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ language, onPro
         }
       };
 
-      newRecognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      newRecognition.onerror = (event: any) => {
         console.error("Speech recognition error:", event);
         setIsRecording(false);
         
