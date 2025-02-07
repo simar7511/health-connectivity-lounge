@@ -13,6 +13,7 @@ import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import SymptomCheckerPage from "./pages/SymptomCheckerPage";
 import PatientOverviewPage from "./pages/PatientOverviewPage";
+import { MedicalChat } from "./components/MedicalChat";
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
@@ -38,9 +39,12 @@ const App = () => {
         <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
       </Routes>
+
+      <div className="fixed bottom-4 right-4">
+        <MedicalChat language={language} />
+      </div>
     </BrowserRouter>
   );
 };
 
 export default App;
-
