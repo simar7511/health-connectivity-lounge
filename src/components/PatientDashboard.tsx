@@ -1,13 +1,23 @@
+
 import { useState } from "react";
-import { useSpeechRecognition } from "react-speech-kit";
-import { useNavigate } from "react-router-dom"; // ✅ Navigation for multiple pages
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
-import { Calendar, Hospital, MapPin, AlertCircle, Mic, Languages } from "lucide-react";
-import { MedicalChat } from "./MedicalChat";
-import { Doctors } from "./Doctors";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Phone,
+  FileText,
+  Users,
+  HospitalSquare,
+  Languages,
+  Info,
+  Car,
+  Bell,
+  CalendarX,
+} from "lucide-react";
 
 interface PatientDashboardProps {
   language: "en" | "es";
@@ -15,35 +25,45 @@ interface PatientDashboardProps {
 
 const PatientDashboard = ({ language }: PatientDashboardProps) => {
   const [currentLanguage, setCurrentLanguage] = useState(language);
-  const [spokenText, setSpokenText] = useState("");
   const { toast } = useToast();
-  const navigate = useNavigate(); // ✅ Enables page navigation
-
-  // Initialize voice recognition
-  const { listen, stop } = useSpeechRecognition({
-    onResult: (result) => setSpokenText(result),
-  });
+  const navigate = useNavigate();
 
   const content = {
     en: {
-      greeting: "Welcome, Maria! You are in your 3rd trimester",
-      book: "Book an Appointment",
-      findClinic: "Find a Free Clinic",
-      transport: "Need Transportation?",
-      symptoms: "Check Symptoms",
-      aiChat: "Ask AI Assistant",
-      voicePrompt: "Tap the microphone and say your request.",
+      upcomingAppointment: "Upcoming Appointment",
+      appointmentDetails: "Next Check-up",
+      transportationDetails: "Transportation Details",
+      healthCheckIns: "Health Check-ins",
+      communityResources: "Support & Resources",
+      manageAppointments: "Manage Appointments",
       switchLang: "Switch to Spanish",
+      recordSymptoms: "Record Daily Symptoms",
+      viewReminders: "View Care Reminders",
+      findClinics: "Find Free Clinics",
+      communityPrograms: "Community Programs",
+      helplines: "Healthcare Hotlines",
+      rights: "Rights & Resources",
+      cancel: "Cancel Appointment",
+      reschedule: "Reschedule",
+      pastVisits: "Past Visits",
     },
     es: {
-      greeting: "¡Bienvenida, María! Estás en tu tercer trimestre",
-      book: "Agendar Cita",
-      findClinic: "Buscar una Clínica Gratuita",
-      transport: "¿Necesita Transporte?",
-      symptoms: "Evaluar Síntomas",
-      aiChat: "Preguntar al Asistente AI",
-      voicePrompt: "Toque el micrófono y diga su solicitud.",
+      upcomingAppointment: "Próxima Cita",
+      appointmentDetails: "Próximo Control",
+      transportationDetails: "Detalles de Transporte",
+      healthCheckIns: "Control de Salud",
+      communityResources: "Apoyo y Recursos",
+      manageAppointments: "Gestionar Citas",
       switchLang: "Cambiar a Inglés",
+      recordSymptoms: "Registrar Síntomas Diarios",
+      viewReminders: "Ver Recordatorios",
+      findClinics: "Buscar Clínicas Gratuitas",
+      communityPrograms: "Programas Comunitarios",
+      helplines: "Líneas de Ayuda",
+      rights: "Derechos y Recursos",
+      cancel: "Cancelar Cita",
+      reschedule: "Reprogramar",
+      pastVisits: "Visitas Anteriores",
     },
   };
 
@@ -51,71 +71,141 @@ const PatientDashboard = ({ language }: PatientDashboardProps) => {
     setCurrentLanguage(currentLanguage === "en" ? "es" : "en");
   };
 
+  const handleCancelAppointment = () => {
+    toast({
+      title: currentLanguage === "en" ? "Appointment Cancelled" : "Cita Cancelada",
+      description: currentLanguage === "en" 
+        ? "Your appointment has been cancelled. You can schedule a new one anytime."
+        : "Su cita ha sido cancelada. Puede programar una nueva en cualquier momento.",
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-primary">{content[currentLanguage].greeting}</h1>
+    <div className="min-h-screen bg-background text-foreground p-4 space-y-6 max-w-2xl mx-auto">
+      {/* Language Toggle */}
+      <div className="flex justify-end">
         <Button variant="outline" className="flex items-center gap-2" onClick={toggleLanguage}>
-          <Languages className="w-5 h-5" />
+          <Languages className="w-4 h-4" />
           {content[currentLanguage].switchLang}
         </Button>
       </div>
 
-      {/* Booking and Resources Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Appointments & Free Clinics */}
-        <Card className="p-4">
-          <h2 className="text-xl font-semibold mb-4">{content[currentLanguage].book}</h2>
-          <Button className="w-full flex items-center gap-2 py-6 bg-green-500 text-white" onClick={() => navigate("/appointment")}>
-            <Calendar className="w-6 h-6" />
-            {content[currentLanguage].book}
-          </Button>
-          <Button className="w-full flex items-center gap-2 py-6 mt-4 bg-blue-500 text-white" onClick={() => navigate("/free-clinic")}>
-            <Hospital className="w-6 h-6" />
-            {content[currentLanguage].findClinic}
-          </Button>
-        </Card>
-
-        {/* Transportation Help */}
-        <Card className="p-4">
-          <h2 className="text-xl font-semibold mb-4">{content[currentLanguage].transport}</h2>
-          <Button className="w-full flex items-center gap-2 py-6 bg-purple-500 text-white" onClick={() => navigate("/transportation")}>
-            <MapPin className="w-6 h-6" />
-            {content[currentLanguage].transport}
-          </Button>
-        </Card>
-      </div>
-
-      {/* AI Chat & Symptom Checker */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-4">
-          <h2 className="text-xl font-semibold mb-4">{content[currentLanguage].aiChat}</h2>
-          <ScrollArea className="h-[300px]">
-            <MedicalChat language={currentLanguage} />
-          </ScrollArea>
-        </Card>
-
-        <Card className="p-4">
-          <h2 className="text-xl font-semibold mb-4">{content[currentLanguage].symptoms}</h2>
-          <Button className="w-full flex items-center gap-2 py-6 bg-red-500 text-white" onClick={() => navigate("/symptoms")}>
-            <AlertCircle className="w-6 h-6" />
-            {content[currentLanguage].symptoms}
-          </Button>
-        </Card>
-      </div>
-
-      {/* Voice Input for Scheduling */}
-      <Card className="p-4">
-        <h2 className="text-xl font-semibold mb-4">{content[currentLanguage].voicePrompt}</h2>
-        <Button className="w-full flex items-center gap-2 py-6 bg-gray-500 text-white" onMouseDown={listen} onMouseUp={stop}>
-          <Mic className="w-6 h-6" />
-          {spokenText || (currentLanguage === "en" ? "Hold to Speak" : "Mantenga presionado para hablar")}
-        </Button>
+      {/* Upcoming Appointment & Transportation */}
+      <Card className="p-4 space-y-4">
+        <h2 className="text-xl font-semibold text-primary">
+          {content[currentLanguage].upcomingAppointment}
+        </h2>
+        <div className="grid gap-4">
+          <div className="flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-primary mt-1" />
+            <div>
+              <p className="font-medium">{content[currentLanguage].appointmentDetails}</p>
+              <p className="text-sm text-muted-foreground">March 25, 2024 - 10:00 AM</p>
+              <p className="text-sm text-muted-foreground">Dr. Sarah Johnson</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Car className="w-5 h-5 text-primary mt-1" />
+            <div>
+              <p className="font-medium">{content[currentLanguage].transportationDetails}</p>
+              <p className="text-sm text-muted-foreground">Pickup: 9:15 AM</p>
+              <p className="text-sm text-muted-foreground">123 Main St, Front Entrance</p>
+            </div>
+          </div>
+        </div>
       </Card>
 
-      {/* Doctors List */}
-      <Doctors language={currentLanguage} />
+      {/* Health Check-ins & Reminders */}
+      <div className="grid gap-4">
+        <Button 
+          className="w-full flex items-center justify-start gap-3 py-6 bg-blue-500 hover:bg-blue-600"
+          onClick={() => navigate("/symptoms")}
+        >
+          <Clock className="w-5 h-5" />
+          {content[currentLanguage].recordSymptoms}
+        </Button>
+        <Button 
+          className="w-full flex items-center justify-start gap-3 py-6 bg-purple-500 hover:bg-purple-600"
+          onClick={() => navigate("/reminders")}
+        >
+          <Bell className="w-5 h-5" />
+          {content[currentLanguage].viewReminders}
+        </Button>
+      </div>
+
+      {/* Support & Community Resources */}
+      <Card className="p-4 space-y-4">
+        <h2 className="text-xl font-semibold text-primary">
+          {content[currentLanguage].communityResources}
+        </h2>
+        <div className="grid gap-3">
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3"
+            onClick={() => navigate("/free-clinic")}
+          >
+            <HospitalSquare className="w-5 h-5" />
+            {content[currentLanguage].findClinics}
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3"
+            onClick={() => navigate("/community")}
+          >
+            <Users className="w-5 h-5" />
+            {content[currentLanguage].communityPrograms}
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3"
+            onClick={() => navigate("/helplines")}
+          >
+            <Phone className="w-5 h-5" />
+            {content[currentLanguage].helplines}
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3"
+            onClick={() => navigate("/resources")}
+          >
+            <Info className="w-5 h-5" />
+            {content[currentLanguage].rights}
+          </Button>
+        </div>
+      </Card>
+
+      {/* Appointment Management */}
+      <Card className="p-4 space-y-4">
+        <h2 className="text-xl font-semibold text-primary">
+          {content[currentLanguage].manageAppointments}
+        </h2>
+        <div className="grid gap-3">
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3 text-red-500 hover:text-red-600"
+            onClick={handleCancelAppointment}
+          >
+            <CalendarX className="w-5 h-5" />
+            {content[currentLanguage].cancel}
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3"
+            onClick={() => navigate("/appointment")}
+          >
+            <Calendar className="w-5 h-5" />
+            {content[currentLanguage].reschedule}
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3"
+            onClick={() => navigate("/past-visits")}
+          >
+            <FileText className="w-5 h-5" />
+            {content[currentLanguage].pastVisits}
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 };
