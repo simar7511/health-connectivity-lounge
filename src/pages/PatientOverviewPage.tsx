@@ -125,21 +125,26 @@ const PatientOverviewPage = () => {
       ...customExams
     ].join(", ");
 
-    // Show first toast immediately
+    console.log("Showing first toast");
     toast({
       title: "Exam Request Sent",
       description: `The exam request has been sent to the provider. You will be notified when it's reviewed.`,
-      duration: 3000, // Show for 3 seconds
+      variant: "default",
     });
 
-    // Show second toast after a delay
+    console.log("Setting timeout for second toast");
     setTimeout(() => {
+      console.log("Showing second toast");
       toast({
         title: "Exam Request Details",
         description: `Ordered the following exams for ${patient.name}: ${allExams}`,
-        duration: 4000, // Show for 4 seconds
+        variant: "default",
       });
-    }, 3500); // Wait until after first toast is gone
+    }, 1000);
+
+    // Clear selections after order
+    setSelectedExams([]);
+    setCustomExams([]);
   };
 
   const handleSendResult = (examId: string) => {
