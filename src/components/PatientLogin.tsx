@@ -1,11 +1,10 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { auth, setUpRecaptcha } from "@/lib/firebase";
-import { signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 
 interface PatientLoginProps {
   language: "en" | "es";
@@ -13,24 +12,11 @@ interface PatientLoginProps {
   onLogin: () => void;
 }
 
-declare global {
-  interface Window {
-    recaptchaVerifier: any;
-    confirmationResult: any;
-  }
-}
-
 const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!window.recaptchaVerifier) {
-      setUpRecaptcha();
-    }
-  }, []);
 
   const formatPhoneNumber = (number: string) => {
     return number.startsWith("+") ? number.trim() : `+1${number.trim()}`;
@@ -45,28 +31,13 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
     }
 
     try {
-      if (!window.recaptchaVerifier) {
-        toast({ title: "Error", description: "reCAPTCHA not initialized. Refresh and try again." });
-        setUpRecaptcha();
-        return;
-      }
-
       console.log(`📩 Sending OTP to: ${formattedPhone}`);
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier!);
-
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, null); // ❌ Removed reCAPTCHA
       setConfirmationResult(confirmation);
-      window.confirmationResult = confirmation;
-
       toast({ title: "OTP Sent", description: "Check your phone for the verification code." });
     } catch (error: any) {
       console.error("❌ Error sending OTP:", error);
       toast({ title: "Error", description: error.message || "Failed to send OTP. Try again." });
-
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-        setUpRecaptcha();
-      }
     }
   };
 
@@ -98,8 +69,6 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
         <h1 className="text-2xl font-bold text-center text-primary">
           {language === "en" ? "Patient Login" : "Inicio de Sesión del Paciente"}
         </h1>
-
-        <div id="recaptcha-container"></div>
 
         {!confirmationResult ? (
           <>
