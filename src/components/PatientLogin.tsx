@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +6,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { auth, setUpRecaptcha } from "@/lib/firebase";
 import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
 
-// Add type declaration for global grecaptcha
+// Define types for window object extensions
 declare global {
   interface Window {
-    grecaptcha: any;
-    recaptchaVerifier: any;
+    recaptchaVerifier: RecaptchaVerifier | null;
     confirmationResult: any;
+    grecaptcha?: any;
   }
 }
 
@@ -22,34 +21,22 @@ interface PatientLoginProps {
   onLogin: () => void;
 }
 
-// ✅ Declare global types for TypeScript compatibility
-declare global {
-  interface Window {
-    grecaptcha?: any;
-    recaptchaVerifier?: RecaptchaVerifier;
-    confirmationResult?: any;
-  }
-}
-
 const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const { toast } = useToast();
 
-  // ✅ Initialize reCAPTCHA when component mounts
   useEffect(() => {
     if (!window.recaptchaVerifier) {
       setUpRecaptcha();
     }
   }, []);
 
-  // ✅ Format phone number (adds country code if missing)
   const formatPhoneNumber = (number: string) => {
     return number.startsWith("+") ? number.trim() : `+1${number.trim()}`;
   };
 
-  // ✅ Send OTP with reCAPTCHA handling
   const sendOTP = async () => {
     const formattedPhone = formatPhoneNumber(phone);
 
@@ -91,7 +78,6 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
     }
   };
 
-  // ✅ Verify OTP and complete authentication
   const verifyOTP = async () => {
     if (!otp || otp.length !== 6) {
       toast({ title: "Invalid OTP", description: "Enter a valid 6-digit OTP." });
@@ -121,7 +107,6 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
           {language === "en" ? "Patient Login" : "Inicio de Sesión del Paciente"}
         </h1>
 
-        {/* ✅ reCAPTCHA Container */}
         <div id="recaptcha-container"></div>
 
         {!confirmationResult ? (
