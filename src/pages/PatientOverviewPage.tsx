@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import jsPDF from 'jspdf';
 
 const mockPatients: Patient[] = [
   {
@@ -154,9 +155,24 @@ const PatientOverviewPage = () => {
       setCurrentReport(report);
       setReportDialogOpen(true);
       
+      // Generate PDF
+      const pdf = new jsPDF();
+      const splitReport = report.split('\n');
+      let yOffset = 10;
+      
+      splitReport.forEach((line) => {
+        if (line.trim()) {
+          pdf.text(line, 10, yOffset);
+          yOffset += 7;
+        }
+      });
+      
+      // Save the PDF
+      pdf.save(`blood_pressure_report_${patient.name.replace(/\s+/g, '_')}.pdf`);
+      
       toast({
         title: "Report Generated",
-        description: `Blood pressure report has been generated in ${language === 'es' ? 'Spanish' : 'English'}.`,
+        description: `Blood pressure report has been generated in ${language === 'es' ? 'Spanish' : 'English'} and downloaded.`,
       });
     } else {
       toast({
