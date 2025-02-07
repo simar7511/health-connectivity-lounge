@@ -1,11 +1,12 @@
+
 import { initializeApp } from "firebase/app";
 import { getAuth, RecaptchaVerifier } from "firebase/auth";
 
-// Extend the Window interface for TypeScript
 declare global {
   interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-    confirmationResult?: any;
+    recaptchaVerifier: RecaptchaVerifier | undefined;
+    confirmationResult: any | undefined;
+    grecaptcha: any;
   }
 }
 
@@ -21,7 +22,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// ✅ Ensure reCAPTCHA is initialized only once
 const setUpRecaptcha = () => {
   if (!window.recaptchaVerifier) {
     window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
@@ -39,4 +39,3 @@ const setUpRecaptcha = () => {
 };
 
 export { auth, setUpRecaptcha };
-
