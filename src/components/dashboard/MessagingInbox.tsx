@@ -25,8 +25,8 @@ const content = {
 };
 
 const mockMessages = [
-  { id: 1, unread: true, from: "Maria Garcia", preview: "Lab results attached" },
-  { id: 2, unread: true, from: "John Doe", preview: "Follow-up question" },
+  { id: 1, unread: true, from: "Dr. Maria Garcia", preview: "Lab results attached" },
+  { id: 2, unread: true, from: "Dr. John Doe", preview: "Follow-up question" },
 ];
 
 export const MessagingInbox = ({ language }: MessagingInboxProps) => {

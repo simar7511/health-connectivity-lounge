@@ -33,17 +33,6 @@ export const ChatPage = () => {
 
     setMessages((prev) => [...prev, message]);
     setNewMessage("");
-    
-    // Simulate provider response after 1 second
-    setTimeout(() => {
-      const response: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "Thank you for your message. A healthcare provider will respond shortly.",
-        sender: "provider",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, response]);
-    }, 1000);
   };
 
   const formatTime = (date: Date) => {
@@ -59,7 +48,7 @@ export const ChatPage = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="ml-4 text-xl font-semibold">Secure Chat</h1>
+        <h1 className="ml-4 text-xl font-semibold">Dr. Maria Garcia</h1>
       </div>
 
       <ScrollArea className="flex-1 p-4">
