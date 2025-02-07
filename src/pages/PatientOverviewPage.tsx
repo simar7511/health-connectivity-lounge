@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
@@ -42,11 +41,7 @@ const mockPatients: Patient[] = [
 const commonExams = [
   { id: "ultrasound", name: "Ultrasound", purpose: "Check baby's growth, placenta health", results: "Normal growth, possible abnormalities" },
   { id: "gtt", name: "Glucose Tolerance Test (GTT)", purpose: "Screen for gestational diabetes", results: "Normal, High sugar levels (diabetes risk)" },
-  { id: "gbs", name: "Group B Strep Test", purpose: "Check for bacterial infection in mother", results: "Negative, Positive (requires antibiotics)" },
   { id: "bp", name: "Blood Pressure Check", purpose: "Monitor for preeclampsia risk", results: "Normal, High BP (risk of complications)" },
-  { id: "urine", name: "Urine Test", purpose: "Check for infections and protein levels", results: "Normal, Protein found (preeclampsia risk)" },
-  { id: "nst", name: "Non-Stress Test (NST)", purpose: "Monitor baby's heart rate & movement", results: "Normal, Irregular heartbeat (further tests needed)" },
-  { id: "cbc", name: "Complete Blood Count (CBC)", purpose: "Detect anemia or infections", results: "Normal, Low iron (anemia risk)" },
 ];
 
 const PatientOverviewPage = () => {
@@ -191,53 +186,6 @@ const PatientOverviewPage = () => {
           </div>
 
           <div className="p-6 bg-white rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Exam Results</h2>
-            <div className="space-y-6">
-              {commonExams.map((exam) => (
-                <div key={exam.id} className="p-4 border rounded-lg">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-medium">{exam.name}</h3>
-                      <p className="text-sm text-muted-foreground">{exam.purpose}</p>
-                    </div>
-                    {getStatusBadge(exam.results)}
-                  </div>
-                  <p className="text-sm mb-4">{exam.results}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSendResult(exam.id)}
-                      className="flex items-center"
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      Send to Patient
-                    </Button>
-                    <Select
-                      value={selectedLanguage}
-                      onValueChange={(value) => {
-                        setSelectedLanguage(value);
-                        handleGeneratePDF(exam.id, value);
-                      }}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <Button variant="outline" size="sm" className="w-full flex items-center">
-                          <FileText className="mr-2 h-4 w-4" />
-                          Generate PDF
-                        </Button>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Recommended Exams</h2>
             <div className="space-y-4">
               {commonExams.map((exam) => (
@@ -301,6 +249,51 @@ const PatientOverviewPage = () => {
                 </Button>
               </div>
             )}
+          </div>
+
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Exam Results</h2>
+            <div className="space-y-6">
+              {commonExams.map((exam) => (
+                <div key={exam.id} className="p-4 border rounded-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-medium">{exam.name}</h3>
+                      <p className="text-sm text-muted-foreground">{exam.purpose}</p>
+                    </div>
+                    {getStatusBadge(exam.results)}
+                  </div>
+                  <p className="text-sm mb-4">{exam.results}</p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSendResult(exam.id)}
+                      className="flex items-center"
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      Send to Patient
+                    </Button>
+                    <Select
+                      value={selectedLanguage}
+                      onValueChange={(value) => {
+                        setSelectedLanguage(value);
+                        handleGeneratePDF(exam.id, value);
+                      }}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Generate PDF
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
