@@ -6,15 +6,16 @@ import { useToast } from "@/components/ui/use-toast";
 import { auth, setUpRecaptcha } from "@/lib/firebase";
 import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
 
-// Define types for window object extensions
+// Add type declaration for global grecaptcha
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier | null;
+    grecaptcha: any;
+    recaptchaVerifier: any;
     confirmationResult: any;
-    grecaptcha?: any;
   }
 }
 
+// ✅ Define Props for Language Support
 interface PatientLoginProps {
   language: "en" | "es";
   onBack: () => void;
@@ -48,6 +49,7 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
     try {
       if (!window.recaptchaVerifier) {
         toast({ title: "Error", description: "reCAPTCHA not initialized. Refresh and try again." });
+        setUpRecaptcha(); // Reinitialize reCAPTCHA
         return;
       }
 
@@ -60,15 +62,15 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
         }
       });
 
-      console.log(`Sending OTP to: ${formattedPhone}`);
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
+      console.log(`📩 Sending OTP to: ${formattedPhone}`);
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier!);
 
       setConfirmationResult(confirmation);
       window.confirmationResult = confirmation;
 
       toast({ title: "OTP Sent", description: "Check your phone for the verification code." });
     } catch (error: any) {
-      console.error("Error sending OTP:", error);
+      console.error("❌ Error sending OTP:", error);
       toast({ title: "Error", description: error.message || "Failed to send OTP. Try again." });
 
       // Reset reCAPTCHA in case of failure
@@ -90,12 +92,12 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
         return;
       }
 
-      console.log("Verifying OTP...");
+      console.log("🔑 Verifying OTP...");
       await confirmationResult.confirm(otp);
       toast({ title: "Login Successful" });
       onLogin();
     } catch (error: any) {
-      console.error("Error verifying OTP:", error);
+      console.error("❌ Error verifying OTP:", error);
       toast({ title: "Error", description: "Invalid OTP. Try again." });
     }
   };

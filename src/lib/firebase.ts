@@ -1,8 +1,25 @@
 
 import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier } from "firebase/auth";
+import { 
+  getAuth, 
+  RecaptchaVerifier, 
+  signInWithPhoneNumber 
+} from "firebase/auth";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc 
+} from "firebase/firestore";
 
-// Firebase Configuration
+// Extend the Window interface for TypeScript
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier | null;
+    confirmationResult?: any;
+  }
+}
+
+// ✅ Firebase Configuration (Update with correct values from Firebase Console)
 const firebaseConfig = {
   apiKey: "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw",
   authDomain: "health-connectivity-01.firebaseapp.com",
@@ -15,11 +32,14 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Setup reCAPTCHA only once
+auth.useDeviceLanguage(); // Ensures Firebase auth respects user language settings
+
+// ✅ Setup reCAPTCHA only once
 const setUpRecaptcha = () => {
-  if (!window.recaptchaVerifier) {
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+  if (!customWindow.recaptchaVerifier) {
+    customWindow.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
       size: "invisible",
       callback: (response: any) => {
         console.log("✅ reCAPTCHA solved, proceeding with OTP", response);
@@ -27,14 +47,16 @@ const setUpRecaptcha = () => {
       "expired-callback": () => {
         console.warn("⚠️ reCAPTCHA expired, reloading...");
         window.recaptchaVerifier?.clear();
-        setUpRecaptcha();
+        setUpRecaptcha(); // Reinitialize if expired
       },
     });
 
-    window.recaptchaVerifier.render().catch((error: Error) => {
+    // ✅ Ensure reCAPTCHA is fully rendered
+    window.recaptchaVerifier.render().catch((error) => {
       console.error("❌ Error rendering reCAPTCHA:", error);
     });
   }
 };
 
+// ✅ Export Firebase Authentication and reCAPTCHA setup
 export { auth, setUpRecaptcha };
