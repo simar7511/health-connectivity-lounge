@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
@@ -97,7 +96,6 @@ const PatientOverviewPage = () => {
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [otherExam, setOtherExam] = useState("");
   const [customExams, setCustomExams] = useState<string[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [currentReport, setCurrentReport] = useState("");
 
@@ -199,30 +197,25 @@ const PatientOverviewPage = () => {
       splitReport.forEach((line) => {
         if (line.trim()) {
           if (line.includes('----------------------------------------')) {
-            // Draw a line instead of dashes
             pdf.line(10, yOffset - 2, 200, yOffset - 2);
             yOffset += 5;
           } else if (line === (language === 'es' ? 'INFORME DE PRESIÓN ARTERIAL' : 'BLOOD PRESSURE REPORT')) {
-            // Make titles bold
             pdf.setFont('helvetica', 'bold');
             pdf.text(line, 10, yOffset);
             pdf.setFont('helvetica', 'normal');
             yOffset += 10;
           } else {
-            // Regular text
             pdf.text(line, 10, yOffset);
             yOffset += 7;
           }
         }
       });
       
-      // Add footer
       pdf.setFontSize(8);
       const currentDate = new Date().toLocaleDateString();
       pdf.text(`Generated on: ${currentDate}`, 10, pdf.internal.pageSize.height - 10);
       
-      // Save the PDF
-      pdf.save(`blood_pressure_report_${patient.name.replace(/\s+/g, '_')}.pdf`);
+      pdf.save(`blood_pressure_report_${patient.name.replace(/\s+/g, '_')}_${language}.pdf`);
       
       toast({
         title: "Report Generated",
@@ -371,22 +364,24 @@ const PatientOverviewPage = () => {
                       <Send className="mr-2 h-4 w-4" />
                       Send to Patient
                     </Button>
-                    <Select
-                      value={selectedLanguage}
-                      onValueChange={(value) => {
-                        setSelectedLanguage(value);
-                        handleGeneratePDF(exam.id, value);
-                      }}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGeneratePDF(exam.id, 'en')}
+                      className="flex items-center"
                     >
-                      <SelectTrigger className="w-[180px]">
-                        <FileText className="mr-2 h-4 w-4" />
-                        Generate PDF
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <FileText className="mr-2 h-4 w-4" />
+                      PDF (English)
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGeneratePDF(exam.id, 'es')}
+                      className="flex items-center"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      PDF (Spanish)
+                    </Button>
                   </div>
                 </div>
               ))}
