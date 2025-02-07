@@ -6,6 +6,7 @@ import { Patient } from "@/types/patient";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
 
 const mockPatients: Patient[] = [
   {
@@ -46,6 +47,8 @@ const PatientOverviewPage = () => {
   const { toast } = useToast();
   const patient = mockPatients.find(p => p.id === patientId);
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
+  const [otherExam, setOtherExam] = useState("");
+  const [customExams, setCustomExams] = useState<string[]>([]);
 
   if (!patient) {
     return <div>Patient not found</div>;
@@ -60,8 +63,15 @@ const PatientOverviewPage = () => {
     });
   };
 
+  const handleAddOtherExam = () => {
+    if (otherExam.trim()) {
+      setCustomExams(prev => [...prev, otherExam.trim()]);
+      setOtherExam("");
+    }
+  };
+
   const handleOrderExams = () => {
-    if (selectedExams.length === 0) {
+    if (selectedExams.length === 0 && customExams.length === 0) {
       toast({
         title: "No Exams Selected",
         description: "Please select at least one exam to order.",
@@ -70,14 +80,19 @@ const PatientOverviewPage = () => {
       return;
     }
 
-    const examNames = selectedExams
+    const standardExams = selectedExams
       .map(id => commonExams.find(e => e.id === id)?.name)
       .filter(Boolean)
       .join(", ");
 
+    const allExams = [
+      ...selectedExams.map(id => commonExams.find(e => e.id === id)?.name).filter(Boolean),
+      ...customExams
+    ].join(", ");
+
     toast({
       title: "Exam Request Ordered",
-      description: `Ordered the following exams for ${patient.name}: ${examNames}`,
+      description: `Ordered the following exams for ${patient.name}: ${allExams}`,
     });
   };
 
@@ -150,15 +165,44 @@ const PatientOverviewPage = () => {
                   </div>
                 </div>
               ))}
+
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-lg font-medium mb-3">Other Exams</h3>
+                <div className="flex gap-2 mb-4">
+                  <Input
+                    placeholder="Enter other exam name"
+                    value={otherExam}
+                    onChange={(e) => setOtherExam(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleAddOtherExam}
+                    variant="secondary"
+                  >
+                    Add Exam
+                  </Button>
+                </div>
+
+                {customExams.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="font-medium">Added Custom Exams:</p>
+                    <ul className="list-disc pl-5">
+                      {customExams.map((exam, index) => (
+                        <li key={index}>{exam}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {selectedExams.length > 0 && (
+            {(selectedExams.length > 0 || customExams.length > 0) && (
               <div className="mt-6">
                 <Button 
                   onClick={handleOrderExams}
                   className="w-full"
                 >
-                  Order Exam Request ({selectedExams.length} selected)
+                  Order Exam Request ({selectedExams.length + customExams.length} selected)
                 </Button>
               </div>
             )}
