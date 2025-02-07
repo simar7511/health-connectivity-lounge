@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { generateBloodPressureReport } from "@/utils/bloodPressureReport";
 import {
   Select,
   SelectContent,
@@ -39,7 +40,14 @@ const mockPatients: Patient[] = [
 ];
 
 const commonExams = [
-  { id: "bp", name: "Blood Pressure Check", purpose: "Monitor for preeclampsia risk", results: "High BP (Critical: 150/95)" },
+  { 
+    id: "bp", 
+    name: "Blood Pressure Check", 
+    purpose: "Monitor for preeclampsia risk", 
+    results: "High BP (Critical: 150/95)",
+    date: "2024-03-15",
+    values: { systolic: 150, diastolic: 95 }
+  },
   { id: "ultrasound", name: "Ultrasound", purpose: "Check baby's growth, placenta health", results: "Normal growth, possible abnormalities" },
   { id: "gtt", name: "Glucose Tolerance Test (GTT)", purpose: "Screen for gestational diabetes", results: "Normal, High sugar levels (diabetes risk)" },
   { id: "cbc", name: "Complete Blood Count", purpose: "Check for anemia and infection", results: "Normal blood cell counts" },
@@ -116,36 +124,31 @@ const PatientOverviewPage = () => {
 
   const handleGeneratePDF = (examId: string, language: string) => {
     const exam = commonExams.find(e => e.id === examId);
-    if (exam) {
+    if (exam && exam.id === "bp" && patient) {
+      const reportData = {
+        patientName: patient.name,
+        examDate: exam.date,
+        systolic: exam.values.systolic,
+        diastolic: exam.values.diastolic
+      };
+      
+      const report = generateBloodPressureReport(reportData, language as 'en' | 'es');
+      
+      // In a real application, you would use a PDF generation library here
+      // For now, we'll just show a toast
       toast({
         title: "PDF Generated",
-        description: `${exam.name} report has been generated in ${language === 'es' ? 'Spanish' : 'English'}.`,
+        description: `Blood pressure report has been generated in ${language === 'es' ? 'Spanish' : 'English'}.`,
+      });
+      
+      // For demonstration, log the report to console
+      console.log("Generated Report:", report);
+    } else {
+      toast({
+        title: "PDF Generated",
+        description: `${exam?.name} report has been generated in ${language === 'es' ? 'Spanish' : 'English'}.`,
       });
     }
-  };
-
-  const getStatusBadge = (results: string) => {
-    if (results.toLowerCase().includes("normal")) {
-      return (
-        <Badge className="bg-[#F2FCE2] text-green-700 flex items-center gap-1">
-          <CheckCircle className="h-4 w-4" />
-          Normal
-        </Badge>
-      );
-    } else if (results.toLowerCase().includes("high") || results.toLowerCase().includes("risk")) {
-      return (
-        <Badge className="bg-[#FEF7CD] text-yellow-700 flex items-center gap-1">
-          <AlertCircle className="h-4 w-4" />
-          Needs Monitoring
-        </Badge>
-      );
-    }
-    return (
-      <Badge variant="destructive" className="flex items-center gap-1">
-        <XCircle className="h-4 w-4" />
-        Critical
-      </Badge>
-    );
   };
 
   return (
