@@ -1,3 +1,4 @@
+
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
@@ -55,8 +56,18 @@ const commonExams = [
     date: "2024-03-15",
     values: { systolic: 150, diastolic: 95 }
   },
-  { id: "ultrasound", name: "Ultrasound", purpose: "Check baby's growth, placenta health", results: "Normal growth, possible abnormalities" },
-  { id: "gtt", name: "Glucose Tolerance Test (GTT)", purpose: "Screen for gestational diabetes", results: "Normal, High sugar levels (diabetes risk)" },
+  { 
+    id: "ultrasound", 
+    name: "Ultrasound", 
+    purpose: "Check baby's growth, placenta health", 
+    results: "Normal growth" 
+  },
+  { 
+    id: "gtt", 
+    name: "Glucose Tolerance Test (GTT)", 
+    purpose: "Screen for gestational diabetes", 
+    results: "Normal" 
+  },
   { id: "cbc", name: "Complete Blood Count", purpose: "Check for anemia and infection", results: "Normal blood cell counts" },
   { id: "urine", name: "Urine Analysis", purpose: "Check for protein, bacteria, and sugar", results: "Normal levels" },
   { id: "thyroid", name: "Thyroid Function Test", purpose: "Monitor thyroid hormone levels", results: "Within normal range" },
