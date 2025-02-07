@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 import Index from "./pages/Index";
@@ -13,7 +13,7 @@ import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import SymptomCheckerPage from "./pages/SymptomCheckerPage";
 import PatientOverviewPage from "./pages/PatientOverviewPage";
-import { MedicalChat } from "./components/MedicalChat";
+import { VoiceTranslator } from "./components/VoiceTranslator";
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
@@ -41,7 +41,7 @@ const App = () => {
       </Routes>
 
       <div className="fixed bottom-4 right-4">
-        <MedicalChat language={language} />
+        <VoiceTranslator language={language} />
       </div>
     </BrowserRouter>
   );
