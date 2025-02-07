@@ -4,12 +4,21 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { auth, setUpRecaptcha } from "@/lib/firebase";
-import { signInWithPhoneNumber } from "firebase/auth";
+import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
 
 interface PatientLoginProps {
   language: "en" | "es";
   onBack: () => void;
   onLogin: () => void;
+}
+
+// ✅ Declare global types for TypeScript compatibility
+declare global {
+  interface Window {
+    grecaptcha?: any;
+    recaptchaVerifier?: RecaptchaVerifier;
+    confirmationResult?: any;
+  }
 }
 
 const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
@@ -18,14 +27,19 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const { toast } = useToast();
 
+  // ✅ Initialize reCAPTCHA when component mounts
   useEffect(() => {
-    setUpRecaptcha(); // Ensure reCAPTCHA is set up when the component mounts
+    if (!window.recaptchaVerifier) {
+      setUpRecaptcha();
+    }
   }, []);
 
+  // ✅ Format phone number (adds country code if missing)
   const formatPhoneNumber = (number: string) => {
     return number.startsWith("+") ? number.trim() : `+1${number.trim()}`;
   };
 
+  // ✅ Send OTP with reCAPTCHA handling
   const sendOTP = async () => {
     const formattedPhone = formatPhoneNumber(phone);
 
@@ -36,29 +50,38 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
 
     try {
       if (!window.recaptchaVerifier) {
-        toast({ title: "Error", description: "reCAPTCHA not initialized. Please refresh and try again." });
+        toast({ title: "Error", description: "reCAPTCHA not initialized. Refresh and try again." });
         return;
       }
 
+      // Ensure reCAPTCHA is fully loaded before sending OTP
+      await new Promise((resolve) => {
+        if (window.grecaptcha) {
+          resolve(true);
+        } else {
+          setTimeout(resolve, 2000);
+        }
+      });
+
       console.log(`Sending OTP to: ${formattedPhone}`);
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
-      
+
       setConfirmationResult(confirmation);
-      window.confirmationResult = confirmation; // Store globally for debugging
+      window.confirmationResult = confirmation;
 
       toast({ title: "OTP Sent", description: "Check your phone for the verification code." });
     } catch (error: any) {
       console.error("Error sending OTP:", error);
       toast({ title: "Error", description: error.message || "Failed to send OTP. Try again." });
 
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.render().then((widgetId: any) => {
-          grecaptcha.reset(widgetId);
-        });
+      // Reset reCAPTCHA in case of failure
+      if (window.grecaptcha && typeof window.grecaptcha.reset === "function") {
+        window.grecaptcha.reset();
       }
     }
   };
 
+  // ✅ Verify OTP and complete authentication
   const verifyOTP = async () => {
     if (!otp || otp.length !== 6) {
       toast({ title: "Invalid OTP", description: "Enter a valid 6-digit OTP." });
@@ -88,6 +111,7 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
           {language === "en" ? "Patient Login" : "Inicio de Sesión del Paciente"}
         </h1>
 
+        {/* ✅ reCAPTCHA Container */}
         <div id="recaptcha-container"></div>
 
         {!confirmationResult ? (
