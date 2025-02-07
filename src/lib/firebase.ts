@@ -11,15 +11,7 @@ import {
   addDoc 
 } from "firebase/firestore";
 
-// Extend the Window interface for TypeScript
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier | null;
-    confirmationResult?: any;
-  }
-}
-
-// ✅ Firebase Configuration (Update with correct values from Firebase Console)
+// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw",
   authDomain: "health-connectivity-01.firebaseapp.com",
@@ -36,10 +28,10 @@ const db = getFirestore(app);
 
 auth.useDeviceLanguage(); // Ensures Firebase auth respects user language settings
 
-// ✅ Setup reCAPTCHA only once
+// Setup reCAPTCHA verification
 const setUpRecaptcha = () => {
-  if (!customWindow.recaptchaVerifier) {
-    customWindow.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+  if (!window.recaptchaVerifier) {
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
       size: "invisible",
       callback: (response: any) => {
         console.log("✅ reCAPTCHA solved, proceeding with OTP", response);
@@ -51,12 +43,11 @@ const setUpRecaptcha = () => {
       },
     });
 
-    // ✅ Ensure reCAPTCHA is fully rendered
+    // Ensure reCAPTCHA is fully rendered
     window.recaptchaVerifier.render().catch((error) => {
       console.error("❌ Error rendering reCAPTCHA:", error);
     });
   }
 };
 
-// ✅ Export Firebase Authentication and reCAPTCHA setup
 export { auth, setUpRecaptcha };

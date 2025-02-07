@@ -1,8 +1,14 @@
-// ✅ Extend the Window interface once, ensuring proper optional properties
+
+// Define the custom window interface
 interface CustomWindow extends Window {
   recaptchaVerifier?: RecaptchaVerifier | null;
   confirmationResult?: any;
+  grecaptcha?: any;
 }
 
-// ✅ Explicitly cast the global window object to CustomWindow
-const customWindow = window as CustomWindow;
+// Export the type definition
+declare global {
+  interface Window extends CustomWindow {}
+}
+
+export {};
