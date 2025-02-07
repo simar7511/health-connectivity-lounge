@@ -68,3 +68,4 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
     </Card>
   );
 };
+

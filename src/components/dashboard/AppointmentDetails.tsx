@@ -201,3 +201,4 @@ export const AppointmentDetails = ({ language, patients }: AppointmentDetailsPro
     </Card>
   );
 };
+
