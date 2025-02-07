@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,15 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { auth, setUpRecaptcha } from "@/lib/firebase";
 import { signInWithPhoneNumber } from "firebase/auth";
+
+// Add type declaration for global grecaptcha
+declare global {
+  interface Window {
+    grecaptcha: any;
+    recaptchaVerifier: any;
+    confirmationResult: any;
+  }
+}
 
 interface PatientLoginProps {
   language: "en" | "es";
