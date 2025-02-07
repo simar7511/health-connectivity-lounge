@@ -1,4 +1,5 @@
 
+import 'regenerator-runtime/runtime';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -77,7 +78,6 @@ export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
       const translatedContent = data.choices[0].message.content;
       setTranslatedText(translatedContent);
       
-      // Speak the translation
       speak({ 
         text: translatedContent, 
         lang: language === "en" ? "es-ES" : "en-US"
