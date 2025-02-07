@@ -1,10 +1,10 @@
+
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
 import { MessagingInbox } from "./dashboard/MessagingInbox";
-import { QuickDocumentation } from "./dashboard/QuickDocumentation";
 import { Button } from "@/components/ui/button";
-import { Globe, MessageCircle } from "lucide-react";
+import { Globe } from "lucide-react";
 import { Patient } from "@/types/patient";
 
 interface ProviderDashboardProps {
@@ -52,13 +52,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const { toast } = useToast();
   const [currentLanguage, setCurrentLanguage] = useState(language);
 
-  const handleStartChat = () => {
-    toast({
-      title: translations[currentLanguage].startChat,
-      description: translations[currentLanguage].preparingChat,
-    });
-  };
-
   const handleTranslate = () => {
     setCurrentLanguage((prev) => (prev === "en" ? "es" : "en"));
     toast({
@@ -82,7 +75,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <AppointmentsList
           language={currentLanguage}
           patients={mockPatients}
@@ -90,12 +83,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 
         <MessagingInbox
           language={currentLanguage}
-          onStartChat={handleStartChat}
-        />
-
-        <QuickDocumentation
-          language={currentLanguage}
-          onTranslate={handleTranslate}
+          onStartChat={() => {}}
         />
       </div>
     </div>
