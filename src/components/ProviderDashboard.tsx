@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -40,15 +39,11 @@ const translations = {
   en: {
     dashboard: "Provider Dashboard",
     translate: "Translate",
-    startChat: "Start Chat",
-    preparingChat: "Preparing secure chat...",
     translatedTo: "Translated to Spanish",
   },
   es: {
     dashboard: "Panel del Proveedor",
     translate: "Traducir",
-    startChat: "Iniciar Chat",
-    preparingChat: "Preparando chat seguro...",
     translatedTo: "Traducido al inglés",
   }
 };
@@ -103,20 +98,8 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
           onTranslate={handleTranslate}
         />
       </div>
-
-      <div className="flex justify-center mt-6">
-        <Button
-          variant="secondary"
-          className="flex items-center gap-2"
-          onClick={handleStartChat}
-        >
-          <MessageCircle className="h-5 w-5" />
-          {translations[currentLanguage].startChat}
-        </Button>
-      </div>
     </div>
   );
 };
 
 export default ProviderDashboard;
-
