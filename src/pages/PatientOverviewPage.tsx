@@ -42,6 +42,12 @@ const commonExams = [
   { id: "ultrasound", name: "Ultrasound", purpose: "Check baby's growth, placenta health", results: "Normal growth, possible abnormalities" },
   { id: "gtt", name: "Glucose Tolerance Test (GTT)", purpose: "Screen for gestational diabetes", results: "Normal, High sugar levels (diabetes risk)" },
   { id: "bp", name: "Blood Pressure Check", purpose: "Monitor for preeclampsia risk", results: "Normal, High BP (risk of complications)" },
+  { id: "cbc", name: "Complete Blood Count", purpose: "Check for anemia and infection", results: "Normal blood cell counts" },
+  { id: "urine", name: "Urine Analysis", purpose: "Check for protein, bacteria, and sugar", results: "Normal levels" },
+  { id: "thyroid", name: "Thyroid Function Test", purpose: "Monitor thyroid hormone levels", results: "Within normal range" },
+  { id: "strep", name: "Group B Strep Culture", purpose: "Screen for bacterial infection", results: "Negative for GBS" },
+  { id: "hiv", name: "HIV Test", purpose: "Screen for HIV infection", results: "Non-reactive" },
+  { id: "iron", name: "Iron Studies", purpose: "Check iron levels and storage", results: "Normal ferritin levels" },
 ];
 
 const PatientOverviewPage = () => {
