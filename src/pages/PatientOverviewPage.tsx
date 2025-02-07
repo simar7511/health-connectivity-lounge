@@ -61,6 +61,16 @@ const commonExams = [
 // Only show the first three exams in results
 const displayedExams = commonExams.slice(0, 3);
 
+const getStatusBadge = (results: string) => {
+  if (results.toLowerCase().includes('normal')) {
+    return <Badge className="bg-green-500"><CheckCircle className="w-4 h-4 mr-1" /> Normal</Badge>;
+  }
+  if (results.toLowerCase().includes('high')) {
+    return <Badge className="bg-red-500"><XCircle className="w-4 h-4 mr-1" /> High Risk</Badge>;
+  }
+  return <Badge className="bg-yellow-500"><AlertCircle className="w-4 h-4 mr-1" /> Attention Needed</Badge>;
+};
+
 const PatientOverviewPage = () => {
   const { patientId } = useParams();
   const navigate = useNavigate();
