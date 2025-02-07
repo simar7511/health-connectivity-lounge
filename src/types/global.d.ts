@@ -2,7 +2,6 @@
 // Define the custom window interface
 interface CustomWindow extends Window {
   recaptchaVerifier?: RecaptchaVerifier | null;
-  confirmationResult?: any;
   grecaptcha?: any;
 }
 

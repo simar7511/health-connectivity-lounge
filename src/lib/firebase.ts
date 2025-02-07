@@ -1,16 +1,7 @@
 
 import { initializeApp } from "firebase/app";
-import { 
-  getAuth, 
-  RecaptchaVerifier, 
-  signInWithPhoneNumber 
-} from "firebase/auth";
-import { 
-  getFirestore, 
-  collection, 
-  addDoc,
-  serverTimestamp
-} from "firebase/firestore";
+import { getAuth, RecaptchaVerifier } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -29,25 +20,4 @@ const db = getFirestore(app);
 
 auth.useDeviceLanguage();
 
-// Setup reCAPTCHA verification
-const setUpRecaptcha = () => {
-  if (!window.recaptchaVerifier) {
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-      size: "invisible",
-      callback: (response: any) => {
-        console.log("✅ reCAPTCHA solved, proceeding with OTP", response);
-      },
-      "expired-callback": () => {
-        console.warn("⚠️ reCAPTCHA expired, reloading...");
-        window.recaptchaVerifier?.clear();
-        setUpRecaptcha();
-      },
-    });
-
-    window.recaptchaVerifier.render().catch((error) => {
-      console.error("❌ Error rendering reCAPTCHA:", error);
-    });
-  }
-};
-
-export { auth, db, setUpRecaptcha };
+export { auth, db };
