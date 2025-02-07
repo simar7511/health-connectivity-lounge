@@ -3,13 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Patient } from "@/types/patient";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -51,21 +45,40 @@ const PatientOverviewPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const patient = mockPatients.find(p => p.id === patientId);
-  const [selectedExam, setSelectedExam] = useState<string>("");
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
 
   if (!patient) {
     return <div>Patient not found</div>;
   }
 
-  const handleExamSelect = (examId: string) => {
-    setSelectedExam(examId);
-    const exam = commonExams.find(e => e.id === examId);
-    if (exam) {
+  const handleExamSelect = (examId: string, checked: boolean) => {
+    setSelectedExams(prev => {
+      if (checked) {
+        return [...prev, examId];
+      }
+      return prev.filter(id => id !== examId);
+    });
+  };
+
+  const handleOrderExams = () => {
+    if (selectedExams.length === 0) {
       toast({
-        title: "Exam Recommended",
-        description: `${exam.name} has been recommended for ${patient.name}`,
+        title: "No Exams Selected",
+        description: "Please select at least one exam to order.",
+        variant: "destructive",
       });
+      return;
     }
+
+    const examNames = selectedExams
+      .map(id => commonExams.find(e => e.id === id)?.name)
+      .filter(Boolean)
+      .join(", ");
+
+    toast({
+      title: "Exam Request Ordered",
+      description: `Ordered the following exams for ${patient.name}: ${examNames}`,
+    });
   };
 
   return (
@@ -116,26 +129,37 @@ const PatientOverviewPage = () => {
 
           <div className="p-6 bg-white rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Recommended Exams</h2>
-            <Select onValueChange={handleExamSelect} value={selectedExam}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select an exam to recommend" />
-              </SelectTrigger>
-              <SelectContent>
-                {commonExams.map((exam) => (
-                  <SelectItem key={exam.id} value={exam.id}>
-                    {exam.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-4">
+              {commonExams.map((exam) => (
+                <div key={exam.id} className="flex items-start space-x-3">
+                  <Checkbox 
+                    id={exam.id}
+                    checked={selectedExams.includes(exam.id)}
+                    onCheckedChange={(checked) => handleExamSelect(exam.id, checked as boolean)}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <label
+                      htmlFor={exam.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {exam.name}
+                    </label>
+                    <p className="text-sm text-muted-foreground">
+                      {exam.purpose}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-            {selectedExam && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold mb-2">
-                  {commonExams.find(e => e.id === selectedExam)?.name}
-                </h4>
-                <p><strong>Purpose:</strong> {commonExams.find(e => e.id === selectedExam)?.purpose}</p>
-                <p><strong>Possible Results:</strong> {commonExams.find(e => e.id === selectedExam)?.results}</p>
+            {selectedExams.length > 0 && (
+              <div className="mt-6">
+                <Button 
+                  onClick={handleOrderExams}
+                  className="w-full"
+                >
+                  Order Exam Request ({selectedExams.length} selected)
+                </Button>
               </div>
             )}
           </div>
