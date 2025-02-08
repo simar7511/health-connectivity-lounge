@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,95 +10,47 @@ import {
   Phone,
   FileText,
   Users,
-  Hospital,
+  HospitalSquare,
   Languages,
   Info,
   Car,
   Bell,
-  CalendarX,
+  MessageSquare,
+  PhoneCall
 } from "lucide-react";
 
-interface PatientDashboardProps {
-  language: "en" | "es";
-}
-
-const PatientDashboard = ({ language }: PatientDashboardProps) => {
-  const [currentLanguage, setCurrentLanguage] = useState(language);
-  const { toast } = useToast();
+const PatientDashboard = ({ language }: { language: "en" | "es" }) => {
   const navigate = useNavigate();
+  const patientPhoneNumber = "+1234567890"; // Replace with actual patient phone
 
-  const content = {
-    en: {
-      upcomingAppointment: "Upcoming Appointment",
-      appointmentDetails: "Next Check-up",
-      transportationDetails: "Transportation Details",
-      healthCheckIns: "Health Check-ins",
-      communityResources: "Support & Resources",
-      manageAppointments: "Manage Appointments",
-      switchLang: "Switch to Spanish",
-      recordSymptoms: "Record Daily Symptoms",
-      viewReminders: "View Care Reminders",
-      findClinics: "Find Free Clinics",
-      communityPrograms: "Community Programs",
-      helplines: "Healthcare Hotlines",
-      rights: "Rights & Resources",
-      cancel: "Cancel Appointment",
-      reschedule: "Reschedule",
-      pastVisits: "Past Visits",
-    },
-    es: {
-      upcomingAppointment: "Próxima Cita",
-      appointmentDetails: "Próximo Control",
-      transportationDetails: "Detalles de Transporte",
-      healthCheckIns: "Control de Salud",
-      communityResources: "Apoyo y Recursos",
-      manageAppointments: "Gestionar Citas",
-      switchLang: "Cambiar a Inglés",
-      recordSymptoms: "Registrar Síntomas Diarios",
-      viewReminders: "Ver Recordatorios",
-      findClinics: "Buscar Clínicas Gratuitas",
-      communityPrograms: "Programas Comunitarios",
-      helplines: "Líneas de Ayuda",
-      rights: "Derechos y Recursos",
-      cancel: "Cancelar Cita",
-      reschedule: "Reprogramar",
-      pastVisits: "Visitas Anteriores",
-    },
+  const sendSMS = () => {
+    const message = encodeURIComponent(
+      language === "en"
+        ? "Reminder: Your appointment is on March 25, 2024, at 10:00 AM with Dr. Sarah Johnson."
+        : "Recordatorio: Su cita es el 25 de marzo de 2024 a las 10:00 AM con la Dra. Sarah Johnson."
+    );
+    window.open(`sms:${patientPhoneNumber}?body=${message}`, "_blank");
   };
 
-  const toggleLanguage = () => {
-    setCurrentLanguage(currentLanguage === "en" ? "es" : "en");
-  };
-
-  const handleCancelAppointment = () => {
-    toast({
-      title: currentLanguage === "en" ? "Appointment Cancelled" : "Cita Cancelada",
-      description: currentLanguage === "en" 
-        ? "Your appointment has been cancelled. You can schedule a new one anytime."
-        : "Su cita ha sido cancelada. Puede programar una nueva en cualquier momento.",
-    });
+  const sendWhatsApp = () => {
+    const message = encodeURIComponent(
+      language === "en"
+        ? "Reminder: Your appointment is on March 25, 2024, at 10:00 AM with Dr. Sarah Johnson."
+        : "Recordatorio: Su cita es el 25 de marzo de 2024 a las 10:00 AM con la Dra. Sarah Johnson."
+    );
+    window.open(`https://wa.me/${patientPhoneNumber}?text=${message}`, "_blank");
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 space-y-6 max-w-2xl mx-auto">
-      {/* Language Toggle */}
-      <div className="flex justify-end">
-        <Button variant="outline" className="flex items-center gap-2" onClick={toggleLanguage}>
-          <Languages className="w-4 h-4" />
-          {content[currentLanguage].switchLang}
-        </Button>
-      </div>
-
       {/* Upcoming Appointment & Transportation */}
       <Card className="p-4 space-y-4">
-        <h2 className="text-xl font-semibold text-primary">
-          {content[currentLanguage].upcomingAppointment}
-        </h2>
+        <h2 className="text-xl font-semibold text-primary">Upcoming Appointment</h2>
         <div className="grid gap-4">
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-primary mt-1" />
             <div>
-              <p className="font-medium">{content[currentLanguage].appointmentDetails}</p>
+              <p className="font-medium">Next Check-up</p>
               <p className="text-sm text-muted-foreground">March 25, 2024 - 10:00 AM</p>
               <p className="text-sm text-muted-foreground">Dr. Sarah Johnson</p>
             </div>
@@ -107,7 +58,7 @@ const PatientDashboard = ({ language }: PatientDashboardProps) => {
           <div className="flex items-start gap-3">
             <Car className="w-5 h-5 text-primary mt-1" />
             <div>
-              <p className="font-medium">{content[currentLanguage].transportationDetails}</p>
+              <p className="font-medium">Transportation Details</p>
               <p className="text-sm text-muted-foreground">Pickup: 9:15 AM</p>
               <p className="text-sm text-muted-foreground">123 Main St, Front Entrance</p>
             </div>
@@ -144,65 +95,11 @@ const PatientDashboard = ({ language }: PatientDashboardProps) => {
             className="flex items-center justify-start gap-3"
             onClick={() => navigate("/free-clinic")}
           >
-            <Hospital className="w-5 h-5" />
+            <HospitalSquare className="w-5 h-5" />
             {content[currentLanguage].findClinics}
           </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center justify-start gap-3"
-            onClick={() => navigate("/community")}
-          >
-            <Users className="w-5 h-5" />
-            {content[currentLanguage].communityPrograms}
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center justify-start gap-3"
-            onClick={() => navigate("/helplines")}
-          >
-            <Phone className="w-5 h-5" />
-            {content[currentLanguage].helplines}
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center justify-start gap-3"
-            onClick={() => navigate("/resources")}
-          >
-            <Info className="w-5 h-5" />
-            {content[currentLanguage].rights}
-          </Button>
-        </div>
-      </Card>
-
-      {/* Appointment Management */}
-      <Card className="p-4 space-y-4">
-        <h2 className="text-xl font-semibold text-primary">
-          {content[currentLanguage].manageAppointments}
-        </h2>
-        <div className="grid gap-3">
-          <Button 
-            variant="outline" 
-            className="flex items-center justify-start gap-3 text-red-500 hover:text-red-600"
-            onClick={handleCancelAppointment}
-          >
-            <CalendarX className="w-5 h-5" />
-            {content[currentLanguage].cancel}
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center justify-start gap-3"
-            onClick={() => navigate("/appointment")}
-          >
-            <Calendar className="w-5 h-5" />
-            {content[currentLanguage].reschedule}
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center justify-start gap-3"
-            onClick={() => navigate("/past-visits")}
-          >
-            <FileText className="w-5 h-5" />
-            {content[currentLanguage].pastVisits}
+          <Button className="bg-green-500 text-white" onClick={sendWhatsApp}>
+            <PhoneCall className="w-5 h-5" /> Send WhatsApp Reminder
           </Button>
         </div>
       </Card>

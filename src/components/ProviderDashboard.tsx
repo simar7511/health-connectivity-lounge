@@ -17,7 +17,7 @@ const mockPatients: Patient[] = [
     id: "1",
     name: "Maria Garcia",
     language: "es",
-    nextAppointment: "2024-03-20T10:00:00",
+    nextAppointment: "2025-02-10T10:00:00",
     reasonForVisit: "Prenatal checkup - 28 weeks",
     demographics: {
       age: 28,
