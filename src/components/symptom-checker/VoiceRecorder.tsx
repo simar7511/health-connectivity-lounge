@@ -38,7 +38,7 @@ export const VoiceRecorder = ({ language, onSymptomsUpdate }: VoiceRecorderProps
         }
 
         if (finalTranscript) {
-          onSymptomsUpdate(prev => prev + finalTranscript);
+          onSymptomsUpdate(finalTranscript);
         }
       };
 

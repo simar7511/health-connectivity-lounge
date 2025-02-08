@@ -11,7 +11,7 @@ import {
   Phone,
   FileText,
   Users,
-  HospitalSquare,
+  Hospital,
   Languages,
   Info,
   Car,
@@ -144,7 +144,7 @@ const PatientDashboard = ({ language }: PatientDashboardProps) => {
             className="flex items-center justify-start gap-3"
             onClick={() => navigate("/free-clinic")}
           >
-            <HospitalSquare className="w-5 h-5" />
+            <Hospital className="w-5 h-5" />
             {content[currentLanguage].findClinics}
           </Button>
           <Button 
