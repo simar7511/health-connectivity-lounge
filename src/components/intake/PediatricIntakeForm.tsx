@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -47,11 +48,12 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     }
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
   };
 
@@ -203,7 +205,12 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
           <Checkbox
             name="consentToTreatment"
             checked={formData.consentToTreatment}
-            onChange={handleChange}
+            onCheckedChange={(checked) => {
+              setFormData(prev => ({
+                ...prev,
+                consentToTreatment: checked as boolean
+              }));
+            }}
           />
           <label className="ml-2">
             {language === "en" ? "I consent to treatment" : "Consiento al tratamiento"}
