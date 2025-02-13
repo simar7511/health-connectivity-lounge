@@ -8,6 +8,58 @@ import { useSpeechSynthesis } from "react-speech-kit";
 import { Mic, StopCircle } from "lucide-react";
 import { Input } from "./ui/input";
 
+interface VoiceRecorderProps {
+  language: "en" | "es";
+  onSymptomsUpdate: (symptoms: string) => void;
+}
+
+export const VoiceRecorder = ({ language, onSymptomsUpdate }: VoiceRecorderProps) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const { toast } = useToast();
+  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+
+  if (!browserSupportsSpeechRecognition) {
+    return <span>Browser doesn't support speech recognition.</span>;
+  }
+
+  const handleStartListening = () => {
+    resetTranscript();
+    SpeechRecognition.startListening({ 
+      continuous: true,
+      language: language === "en" ? "en-US" : "es-ES" 
+    });
+    setIsRecording(true);
+  };
+
+  const handleStopListening = () => {
+    SpeechRecognition.stopListening();
+    setIsRecording(false);
+    if (transcript.trim()) {
+      onSymptomsUpdate(transcript);
+    }
+  };
+
+  return (
+    <Button 
+      className="w-full py-6" 
+      onClick={isRecording ? handleStopListening : handleStartListening}
+      variant={isRecording ? "destructive" : "default"}
+    >
+      {isRecording ? (
+        <>
+          <StopCircle className="mr-2 h-4 w-4" />
+          {language === "en" ? "Stop Recording" : "Detener Grabación"}
+        </>
+      ) : (
+        <>
+          <Mic className="mr-2 h-4 w-4" />
+          {language === "en" ? "Start Recording" : "Comenzar Grabación"}
+        </>
+      )}
+    </Button>
+  );
+};
+
 export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
