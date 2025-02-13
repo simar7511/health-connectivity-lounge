@@ -1,17 +1,17 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, InfoIcon, Globe } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { BasicInfoSection } from "./form-sections/BasicInfoSection";
 import { MedicalInfoSection } from "./form-sections/MedicalInfoSection";
 import { SocialInfoSection } from "./form-sections/SocialInfoSection";
 import { ConsentSection } from "./form-sections/ConsentSection";
+import { LanguageSwitcher } from "./components/LanguageSwitcher";
+import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
+import { SubmitButton } from "./components/SubmitButton";
 
 interface PediatricIntakeFormProps {
   language: "en" | "es";
@@ -126,35 +126,8 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
 
   return (
     <div className="container mx-auto max-w-3xl p-6 space-y-6">
-      <Alert className="bg-yellow-50 border-yellow-200 mb-6">
-        <InfoIcon className="h-4 w-4 text-yellow-600" />
-        <AlertDescription className="text-sm text-yellow-800">
-          {language === "en" 
-            ? "🚨 This form is private and will NOT be shared with law enforcement or immigration authorities. This clinic provides care regardless of immigration status."
-            : "🚨 Este formulario es privado y NO será compartido con la policía ni con autoridades de inmigración. Esta clínica brinda atención sin importar el estado migratorio."}
-        </AlertDescription>
-      </Alert>
-
-      <div className="flex justify-end space-x-2 mb-4">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setLanguage("en")}
-          className={language === "en" ? "bg-primary/10" : ""}
-        >
-          <Globe className="w-4 h-4 mr-2" />
-          English
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setLanguage("es")}
-          className={language === "es" ? "bg-primary/10" : ""}
-        >
-          <Globe className="w-4 h-4 mr-2" />
-          Español
-        </Button>
-      </div>
+      <ConfidentialityNotice language={language} />
+      <LanguageSwitcher currentLanguage={language} onLanguageChange={setLanguage} />
 
       <form onSubmit={handleSubmit}>
         <Card className="p-6">
@@ -191,16 +164,10 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
               onCheckedChange={(checked) => handleCheckboxChange("consentToTreatment", checked)}
             />
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {language === "en" ? "Submitting..." : "Enviando..."}
-                </>
-              ) : (
-                language === "en" ? "I Agree & Continue" : "Acepto y Continuar"
-              )}
-            </Button>
+            <SubmitButton 
+              language={language}
+              isSubmitting={isSubmitting}
+            />
           </div>
         </Card>
       </form>
