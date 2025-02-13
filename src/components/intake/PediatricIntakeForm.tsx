@@ -2,19 +2,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { VoiceRecorder } from "@/components/VoiceTranslator";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
+import { BasicInfoSection } from "./form-sections/BasicInfoSection";
+import { MedicalInfoSection } from "./form-sections/MedicalInfoSection";
+import { SocialInfoSection } from "./form-sections/SocialInfoSection";
+import { ConsentSection } from "./form-sections/ConsentSection";
 
 interface PediatricIntakeFormProps {
   language: "en" | "es";
@@ -24,7 +20,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [voiceInput, setVoiceInput] = useState("");
   const [language, setLanguage] = useState(propLanguage);
   const [formData, setFormData] = useState({
     childName: "",
@@ -50,15 +45,13 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-
-    setFormData((prevFormData) => ({
-      ...prevFormData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
   };
 
   const handleVoiceInput = (input: string) => {
-    setVoiceInput(input);
     setFormData((prev) => ({
       ...prev,
       symptoms: input,
@@ -95,7 +88,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       });
 
       sessionStorage.setItem('intakeId', docRef.id);
-      
       navigate("/appointment");
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -112,123 +104,51 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <Card className="p-6">
-        <h2 className="text-2xl font-bold text-center">
+        <h2 className="text-2xl font-bold text-center mb-6">
           {language === "en" ? "Pediatric Intake Form" : "Formulario de Admisión Pediátrica"}
         </h2>
 
-        <Input
-          name="childName"
-          value={formData.childName}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Child's Name" : "Nombre del Niño"}
-          required
-        />
-
-        <Input
-          name="dob"
-          type="date"
-          value={formData.dob}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Date of Birth" : "Fecha de Nacimiento"}
-          required
-        />
-
-        <Input
-          name="languagePreference"
-          value={formData.languagePreference}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Language Preference" : "Preferencia de Idioma"}
-          required
-        />
-
-        <Input
-          name="emergencyContact"
-          value={formData.emergencyContact}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Emergency Contact" : "Contacto de Emergencia"}
-          required
-        />
-
-        <Textarea
-          name="symptoms"
-          value={formData.symptoms}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Symptoms" : "Síntomas"}
-          required
-        />
-
-        <Textarea
-          name="medicalHistory"
-          value={formData.medicalHistory}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Medical History" : "Historial Médico"}
-        />
-
-        <Textarea
-          name="medications"
-          value={formData.medications}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Medications" : "Medicamentos"}
-        />
-
-        <Textarea
-          name="hospitalVisits"
-          value={formData.hospitalVisits}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Hospital Visits" : "Visitas al Hospital"}
-        />
-
-        <Input
-          name="insuranceStatus"
-          value={formData.insuranceStatus}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Insurance Status" : "Estado del Seguro"}
-        />
-
-        <Input
-          name="transportation"
-          value={formData.transportation}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Transportation" : "Transporte"}
-        />
-
-        <Input
-          name="childcare"
-          value={formData.childcare}
-          onChange={handleChange}
-          placeholder={language === "en" ? "Childcare" : "Cuidado Infantil"}
-        />
-
-        <div className="flex items-center">
-          <Checkbox
-            name="consentToTreatment"
-            checked={formData.consentToTreatment}
-            onCheckedChange={(checked) => {
-              setFormData(prev => ({
-                ...prev,
-                consentToTreatment: checked as boolean
-              }));
-            }}
+        <div className="space-y-6">
+          <BasicInfoSection 
+            language={language}
+            formData={formData}
+            handleChange={handleChange}
           />
-          <label className="ml-2">
-            {language === "en" ? "I consent to treatment" : "Consiento al tratamiento"}
-          </label>
+
+          <MedicalInfoSection 
+            language={language}
+            formData={formData}
+            handleChange={handleChange}
+            onVoiceInput={handleVoiceInput}
+          />
+
+          <SocialInfoSection 
+            language={language}
+            formData={formData}
+            handleChange={handleChange}
+          />
+
+          <ConsentSection 
+            language={language}
+            checked={formData.consentToTreatment}
+            onCheckedChange={(checked) => 
+              setFormData(prev => ({ ...prev, consentToTreatment: checked }))
+            }
+          />
+
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {language === "en" ? "Submitting..." : "Enviando..."}
+              </>
+            ) : (
+              language === "en" ? "Submit & Schedule Appointment" : "Enviar y Programar Cita"
+            )}
+          </Button>
         </div>
-
-        <VoiceRecorder language={language} onSymptomsUpdate={handleVoiceInput} />
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {language === "en" ? "Submitting..." : "Enviando..."}
-            </>
-          ) : (
-            language === "en" ? "Submit & Schedule Appointment" : "Enviar y Programar Cita"
-          )}
-        </Button>
       </Card>
     </form>
   );
