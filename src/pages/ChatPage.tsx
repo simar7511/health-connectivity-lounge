@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";

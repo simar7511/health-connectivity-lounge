@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
 import { MessagingInbox } from "./dashboard/MessagingInbox";
 import { Button } from "@/components/ui/button";
