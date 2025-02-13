@@ -1,6 +1,5 @@
-
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -19,8 +18,15 @@ import { VoiceTranslator } from "./components/VoiceTranslator";
 import { ChatPage } from "./pages/ChatPage";
 
 const App = () => {
-  const [language, setLanguage] = useState<"en" | "es">("en");
+  const [language, setLanguage] = useState<"en" | "es">(() => {
+    const saved = sessionStorage.getItem('preferredLanguage') as "en" | "es" | null;
+    return saved || "en";
+  });
   const [appointmentDetails, setAppointmentDetails] = useState<any>(null);
+
+  useEffect(() => {
+    sessionStorage.setItem('preferredLanguage', language);
+  }, [language]);
 
   return (
     <BrowserRouter>

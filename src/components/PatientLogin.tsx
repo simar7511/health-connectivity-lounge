@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { auth } from "@/lib/firebase";
 import { signInWithPhoneNumber } from "firebase/auth";
+import { Loader2 } from "lucide-react";
 
 interface PatientLoginProps {
   language: "en" | "es";
@@ -15,7 +17,9 @@ interface PatientLoginProps {
 
 const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
   const [phone, setPhone] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const formatPhoneNumber = (number: string) => {
     return number.startsWith("+") ? number.trim() : `+1${number.trim()}`;
@@ -34,13 +38,17 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
       return;
     }
 
+    setIsLoading(true);
     try {
+      // Store language preference in sessionStorage
+      sessionStorage.setItem('preferredLanguage', language);
+      
       // For now, just proceed with login
       // In a real app, you'd want to implement proper authentication here
       toast({ 
         title: language === "en" ? "Login Successful" : "Inicio de Sesión Exitoso"
       });
-      onLogin();
+      navigate("/pediatric-intake");
     } catch (error: any) {
       console.error("❌ Error during login:", error);
       toast({ 
@@ -49,6 +57,8 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
           ? "Failed to login. Try again." 
           : "Error al iniciar sesión. Intente nuevamente.")
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -65,18 +75,27 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
           onChange={(e) => setPhone(e.target.value)}
           placeholder={language === "en" ? "Enter your phone number" : "Ingrese su número de teléfono"}
           className="text-lg py-6"
+          disabled={isLoading}
           required
         />
         
         <Button 
           className="w-full text-lg py-6" 
           onClick={handleLogin}
+          disabled={isLoading}
         >
-          {language === "en" ? "Login" : "Iniciar Sesión"}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {language === "en" ? "Loading..." : "Cargando..."}
+            </>
+          ) : (
+            language === "en" ? "Login" : "Iniciar Sesión"
+          )}
         </Button>
       </Card>
 
-      <Button variant="ghost" onClick={onBack}>
+      <Button variant="ghost" onClick={onBack} disabled={isLoading}>
         {language === "en" ? "Back" : "Volver"}
       </Button>
     </div>
