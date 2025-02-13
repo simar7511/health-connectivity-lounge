@@ -1,6 +1,9 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 interface SocialInfoSectionProps {
   language: "en" | "es";
@@ -28,15 +31,28 @@ export const SocialInfoSection = ({
       </h3>
 
       <div className="space-y-3">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            name="hasInsurance"
-            checked={formData.hasInsurance}
-            onCheckedChange={(checked) => handleCheckboxChange("hasInsurance", checked as boolean)}
-          />
-          <label className="text-sm">
-            {language === "en" ? "Do you have health insurance?" : "¿Tiene seguro médico?"}
-          </label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              name="hasInsurance"
+              checked={formData.hasInsurance}
+              onCheckedChange={(checked) => handleCheckboxChange("hasInsurance", checked as boolean)}
+            />
+            <label className="text-sm">
+              {language === "en" ? "Do you have health insurance?" : "¿Tiene seguro médico?"}
+            </label>
+          </div>
+          
+          {!formData.hasInsurance && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <InfoIcon className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-sm text-blue-800">
+                {language === "en" 
+                  ? "Your information will NOT be shared with law enforcement or immigration authorities. This clinic provides care regardless of immigration status."
+                  : "Su información NO será compartida con la policía ni con autoridades de inmigración. Esta clínica brinda atención sin importar el estado migratorio."}
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         <div className="flex items-center space-x-2">
