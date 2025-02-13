@@ -2,7 +2,7 @@
 import 'regenerator-runtime/runtime';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { useSpeechSynthesis } from "react-speech-kit";
 import { Mic, StopCircle } from "lucide-react";
