@@ -22,17 +22,30 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [language, setLanguage] = useState(propLanguage);
   const [formData, setFormData] = useState({
+    // Basic Info
     childName: "",
     dob: "",
     languagePreference: "",
-    emergencyContact: "",
-    symptoms: "",
+    needsInterpreter: false,
+    phoneNumber: "",
+    emergencyContactName: "",
+    emergencyContactRelation: "",
+    
+    // Medical Info
+    reasonForVisit: "",
     medicalHistory: "",
-    medications: "",
-    hospitalVisits: "",
-    insuranceStatus: "",
-    transportation: "",
-    childcare: "",
+    medicationsAndAllergies: "",
+    hasRecentHospitalVisits: false,
+    hospitalVisitLocation: "",
+    
+    // Social Info
+    hasInsurance: false,
+    wantsLowCostInfo: false,
+    needsTransportation: false,
+    needsChildcare: false,
+    otherConcerns: "",
+    
+    // Consent
     consentToTreatment: false,
   });
 
@@ -44,17 +57,24 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+      [name]: value,
     }));
   };
 
-  const handleVoiceInput = (input: string) => {
+  const handleCheckboxChange = (name: string, checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
-      symptoms: input,
+      [name]: checked,
+    }));
+  };
+
+  const handleVoiceInput = (field: string, input: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: input,
     }));
   };
 
@@ -104,23 +124,25 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="container mx-auto max-w-3xl p-6 space-y-6">
       <Card className="p-6">
         <h2 className="text-2xl font-bold text-center mb-6">
           {language === "en" ? "Pediatric Intake Form" : "Formulario de Admisión Pediátrica"}
         </h2>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           <BasicInfoSection 
             language={language}
             formData={formData}
             handleChange={handleChange}
+            handleCheckboxChange={handleCheckboxChange}
           />
 
           <MedicalInfoSection 
             language={language}
             formData={formData}
             handleChange={handleChange}
+            handleCheckboxChange={handleCheckboxChange}
             onVoiceInput={handleVoiceInput}
           />
 
@@ -128,14 +150,13 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
             language={language}
             formData={formData}
             handleChange={handleChange}
+            handleCheckboxChange={handleCheckboxChange}
           />
 
           <ConsentSection 
             language={language}
             checked={formData.consentToTreatment}
-            onCheckedChange={(checked) => 
-              setFormData(prev => ({ ...prev, consentToTreatment: checked }))
-            }
+            onCheckedChange={(checked) => handleCheckboxChange("consentToTreatment", checked)}
           />
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
