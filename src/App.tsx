@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -9,6 +10,7 @@ import ProviderDashboard from "./components/ProviderDashboard";
 import PatientLogin from "./components/PatientLogin";
 import PatientDashboard from "./components/PatientDashboard";
 import PatientIntakeForm from "./components/intake/PatientIntakeForm";
+import PediatricIntakeForm from "./components/intake/PediatricIntakeForm";
 import AppointmentPage from "./pages/AppointmentPage";
 import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
@@ -40,6 +42,7 @@ const App = () => {
         <Route path="/" element={<Index />} />
         <Route path="/patient/login" element={<PatientLogin language={language} onBack={() => {}} onLogin={() => {}} />} />
         <Route path="/patient/intake" element={<PatientIntakeForm />} />
+        <Route path="/pediatric-intake" element={<PediatricIntakeForm language={language} />} />
         <Route path="/patient/dashboard" element={<PatientDashboard language={language} />} />
         <Route 
           path="/appointment" 
