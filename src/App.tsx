@@ -9,6 +9,7 @@ import ProviderLogin from "./components/ProviderLogin";
 import ProviderDashboard from "./components/ProviderDashboard";
 import PatientLogin from "./components/PatientLogin";
 import PatientDashboard from "./components/PatientDashboard";
+import PatientIntakeForm from "./components/intake/PatientIntakeForm";
 import AppointmentPage from "./pages/AppointmentPage";
 import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
@@ -32,6 +33,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/patient/login" element={<PatientLogin language={language} onBack={() => {}} onLogin={() => {}} />} />
+        <Route path="/patient/intake" element={<PatientIntakeForm />} />
         <Route path="/patient/dashboard" element={<PatientDashboard language={language} />} />
         <Route 
           path="/appointment" 
@@ -40,7 +42,6 @@ const App = () => {
               language={language} 
               onProceed={(details) => {
                 setAppointmentDetails(details);
-                // Navigate to symptoms page
                 window.location.href = "/symptoms";
               }} 
             />
