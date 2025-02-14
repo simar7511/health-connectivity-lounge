@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -103,14 +102,18 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       });
 
       toast({
-        title: language === "en" ? "Form Submitted" : "Formulario Enviado",
-        description: language === "en" 
-          ? "Thank you for completing the intake form" 
-          : "Gracias por completar el formulario"
+        title: language === "en" ? "Form Successfully Submitted!" : "¡Formulario Enviado Exitosamente!",
+        description: language === "en"
+          ? "Your intake form has been received. You will now be redirected to schedule your appointment."
+          : "Su formulario de admisión ha sido recibido. Ahora será redirigido para programar su cita.",
+        duration: 5000, // Show for 5 seconds
       });
 
       sessionStorage.setItem('intakeId', docRef.id);
-      navigate("/appointment");
+      setTimeout(() => {
+        navigate("/appointment");
+      }, 2000); // Wait 2 seconds before redirecting
+      
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
