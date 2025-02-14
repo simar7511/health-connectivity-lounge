@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar } from "lucide-react";
+import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface LoginSelectorProps {
@@ -22,6 +22,7 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
       welcomeMessage2: "We offer virtual and in-person visits – choose what works best for your family!",
       getStarted: "Get Started – Complete Intake Form",
       findClinics: "Find Free & Low-Cost Clinics Nearby",
+      providerLogin: "Provider Login",
       switchLanguage: "Cambiar a Español",
       virtualVisits: "Virtual Visits Available",
       inPersonVisits: "In-Person Care",
@@ -35,6 +36,7 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
       welcomeMessage2: "¡Ofrecemos visitas virtuales y en persona – elija lo que mejor funcione para su familia!",
       getStarted: "Comenzar – Completar Formulario de Admisión",
       findClinics: "Encontrar Clínicas Gratuitas y de Bajo Costo",
+      providerLogin: "Acceso para Proveedores",
       switchLanguage: "Switch to English",
       virtualVisits: "Visitas Virtuales Disponibles",
       inPersonVisits: "Atención en Persona",
@@ -53,6 +55,19 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
         >
           <Globe className="w-5 h-5" />
           {content[language].switchLanguage}
+        </Button>
+      </div>
+
+      {/* Provider Login Button */}
+      <div className="absolute top-4 left-4">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => navigate("/provider/login")}
+          className="flex items-center gap-2"
+        >
+          <UserCog className="w-5 h-5" />
+          {content[language].providerLogin}
         </Button>
       </div>
 
