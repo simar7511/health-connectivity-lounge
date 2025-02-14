@@ -1,258 +1,168 @@
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Clock, Edit2 } from "lucide-react";
+import { Clock, CheckCircle, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-interface Provider {
-  id: string;
-  name: string;
-  specialty: string;
-  availability: string[];
-}
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 
 interface AppointmentPageProps {
   language: "en" | "es";
   onProceed: (appointmentDetails: {
-    type: string;
     date: Date;
     time: string;
-    provider: Provider;
+    isVirtual: boolean;
   }) => void;
 }
 
 const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }) => {
-  const [selectedType, setSelectedType] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState<string>("");
+  const navigate = useNavigate(); // ✅ Use React Router navigate
+  const [isVirtual, setIsVirtual] = useState<boolean | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const { toast } = useToast();
 
-  // Simulated provider database - in a real app this would come from a backend
-  const providers: Provider[] = [
-    {
-      id: "1",
-      name: "Dr. Maria Rodriguez",
-      specialty: "prenatal",
-      availability: ["09:00", "10:00", "11:00", "14:00", "15:00"],
-    },
-    {
-      id: "2",
-      name: "Dr. James Smith",
-      specialty: "general",
-      availability: ["09:30", "10:30", "13:30", "14:30", "16:30"],
-    },
-    {
-      id: "3",
-      name: "Dr. Sarah Chen",
-      specialty: "emergency",
-      availability: ["08:00", "09:00", "10:00", "11:00", "12:00"],
-    },
-  ];
+  const availableTimes = ["09:00", "09:30", "10:00", "10:30", "11:00", "14:00", "15:30"];
 
-  const appointmentOptions = [
-    { label: language === "en" ? "Prenatal Checkup" : "Chequeo Prenatal", value: "prenatal" },
-    { label: language === "en" ? "General Consultation" : "Consulta General", value: "general" },
-    { label: language === "en" ? "Emergency Visit" : "Visita de Emergencia", value: "emergency" }
-  ];
+  const handleConfirmSelection = (event: React.FormEvent) => {
+    event.preventDefault(); // ✅ Prevent page refresh
 
-  const timeSlots = [
-    "09:00", "09:30", "10:00", "10:30", "11:00", 
-    "11:30", "14:00", "14:30", "15:00", "15:30"
-  ];
-
-  const handleTypeSelect = (type: string) => {
-    setSelectedType(type);
-    setSelectedDate(undefined);
-    setSelectedTime("");
-    setConfirming(false);
-    setSelectedProvider(null);
-  };
-
-  const checkProviderAvailability = () => {
-    if (!selectedType || !selectedDate || !selectedTime) return null;
-
-    // Find available provider based on specialty and time slot
-    const availableProvider = providers.find(p => 
-      p.specialty === selectedType && 
-      p.availability.includes(selectedTime)
-    );
-
-    if (!availableProvider) {
-      // Find next available slot
-      const typeProviders = providers.filter(p => p.specialty === selectedType);
-      const nextSlot = typeProviders.length > 0 ? typeProviders[0].availability[0] : null;
-
-      toast({
-        title: language === "en" ? "No Provider Available" : "No Hay Proveedor Disponible",
-        description: language === "en" 
-          ? `Next available slot: ${nextSlot || 'None found'}` 
-          : `Próximo horario disponible: ${nextSlot || 'No encontrado'}`,
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    return availableProvider;
-  };
-
-  const handleConfirmSelection = () => {
-    if (!selectedType || !selectedDate || !selectedTime) {
+    if (isVirtual === null || !selectedDate || !selectedTime) {
       toast({
         title: language === "en" ? "Missing Information" : "Información Faltante",
-        description: language === "en" 
-          ? "Please select appointment type, date, and time" 
-          : "Por favor seleccione tipo de cita, fecha y hora",
-        variant: "destructive"
+        description:
+          language === "en"
+            ? "Please select an appointment type, date, and time."
+            : "Por favor seleccione tipo de cita, fecha y hora.",
+        variant: "destructive",
       });
       return;
     }
-
-    const provider = checkProviderAvailability();
-    if (provider) {
-      setSelectedProvider(provider);
-      setConfirming(true);
-    }
-  };
-
-  const handleModifySelection = () => {
-    setConfirming(false);
-    setSelectedProvider(null);
+    setConfirming(true);
   };
 
   const handleProceed = () => {
-    if (!selectedProvider) return;
+    if (!selectedDate || !selectedTime) return;
 
     onProceed({
-      type: selectedType,
-      date: selectedDate!,
+      date: selectedDate,
       time: selectedTime,
-      provider: selectedProvider
+      isVirtual,
     });
+
+    // ✅ Ensure correct navigation without page refresh
+    navigate("/confirmation");
   };
 
-  if (confirming && selectedProvider) {
-    return (
-      <div className="container mx-auto p-4">
-        <Card className="w-full max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>
-              {language === "en" ? "Confirm Your Appointment" : "Confirmar su Cita"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-semibold">{language === "en" ? "Type:" : "Tipo:"}</h3>
-              <p>{appointmentOptions.find(opt => opt.value === selectedType)?.label}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">{language === "en" ? "Date:" : "Fecha:"}</h3>
-              <p>{format(selectedDate!, "PPP")}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">{language === "en" ? "Time:" : "Hora:"}</h3>
-              <p>{selectedTime}</p>
-            </div>
-            <div>
-              <h3 className="font-semibold">{language === "en" ? "Provider:" : "Proveedor:"}</h3>
-              <p>{selectedProvider.name}</p>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={handleModifySelection}>
-              <Edit2 className="mr-2 h-4 w-4" />
-              {language === "en" ? "Modify" : "Modificar"}
-            </Button>
-            <Button onClick={handleProceed}>
-              {language === "en" ? "Proceed to Symptom Checker" : "Continuar al Verificador de Síntomas"}
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">
-        📅 {language === "en" ? "Schedule an Appointment" : "Agendar una Cita"}
-      </h1>
-      
-      {/* Appointment Type Selection */}
-      <div className="mb-6">
-        <h2 className="text-xl mb-2">
-          {language === "en" ? "Select Appointment Type:" : "Seleccione el Tipo de Cita:"}
-        </h2>
-        <div className="flex flex-col space-y-2">
-          {appointmentOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={selectedType === option.value ? "default" : "outline"}
-              className="w-full py-6"
-              onClick={() => handleTypeSelect(option.value)}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
-      </div>
+    <div className="container mx-auto p-6 max-w-3xl">
+      <Card className="shadow-lg p-6">
+        <CardHeader>
+          <h1 className="text-3xl font-bold flex items-center space-x-2">
+            <CalendarDays className="h-7 w-7 text-blue-500" />
+            <span>{language === "en" ? "Schedule an Appointment" : "Agendar una Cita"}</span>
+          </h1>
+        </CardHeader>
 
-      {/* Date Selection */}
-      {selectedType && (
-        <div className="mb-6">
-          <h2 className="text-xl mb-2">
-            {language === "en" ? "Select Date:" : "Seleccione la Fecha:"}
-          </h2>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border"
-            disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
-          />
-        </div>
-      )}
-
-      {/* Time Selection */}
-      {selectedDate && (
-        <div className="mb-6">
-          <h2 className="text-xl mb-2">
-            {language === "en" ? "Select Time:" : "Seleccione la Hora:"}
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {timeSlots.map((time) => (
+        <CardContent className="space-y-6">
+          {/* ✅ Appointment Type Selection */}
+          <div>
+            <h2 className="text-xl font-semibold mb-2">
+              {language === "en" ? "How would you like to meet?" : "¿Cómo le gustaría reunirse?"}
+            </h2>
+            <div className="flex gap-4">
               <Button
-                key={time}
-                variant={selectedTime === time ? "default" : "outline"}
-                className="flex items-center justify-center gap-2"
-                onClick={() => setSelectedTime(time)}
+                variant={isVirtual === true ? "default" : "outline"}
+                className="w-full py-3"
+                onClick={() => {
+                  setIsVirtual(true);
+                  setSelectedDate(null); // ✅ Reset date when switching
+                  setSelectedTime(null); // ✅ Reset time when switching
+                }}
               >
-                <Clock className="h-4 w-4" />
-                {time}
+                🖥 {language === "en" ? "Virtual Visit" : "Visita Virtual"}
               </Button>
-            ))}
+              <Button
+                variant={isVirtual === false ? "default" : "outline"}
+                className="w-full py-3"
+                onClick={() => {
+                  setIsVirtual(false);
+                  setSelectedDate(null); // ✅ Reset date when switching
+                  setSelectedTime(null); // ✅ Reset time when switching
+                }}
+              >
+                🏥 {language === "en" ? "In-Person Visit" : "Visita en Persona"}
+              </Button>
+            </div>
           </div>
+
+          {/* ✅ Date Selection */}
+          {isVirtual !== null && (
+            <div>
+              <h2 className="text-xl font-semibold mb-2">{language === "en" ? "Select Date" : "Seleccione la Fecha"}</h2>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="rounded-md border p-2 shadow-sm"
+              />
+            </div>
+          )}
+
+          {/* ✅ Time Selection */}
+          {selectedDate && (
+            <div>
+              <h2 className="text-xl font-semibold mb-2">{language === "en" ? "Select Time" : "Seleccione la Hora"}</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {availableTimes.map((time) => (
+                  <Button
+                    key={time}
+                    variant={selectedTime === time ? "default" : "outline"}
+                    className="flex items-center justify-center gap-2 py-2"
+                    onClick={() => setSelectedTime(time)}
+                  >
+                    <Clock className="h-4 w-4 text-gray-600" />
+                    {time}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+
+        {/* ✅ Confirm Selection */}
+        <CardFooter className="flex justify-end">
+          <Button
+            className={`w-full py-4 text-lg ${
+              selectedDate && selectedTime ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-300 cursor-not-allowed"
+            }`}
+            onClick={handleConfirmSelection}
+            disabled={!selectedDate || !selectedTime}
+          >
+            {language === "en" ? "Confirm Selection" : "Confirmar Selección"}
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {/* ✅ Confirmation Summary */}
+      {confirming && (
+        <div className="mt-6 p-4 border rounded-md bg-gray-50">
+          <h3 className="text-xl font-bold flex items-center space-x-2">
+            <CheckCircle className="h-6 w-6 text-green-500" />
+            <span>{language === "en" ? "Appointment Confirmed!" : "¡Cita Confirmada!"}</span>
+          </h3>
+          <p className="mt-2">
+            {language === "en" ? "You have scheduled a" : "Ha programado una"}{" "}
+            <strong>{isVirtual ? "Virtual Visit" : "In-Person Visit"}</strong> {language === "en" ? "on" : "el"}{" "}
+            {format(selectedDate!, "PPP")} {language === "en" ? "at" : "a las"} {selectedTime}.
+          </p>
+          <Button className="mt-4 w-full bg-green-600 hover:bg-green-700" onClick={handleProceed}>
+            {language === "en" ? "Proceed to Confirmation" : "Proceder a Confirmación"}
+          </Button>
         </div>
       )}
-
-      {/* Confirm Selection Button */}
-      <Button 
-        className="w-full py-6 mt-4" 
-        onClick={handleConfirmSelection}
-        disabled={!selectedType || !selectedDate || !selectedTime}
-      >
-        {language === "en" ? "Check Availability" : "Verificar Disponibilidad"}
-      </Button>
     </div>
   );
 };

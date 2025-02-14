@@ -1,7 +1,4 @@
-
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 interface BasicInfoSectionProps {
@@ -14,9 +11,6 @@ interface BasicInfoSectionProps {
     phoneNumber: string;
     emergencyContactName: string;
     emergencyContactRelation: string;
-    preferVirtual: boolean;
-    needsTransportation: boolean;
-    needsChildcare: boolean;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleCheckboxChange: (name: string, checked: boolean) => void;
@@ -34,9 +28,10 @@ export const BasicInfoSection = ({
         {language === "en" ? "1️⃣ Basic Information" : "1️⃣ Información Básica"}
       </h3>
       
+      {/* Child's Name */}
       <div className="space-y-2">
-        <Label htmlFor="childName" className="flex items-center gap-2">
-          👶 {language === "en" ? "Child's Full Name / Preferred Name" : "Nombre Completo del Niño / Nombre Preferido"}
+        <Label htmlFor="childName">
+          {language === "en" ? "Child's Full Name / Preferred Name" : "Nombre Completo del Niño / Nombre Preferido"}
         </Label>
         <Input
           id="childName"
@@ -48,9 +43,10 @@ export const BasicInfoSection = ({
         />
       </div>
 
+      {/* Date of Birth */}
       <div className="space-y-2">
-        <Label htmlFor="dob" className="flex items-center gap-2">
-          📅 {language === "en" ? "Date of Birth" : "Fecha de Nacimiento"}
+        <Label htmlFor="dob">
+          {language === "en" ? "Date of Birth" : "Fecha de Nacimiento"}
         </Label>
         <Input
           id="dob"
@@ -62,9 +58,10 @@ export const BasicInfoSection = ({
         />
       </div>
 
+      {/* Preferred Language */}
       <div className="space-y-2">
-        <Label htmlFor="languagePreference" className="flex items-center gap-2">
-          🗣 {language === "en" ? "Preferred Language" : "Idioma Preferido"}
+        <Label htmlFor="languagePreference">
+          {language === "en" ? "Preferred Language" : "Idioma Preferido"}
         </Label>
         <select
           id="languagePreference"
@@ -81,9 +78,10 @@ export const BasicInfoSection = ({
         </select>
       </div>
 
+      {/* Needs Interpreter */}
       <div className="space-y-2">
-        <Label className="flex items-center gap-2">
-          👂 {language === "en" ? "Do you need an interpreter?" : "¿Necesita un intérprete?"}
+        <Label>
+          {language === "en" ? "Do you need an interpreter?" : "¿Necesita un intérprete?"}
         </Label>
         <div className="flex items-center space-x-4">
           <label className="flex items-center space-x-2">
@@ -91,7 +89,7 @@ export const BasicInfoSection = ({
               type="radio"
               name="needsInterpreter"
               checked={formData.needsInterpreter}
-              onChange={(e) => handleCheckboxChange("needsInterpreter", true)}
+              onChange={() => handleCheckboxChange("needsInterpreter", true)}
               className="rounded-full"
             />
             <span>{language === "en" ? "Yes" : "Sí"}</span>
@@ -101,7 +99,7 @@ export const BasicInfoSection = ({
               type="radio"
               name="needsInterpreter"
               checked={!formData.needsInterpreter}
-              onChange={(e) => handleCheckboxChange("needsInterpreter", false)}
+              onChange={() => handleCheckboxChange("needsInterpreter", false)}
               className="rounded-full"
             />
             <span>{language === "en" ? "No" : "No"}</span>
@@ -109,9 +107,10 @@ export const BasicInfoSection = ({
         </div>
       </div>
 
+      {/* Phone Number */}
       <div className="space-y-2">
-        <Label htmlFor="phoneNumber" className="flex items-center gap-2">
-          📞 {language === "en" ? "Phone Number (Optional)" : "Número de Teléfono (Opcional)"}
+        <Label htmlFor="phoneNumber">
+          {language === "en" ? "Phone Number (Optional)" : "Número de Teléfono (Opcional)"}
         </Label>
         <Input
           id="phoneNumber"
@@ -123,10 +122,9 @@ export const BasicInfoSection = ({
         />
       </div>
 
+      {/* Emergency Contact */}
       <div className="space-y-2 border-t pt-4">
-        <Label className="block mb-2">
-          {language === "en" ? "Emergency Contact (Optional)" : "Contacto de Emergencia (Opcional)"}
-        </Label>
+        <Label>{language === "en" ? "Emergency Contact (Optional)" : "Contacto de Emergencia (Opcional)"}</Label>
         <div className="grid grid-cols-2 gap-4">
           <Input
             name="emergencyContactName"
@@ -141,100 +139,6 @@ export const BasicInfoSection = ({
             placeholder={language === "en" ? "Relationship" : "Relación"}
           />
         </div>
-      </div>
-
-      <div className="space-y-4 border-t pt-4">
-        <h4 className="font-medium">
-          {language === "en" ? "Virtual or In-Person Visit Preference" : "Preferencia de Visita Virtual o Presencial"}
-        </h4>
-        
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            {language === "en" ? "Would you like to meet virtually?" : "¿Le gustaría reunirse virtualmente?"}
-          </Label>
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="preferVirtual"
-                checked={formData.preferVirtual}
-                onChange={(e) => handleCheckboxChange("preferVirtual", true)}
-                className="rounded-full"
-              />
-              <span>{language === "en" ? "Yes" : "Sí"}</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="preferVirtual"
-                checked={!formData.preferVirtual}
-                onChange={(e) => handleCheckboxChange("preferVirtual", false)}
-                className="rounded-full"
-              />
-              <span>{language === "en" ? "No" : "No"}</span>
-            </label>
-          </div>
-        </div>
-
-        {!formData.preferVirtual && (
-          <>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                {language === "en" ? "Do you need help with transportation?" : "¿Necesita ayuda con el transporte?"}
-              </Label>
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="needsTransportation"
-                    checked={formData.needsTransportation}
-                    onChange={(e) => handleCheckboxChange("needsTransportation", true)}
-                    className="rounded-full"
-                  />
-                  <span>{language === "en" ? "Yes" : "Sí"}</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="needsTransportation"
-                    checked={!formData.needsTransportation}
-                    onChange={(e) => handleCheckboxChange("needsTransportation", false)}
-                    className="rounded-full"
-                  />
-                  <span>{language === "en" ? "No" : "No"}</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                {language === "en" ? "Do you need childcare assistance for the visit?" : "¿Necesita ayuda con el cuidado de niños para la visita?"}
-              </Label>
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="needsChildcare"
-                    checked={formData.needsChildcare}
-                    onChange={(e) => handleCheckboxChange("needsChildcare", true)}
-                    className="rounded-full"
-                  />
-                  <span>{language === "en" ? "Yes" : "Sí"}</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="needsChildcare"
-                    checked={!formData.needsChildcare}
-                    onChange={(e) => handleCheckboxChange("needsChildcare", false)}
-                    className="rounded-full"
-                  />
-                  <span>{language === "en" ? "No" : "No"}</span>
-                </label>
-              </div>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );

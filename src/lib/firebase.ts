@@ -1,23 +1,27 @@
-
 import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, setLogLevel } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
-// Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw",
-  authDomain: "health-connectivity-01.firebaseapp.com",
-  projectId: "health-connectivity-01",
-  storageBucket: "health-connectivity-01.appspot.com",
-  messagingSenderId: "429069343294",
-  appId: "1:429069343294:web:943a1998a83e63353c0f6f",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-auth.useDeviceLanguage();
+// 🔥 Enable Firestore Debug Logging
+setLogLevel("debug");
 
-export { auth, db };
+console.log("✅ Firebase initialized:", app);
+console.log("✅ Firestore initialized:", db);
+console.log("✅ Authentication initialized:", auth);
+
+export { db, auth };
+

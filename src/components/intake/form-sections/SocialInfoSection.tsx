@@ -1,9 +1,8 @@
-
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { InfoIcon } from "lucide-react";
-import { VoiceRecorder } from "@/components/VoiceTranslator";
+import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder"; // Ensure correct import path
 
 interface SocialInfoSectionProps {
   language: "en" | "es";
@@ -41,7 +40,7 @@ export const SocialInfoSection = ({
                 type="radio"
                 name="hasInsurance"
                 checked={formData.hasInsurance}
-                onChange={(e) => handleCheckboxChange("hasInsurance", true)}
+                onChange={() => handleCheckboxChange("hasInsurance", true)}
                 className="rounded-full"
               />
               <span>{language === "en" ? "Yes" : "Sí"}</span>
@@ -51,7 +50,7 @@ export const SocialInfoSection = ({
                 type="radio"
                 name="hasInsurance"
                 checked={!formData.hasInsurance}
-                onChange={(e) => handleCheckboxChange("hasInsurance", false)}
+                onChange={() => handleCheckboxChange("hasInsurance", false)}
                 className="rounded-full"
               />
               <span>{language === "en" ? "No" : "No"}</span>
@@ -80,7 +79,7 @@ export const SocialInfoSection = ({
                 type="radio"
                 name="wantsLowCostInfo"
                 checked={formData.wantsLowCostInfo}
-                onChange={(e) => handleCheckboxChange("wantsLowCostInfo", true)}
+                onChange={() => handleCheckboxChange("wantsLowCostInfo", true)}
                 className="rounded-full"
               />
               <span>{language === "en" ? "Yes" : "Sí"}</span>
@@ -90,7 +89,7 @@ export const SocialInfoSection = ({
                 type="radio"
                 name="wantsLowCostInfo"
                 checked={!formData.wantsLowCostInfo}
-                onChange={(e) => handleCheckboxChange("wantsLowCostInfo", false)}
+                onChange={() => handleCheckboxChange("wantsLowCostInfo", false)}
                 className="rounded-full"
               />
               <span>{language === "en" ? "No" : "No"}</span>
@@ -109,7 +108,8 @@ export const SocialInfoSection = ({
           />
           <VoiceRecorder 
             language={language} 
-            onSymptomsUpdate={(input) => onVoiceInput("otherConcerns", input)} 
+            fieldName="otherConcerns"  // ✅ Corrected prop
+            onVoiceInput={onVoiceInput} // ✅ Corrected function name
           />
         </div>
       </div>

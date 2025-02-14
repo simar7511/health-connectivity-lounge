@@ -1,119 +1,88 @@
-
-import { useState, useEffect } from "react";
+import 'regenerator-runtime/runtime';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { Mic, StopCircle } from "lucide-react";
-import 'regenerator-runtime/runtime';
 
 interface VoiceRecorderProps {
   language: "en" | "es";
-  onSymptomsUpdate: (symptoms: string) => void;
+  onVoiceInput: (input: string) => void;
 }
 
-export const VoiceRecorder = ({ language, onSymptomsUpdate }: VoiceRecorderProps) => {
+export const VoiceRecorder = ({ language, onVoiceInput }: VoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
-  const [recognition, setRecognition] = useState<any>(null);
+  const { resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+  const [transcript, setTranscript] = useState("");
 
-  useEffect(() => {
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+  if (!browserSupportsSpeechRecognition) {
+    return <span className="text-red-500">⚠️ Your browser does not support speech recognition.</span>;
+  }
+
+  const handleStartListening = () => {
+    resetTranscript();
+    setTranscript(""); // Reset local transcript
+    setIsRecording(true);
     
-    if (SpeechRecognition) {
-      const newRecognition = new SpeechRecognition();
-      newRecognition.continuous = true;
-      newRecognition.interimResults = true;
-      newRecognition.lang = language === "en" ? "en-US" : "es-ES";
-
-      newRecognition.onresult = (event: any) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-
+    SpeechRecognition.startListening({
+      continuous: true,
+      language: language === "en" ? "en-US" : "es-ES",
+      onResult: (event: any) => {
+        let newTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
+            newTranscript += event.results[i][0].transcript + " ";
           }
         }
-
-        if (finalTranscript) {
-          onSymptomsUpdate(finalTranscript);
-        }
-      };
-
-      newRecognition.onerror = (event: any) => {
-        console.error("Speech recognition error:", event);
-        setIsRecording(false);
-        
-        toast({
-          title: language === "en" ? "Error" : "Error",
-          description: language === "en" 
-            ? "Failed to record symptoms. Please check your microphone and try again." 
-            : "Error al grabar síntomas. Por favor verifique su micrófono e intente nuevamente.",
-          variant: "destructive"
-        });
-      };
-
-      newRecognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      setRecognition(newRecognition);
-    } else {
-      toast({
-        title: language === "en" ? "Not Supported" : "No Soportado",
-        description: language === "en" 
-          ? "Speech recognition is not supported in your browser" 
-          : "El reconocimiento de voz no está soportado en su navegador",
-        variant: "destructive"
-      });
-    }
-
-    return () => {
-      if (recognition) {
-        recognition.stop();
+        setTranscript(newTranscript);
       }
-    };
-  }, [language]);
+    });
+  };
 
-  const handleVoiceInput = () => {
-    if (!recognition) {
-      toast({
-        title: language === "en" ? "Error" : "Error",
-        description: language === "en" 
-          ? "Speech recognition is not available" 
-          : "El reconocimiento de voz no está disponible",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleStopListening = () => {
+    SpeechRecognition.stopListening();
+    setIsRecording(false);
 
-    if (isRecording) {
-      recognition.stop();
-      setIsRecording(false);
+    if (transcript.trim()) {
+      onVoiceInput(transcript); // Update the corresponding text field only
     } else {
-      setIsRecording(true);
-      recognition.start();
+      toast({
+        title: language === "en" ? "No Input Detected" : "No se detectó entrada",
+        description: language === "en"
+          ? "Please speak clearly and try again."
+          : "Por favor, hable claramente e intente de nuevo.",
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <Button 
-      className="w-full py-6" 
-      onClick={handleVoiceInput}
-    >
-      {isRecording ? (
-        <>
-          <StopCircle className="mr-2 h-4 w-4" />
-          {language === "en" ? "Stop Recording" : "Detener Grabación"}
-        </>
-      ) : (
-        <>
-          <Mic className="mr-2 h-4 w-4" />
-          {language === "en" ? "Start Recording" : "Comenzar Grabación"}
-        </>
+    <div className="flex flex-col items-center space-y-2">
+      <Button
+        className="w-full py-4"
+        onClick={isRecording ? handleStopListening : handleStartListening}
+        variant={isRecording ? "destructive" : "default"}
+      >
+        {isRecording ? (
+          <>
+            <StopCircle className="mr-2 h-4 w-4" />
+            {language === "en" ? "Stop Recording" : "Detener Grabación"}
+          </>
+        ) : (
+          <>
+            <Mic className="mr-2 h-4 w-4" />
+            {language === "en" ? "Start Recording" : "Comenzar Grabación"}
+          </>
+        )}
+      </Button>
+
+      {/* Show the transcribed text for this field only */}
+      {transcript && (
+        <p className="p-2 border border-gray-300 rounded-md bg-gray-100 text-sm">
+          {language === "en" ? "Recorded:" : "Grabado:"} <span className="font-semibold">{transcript}</span>
+        </p>
       )}
-    </Button>
+    </div>
   );
 };
