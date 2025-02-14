@@ -1,6 +1,6 @@
 
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { VoiceRecorder } from "@/components/VoiceTranslator";
 
@@ -32,9 +32,9 @@ export const MedicalInfoSection = ({
       </h3>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">
-          {language === "en" ? "Reason for Visit" : "Razón de la Visita"}
-        </label>
+        <Label className="text-sm font-medium">
+          {language === "en" ? "What symptoms are you experiencing?" : "¿Qué síntomas tiene?"}
+        </Label>
         <Textarea
           name="reasonForVisit"
           value={formData.reasonForVisit}
@@ -48,9 +48,9 @@ export const MedicalInfoSection = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">
+        <Label className="text-sm font-medium">
           {language === "en" ? "Medical History" : "Historial Médico"}
-        </label>
+        </Label>
         <Textarea
           name="medicalHistory"
           value={formData.medicalHistory}
@@ -63,9 +63,9 @@ export const MedicalInfoSection = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">
+        <Label className="text-sm font-medium">
           {language === "en" ? "Current Medications & Allergies" : "Medicamentos Actuales y Alergias"}
-        </label>
+        </Label>
         <Textarea
           name="medicationsAndAllergies"
           value={formData.medicationsAndAllergies}
@@ -78,23 +78,48 @@ export const MedicalInfoSection = ({
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            name="hasRecentHospitalVisits"
-            checked={formData.hasRecentHospitalVisits}
-            onCheckedChange={(checked) => handleCheckboxChange("hasRecentHospitalVisits", checked as boolean)}
-          />
-          <label className="text-sm">
-            {language === "en" ? "Recent Hospital Visits?" : "¿Visitas Recientes al Hospital?"}
+        <Label className="text-sm font-medium">
+          {language === "en" ? "Have you been to a hospital recently for medical care?" : "¿Ha estado en un hospital recientemente para atención médica?"}
+        </Label>
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              name="hasRecentHospitalVisits"
+              checked={formData.hasRecentHospitalVisits}
+              onChange={(e) => handleCheckboxChange("hasRecentHospitalVisits", true)}
+              className="rounded-full"
+            />
+            <span>{language === "en" ? "Yes" : "Sí"}</span>
+          </label>
+          <label className="flex items-center space-x-2">
+            <input
+              type="radio"
+              name="hasRecentHospitalVisits"
+              checked={!formData.hasRecentHospitalVisits}
+              onChange={(e) => handleCheckboxChange("hasRecentHospitalVisits", false)}
+              className="rounded-full"
+            />
+            <span>{language === "en" ? "No" : "No"}</span>
           </label>
         </div>
+        
         {formData.hasRecentHospitalVisits && (
-          <Input
-            name="hospitalVisitLocation"
-            value={formData.hospitalVisitLocation}
-            onChange={handleChange}
-            placeholder={language === "en" ? "Where?" : "¿Dónde?"}
-          />
+          <div className="space-y-2 mt-2">
+            <Label className="text-sm font-medium">
+              {language === "en" ? "Where did you receive care?" : "¿Dónde recibió atención?"}
+            </Label>
+            <VoiceRecorder 
+              language={language} 
+              onSymptomsUpdate={(input) => onVoiceInput("hospitalVisitLocation", input)} 
+            />
+            <Input
+              name="hospitalVisitLocation"
+              value={formData.hospitalVisitLocation}
+              onChange={handleChange}
+              placeholder={language === "en" ? "Enter location" : "Ingrese ubicación"}
+            />
+          </div>
         )}
       </div>
     </div>

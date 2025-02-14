@@ -1,6 +1,5 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card } from "@/components/ui/card";
 
 interface ConsentSectionProps {
   language: "en" | "es";
@@ -12,16 +11,8 @@ export const ConsentSection = ({ language, checked, onCheckedChange }: ConsentSe
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">
-        {language === "en" ? "4️⃣ Consent & Privacy Statement" : "4️⃣ Consentimiento y Declaración de Privacidad"}
+        {language === "en" ? "4️⃣ Consent Statement" : "4️⃣ Declaración de Consentimiento"}
       </h3>
-
-      <Card className="p-4 bg-blue-50">
-        <p className="text-sm text-blue-900">
-          {language === "en" 
-            ? "Your personal information is private and will NOT be shared with immigration authorities or law enforcement. This clinic provides care regardless of immigration status."
-            : "Su información personal es privada y NO será compartida con autoridades de inmigración o policía. Esta clínica brinda atención sin importar el estado migratorio."}
-        </p>
-      </Card>
 
       <div className="flex items-center space-x-2">
         <Checkbox
