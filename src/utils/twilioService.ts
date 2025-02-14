@@ -1,25 +1,20 @@
 
-import { Twilio } from 'twilio';
-
 export const makeCall = async (toNumber: string) => {
   try {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
-
-    if (!accountSid || !authToken || !fromNumber) {
-      throw new Error('Missing Twilio credentials');
-    }
-
-    const client = new Twilio(accountSid, authToken);
-
-    const call = await client.calls.create({
-      url: 'http://demo.twilio.com/docs/voice.xml',
-      to: toNumber,
-      from: fromNumber,
+    const response = await fetch('https://us-central1-YOUR_PROJECT.cloudfunctions.net/makeCall', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ toNumber }),
     });
 
-    return call.sid;
+    if (!response.ok) {
+      throw new Error('Failed to initiate call');
+    }
+
+    const data = await response.json();
+    return data.callSid;
   } catch (error) {
     console.error('Error making Twilio call:', error);
     throw error;
