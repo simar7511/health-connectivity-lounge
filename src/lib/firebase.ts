@@ -1,6 +1,8 @@
+
 import { initializeApp } from "firebase/app";
 import { getFirestore, setLogLevel } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
 // ✅ Use only `import.meta.env` for Vite
 const firebaseConfig = {
@@ -12,17 +14,17 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// ✅ Ensure all env variables are available (Debugging Step)
-console.log("Loaded Firebase Config:", firebaseConfig);
-
-// ✅ Initialize Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-// ✅ Enable Firestore Debug Logging
+// 🔥 Enable Firestore Debug Logging
 setLogLevel("debug");
 
 console.log("✅ Firebase initialized:", app);
 console.log("✅ Firestore initialized:", db);
 console.log("✅ Authentication initialized:", auth);
+
+export { db, auth };
+
