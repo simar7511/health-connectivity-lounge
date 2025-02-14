@@ -1,4 +1,3 @@
-
 import * as functions from "firebase-functions";
 import { Twilio } from "twilio";
 import * as dotenv from "dotenv";
@@ -18,12 +17,14 @@ if (!accountSid || !authToken || !twilioPhone) {
 // ✅ Initialize Twilio client
 const client = new Twilio(accountSid, authToken);
 
+// ✅ LibreTranslate API URL
+const TRANSLATION_API_URL = process.env.TRANSLATION_API_URL || "https://libretranslate.com/translate";
+
 /**
  * ✅ Function to send SMS via Twilio
  */
 export const sendSms = functions.https.onCall(async (request, context) => {
   try {
-    // ✅ Extract data directly from request.data
     const phoneNumber: string | undefined = request.data?.phoneNumber;
     const message: string | undefined = request.data?.message;
 
@@ -31,7 +32,6 @@ export const sendSms = functions.https.onCall(async (request, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Missing phoneNumber or message.");
     }
 
-    // ✅ Send SMS
     const response = await client.messages.create({
       body: message,
       from: twilioPhone,
@@ -51,7 +51,6 @@ export const sendSms = functions.https.onCall(async (request, context) => {
  */
 export const sendWhatsApp = functions.https.onCall(async (request, context) => {
   try {
-    // ✅ Extract data directly from request.data
     const phoneNumber: string | undefined = request.data?.phoneNumber;
     const message: string | undefined = request.data?.message;
 
@@ -59,10 +58,9 @@ export const sendWhatsApp = functions.https.onCall(async (request, context) => {
       throw new functions.https.HttpsError("invalid-argument", "Missing phoneNumber or message.");
     }
 
-    // ✅ Send WhatsApp message
     const response = await client.messages.create({
       body: message,
-      from: `whatsapp:${twilioPhone}`, // ✅ Twilio requires `whatsapp:` prefix
+      from: `whatsapp:${twilioPhone}`,
       to: `whatsapp:${phoneNumber}`,
     });
 
@@ -75,33 +73,53 @@ export const sendWhatsApp = functions.https.onCall(async (request, context) => {
 });
 
 /**
- * ✅ Function to translate text via Twilio
+ * ✅ Function to translate text using LibreTranslate API
  */
 export const translateText = functions.https.onCall(async (request, context) => {
   try {
-    // ✅ Extract data directly from request.data
     const text: string | undefined = request.data?.text;
     const fromLanguage: string | undefined = request.data?.fromLanguage;
     const toLanguage: string | undefined = request.data?.toLanguage;
 
     if (!text || !fromLanguage || !toLanguage) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Missing text, fromLanguage, or toLanguage."
-      );
+      throw new functions.https.HttpsError("invalid-argument", "Missing text, fromLanguage, or toLanguage.");
     }
 
-    // Call Twilio's Translation API
-    const translation = await client.translate.v1.translations.create({
-      text: text,
-      from: fromLanguage,
-      to: toLanguage
+    console.log(`🔄 Sending translation request: ${text} (${fromLanguage} → ${toLanguage})`);
+
+    // ✅ Use dynamic import for `node-fetch`
+    const fetch = (await import("node-fetch")).default;
+
+    // 📌 Send translation request to LibreTranslate API
+    const response = await fetch(TRANSLATION_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        q: text,
+        source: fromLanguage,
+        target: toLanguage,
+        format: "text"
+      })
     });
 
-    console.log(`✅ Text translated from ${fromLanguage} to ${toLanguage}`);
-    return { 
-      success: true, 
-      translatedText: translation.translatedText 
+    const data = await response.json();
+
+    // 📌 Debugging: Log response
+    console.log("🔍 Translation API response:", JSON.stringify(data, null, 2));
+
+    // ✅ Ensure response has expected structure
+    if (!data || typeof data !== "object" || !("translatedText" in data)) {
+      console.error("❌ Translation API response error:", data);
+      throw new functions.https.HttpsError("internal", "Unexpected response from translation API.");
+    }
+
+    console.log(`✅ Translated text: ${data.translatedText}`);
+
+    return {
+      success: true,
+      translatedText: data.translatedText
     };
   } catch (error) {
     console.error("❌ Error translating text:", error);

@@ -2,16 +2,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { format, parseISO } from "date-fns"; // ✅ Ensure date formatting works
+import { format } from "date-fns"; // ✅ Ensure date formatting works
 import { Clock, CheckCircle, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 
 interface AppointmentPageProps {
   language: "en" | "es";
+  onProceed?: () => void; // ✅ Added onProceed
 }
 
-const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
+const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isVirtual, setIsVirtual] = useState<boolean | null>(null);
@@ -21,7 +22,6 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
 
   const availableTimes = ["09:00", "09:30", "10:00", "10:30", "11:00", "14:00", "15:30"];
 
-  // ✅ Prevent page refresh & handle validation
   const handleConfirmSelection = (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -37,20 +37,23 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
       return;
     }
 
-    setIsConfirmed(true); // ✅ Show confirmation summary before proceeding
+    setIsConfirmed(true);
   };
 
-  // ✅ Navigate to confirmation page with correct appointment details
   const handleProceed = () => {
     if (!selectedDate || !selectedTime) return;
 
     navigate("/appointment-confirmation", {
       state: {
         appointmentType: isVirtual ? "Virtual Visit" : "In-Person Visit",
-        date: selectedDate.toISOString(), // ✅ Send ISO format
+        date: selectedDate.toISOString(),
         time: selectedTime,
       },
     });
+
+    if (onProceed) {
+      onProceed(); // ✅ Call onProceed if provided
+    }
   };
 
   return (
@@ -64,7 +67,6 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* ✅ Appointment Type Selection */}
           <div>
             <h2 className="text-xl font-semibold mb-2">
               {language === "en" ? "How would you like to meet?" : "¿Cómo le gustaría reunirse?"}
@@ -97,20 +99,13 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
             </div>
           </div>
 
-          {/* ✅ Date Selection */}
           {isVirtual !== null && (
             <div>
               <h2 className="text-xl font-semibold mb-2">{language === "en" ? "Select Date" : "Seleccione la Fecha"}</h2>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border p-2 shadow-sm"
-              />
+              <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="rounded-md border p-2 shadow-sm" />
             </div>
           )}
 
-          {/* ✅ Time Selection */}
           {selectedDate && (
             <div>
               <h2 className="text-xl font-semibold mb-2">{language === "en" ? "Select Time" : "Seleccione la Hora"}</h2>
@@ -131,12 +126,9 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
           )}
         </CardContent>
 
-        {/* ✅ Confirm Selection */}
         <CardFooter className="flex justify-end">
           <Button
-            className={`w-full py-4 text-lg ${
-              selectedDate && selectedTime ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-300 cursor-not-allowed"
-            }`}
+            className={`w-full py-4 text-lg ${selectedDate && selectedTime ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-300 cursor-not-allowed"}`}
             onClick={handleConfirmSelection}
             disabled={!selectedDate || !selectedTime}
           >
@@ -145,7 +137,6 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
         </CardFooter>
       </Card>
 
-      {/* ✅ Confirmation Summary */}
       {isConfirmed && (
         <div className="mt-6 p-4 border rounded-md bg-gray-50">
           <h3 className="text-xl font-bold flex items-center space-x-2">
@@ -153,8 +144,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
             <span>{language === "en" ? "Appointment Confirmed!" : "¡Cita Confirmada!"}</span>
           </h3>
           <p className="mt-2">
-            {language === "en" ? "You have scheduled a" : "Ha programado una"}{" "}
-            <strong>{isVirtual ? "Virtual Visit" : "In-Person Visit"}</strong> {language === "en" ? "on" : "el"}{" "}
+            {language === "en" ? "You have scheduled a" : "Ha programado una"} <strong>{isVirtual ? "Virtual Visit" : "In-Person Visit"}</strong> {language === "en" ? "on" : "el"}{" "}
             {format(selectedDate!, "PPP")} {language === "en" ? "at" : "a las"} {selectedTime}.
           </p>
           <Button className="mt-4 w-full bg-green-600 hover:bg-green-700" onClick={handleProceed}>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -10,7 +9,15 @@ import PatientDashboard from "@/components/PatientDashboard";
 import ProviderDashboard from "@/components/ProviderDashboard";
 
 // Define possible states
-type LoginState = "select" | "patient" | "provider" | "appointment" | "symptoms" | "transportation" | "patient-dashboard" | "provider-dashboard";
+type LoginState =
+  | "select"
+  | "patient"
+  | "provider"
+  | "appointment"
+  | "symptoms"
+  | "transportation"
+  | "patient-dashboard"
+  | "provider-dashboard";
 
 const Index = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
@@ -25,28 +32,11 @@ const Index = () => {
   const renderComponent = () => {
     switch (loginState) {
       case "select":
-        return (
-          <LoginSelector
-            language={language}
-            onLanguageChange={toggleLanguage}
-          />
-        );
+        return <LoginSelector language={language} onLanguageChange={toggleLanguage} />;
       case "patient":
-        return (
-          <PatientLogin
-            language={language}
-            onBack={() => setLoginState("select")}
-            onLogin={() => setLoginState("appointment")}
-          />
-        );
+        return <PatientLogin language={language} onBack={() => setLoginState("select")} onLogin={() => setLoginState("appointment")} />;
       case "provider":
-        return (
-          <ProviderLogin
-            language={language}
-            onBack={() => setLoginState("select")}
-            onLogin={() => setLoginState("provider-dashboard")}
-          />
-        );
+        return <ProviderLogin language={language} onBack={() => setLoginState("select")} onLogin={() => setLoginState("provider-dashboard")} />;
       case "appointment":
         return <AppointmentPage language={language} onProceed={() => setLoginState("symptoms")} />;
       case "symptoms":
@@ -58,17 +48,13 @@ const Index = () => {
       case "provider-dashboard":
         return <ProviderDashboard language={language} />;
       default:
-        console.warn("Invalid state:", loginState);
+        console.warn("⚠️ Invalid state:", loginState);
         setLoginState("select");
         return null;
     }
   };
 
-  return (
-    <div>
-      {renderComponent()}
-    </div>
-  );
+  return <div>{renderComponent()}</div>;
 };
 
 export default Index;
