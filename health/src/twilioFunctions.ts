@@ -1,4 +1,3 @@
-
 import * as functions from "firebase-functions";
 import { Twilio } from "twilio";
 import * as dotenv from "dotenv";
@@ -71,5 +70,40 @@ export const sendWhatsApp = functions.https.onCall(async (request, context) => {
   } catch (error) {
     console.error("❌ Error sending WhatsApp message:", error);
     throw new functions.https.HttpsError("internal", "Failed to send WhatsApp message.");
+  }
+});
+
+/**
+ * ✅ Function to translate text via Twilio
+ */
+export const translateText = functions.https.onCall(async (request, context) => {
+  try {
+    // ✅ Extract data directly from request.data
+    const text: string | undefined = request.data?.text;
+    const fromLanguage: string | undefined = request.data?.fromLanguage;
+    const toLanguage: string | undefined = request.data?.toLanguage;
+
+    if (!text || !fromLanguage || !toLanguage) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Missing text, fromLanguage, or toLanguage."
+      );
+    }
+
+    // Call Twilio's Translation API
+    const translation = await client.translate.v1.translations.create({
+      text: text,
+      from: fromLanguage,
+      to: toLanguage
+    });
+
+    console.log(`✅ Text translated from ${fromLanguage} to ${toLanguage}`);
+    return { 
+      success: true, 
+      translatedText: translation.translatedText 
+    };
+  } catch (error) {
+    console.error("❌ Error translating text:", error);
+    throw new functions.https.HttpsError("internal", "Failed to translate text.");
   }
 });
