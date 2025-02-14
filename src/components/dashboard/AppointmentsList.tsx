@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Languages, AlertTriangle, Clock, StethoscopeIcon } from "lucide-react";
+import { Calendar, Languages, AlertTriangle, Clock } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useNavigate } from "react-router-dom";
 
@@ -60,10 +60,7 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
                       <p className="text-sm font-medium text-muted-foreground mb-1">
                         {content[language].reasonForVisit}
                       </p>
-                      <p className="flex items-center gap-2">
-                        <StethoscopeIcon className="h-4 w-4 text-primary" />
-                        {patient.reasonForVisit}
-                      </p>
+                      <p>{patient.reasonForVisit}</p>
                     </div>
 
                     {patient.risks.length > 0 && (
