@@ -48,15 +48,7 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
               <div className="flex justify-between items-start">
                 <div className="space-y-4 flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      {patient.name}
-                      {patient.demographics.preferredLanguage === "es" && (
-                        <span className="inline-flex items-center text-sm text-blue-600">
-                          <Languages className="h-4 w-4" />
-                          <span className="ml-1">Español</span>
-                        </span>
-                      )}
-                    </h3>
+                    <h3 className="text-lg font-semibold">{patient.name}</h3>
                     <div className="flex items-center text-muted-foreground">
                       <Clock className="h-4 w-4 mr-1" />
                       {new Date(patient.nextAppointment).toLocaleString()}
