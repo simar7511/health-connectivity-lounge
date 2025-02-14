@@ -9,7 +9,7 @@ export interface ConfirmationPageProps {
   language: "en" | "es";
 }
 
-const ConfirmationPage = ({ language }: ConfirmationPageProps) => {
+const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
   const navigate = useNavigate();
 
   return (
