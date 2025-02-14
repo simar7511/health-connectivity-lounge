@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, isValid } from "date-fns"; // ✅ Ensure correct date formatting
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Clipboard } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 
 const AppointmentConfirmationPage = () => {
@@ -25,10 +25,10 @@ const AppointmentConfirmationPage = () => {
     }
   }
 
-  // ✅ Copy meeting link to clipboard
-  const handleCopyLink = () => {
-    if (appointmentDetails.virtualLink) {
-      navigator.clipboard.writeText(appointmentDetails.virtualLink);
+  // ✅ Copy meeting code to clipboard
+  const handleCopyCode = () => {
+    if (appointmentDetails.meetingCode) {
+      navigator.clipboard.writeText(appointmentDetails.meetingCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -55,15 +55,19 @@ const AppointmentConfirmationPage = () => {
               <p>⏰ <strong>Time:</strong> {appointmentDetails.time}</p>
               <p>🩺 <strong>Visit Type:</strong> {appointmentDetails.appointmentType}</p>
 
-              {/* ✅ Show Virtual Meeting Link (Only for Virtual Visits) */}
-              {appointmentDetails.appointmentType === "Virtual Visit" && appointmentDetails.virtualLink && (
+              {/* ✅ Show Meeting Code for Virtual Visits */}
+              {appointmentDetails.appointmentType === "Virtual Visit" && appointmentDetails.meetingCode && (
                 <div className="mt-4 bg-white p-3 border rounded-md flex items-center justify-between">
-                  <span className="truncate text-blue-600">{appointmentDetails.virtualLink}</span>
-                  <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                    <Clipboard className="h-4 w-4 mr-1" />
-                    {copied ? "Copied!" : "Copy Link"}
+                  <span className="font-bold text-blue-600">🔢 Meeting Code: {appointmentDetails.meetingCode}</span>
+                  <Button variant="outline" size="sm" onClick={handleCopyCode}>
+                    {copied ? "Copied!" : "Copy Code"}
                   </Button>
                 </div>
+              )}
+
+              {/* ✅ Notify patient that code is sent via SMS */}
+              {appointmentDetails.appointmentType === "Virtual Visit" && (
+                <p className="mt-2 text-gray-600">📩 Your meeting code has been sent via SMS.</p>
               )}
             </div>
           ) : (
