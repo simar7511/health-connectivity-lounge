@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
@@ -15,7 +14,7 @@ import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import PatientOverviewPage from "./pages/PatientOverviewPage";
 import { ChatPage } from "./pages/ChatPage";
-import ConfirmationPage, { ConfirmationPageProps } from "./pages/ConfirmationPage";
+import ConfirmationPage from "./pages/ConfirmationPage"; // ✅ Removed unnecessary named import
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">(() => {
@@ -46,7 +45,7 @@ const App = () => {
         <Route path="/confirmation" element={<ConfirmationPage language={language} />} />
         <Route path="/patient/dashboard" element={<PatientDashboard language={language} />} />
         <Route path="/appointment" element={<AppointmentPage language={language} onProceed={handleProceed} />} />
-        <Route path="/appointment-confirmation" element={<AppointmentConfirmationPage language={language} />} />
+        <Route path="/appointment-confirmation" element={<AppointmentConfirmationPage />} />
         <Route path="/transportation" element={<TransportationPage language={language} onProceed={handleProceed} />} />
         <Route path="/free-clinic" element={<ClinicLocatorPage />} />
         <Route path="/provider/login" element={<ProviderLogin language={language} onLogin={() => {}} />} />
