@@ -1,3 +1,4 @@
+
 import 'regenerator-runtime/runtime';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -7,15 +8,13 @@ import { Mic, StopCircle } from "lucide-react";
 
 interface VoiceRecorderProps {
   language: "en" | "es";
-  fieldName: string;
-  onVoiceInput: (field: string, input: string) => void;
+  onSymptomsUpdate: (symptoms: string) => void;
 }
 
-export const VoiceRecorder = ({ language, onVoiceInput, fieldName }: VoiceRecorderProps) => {
+export const VoiceRecorder = ({ language, onSymptomsUpdate }: VoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [activeField, setActiveField] = useState<string | null>(null); // Track which field is active
   const { toast } = useToast();
-  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+  const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
     return <span className="text-red-500">⚠️ Your browser does not support speech recognition.</span>;
@@ -24,7 +23,6 @@ export const VoiceRecorder = ({ language, onVoiceInput, fieldName }: VoiceRecord
   const handleStartListening = () => {
     resetTranscript();
     setIsRecording(true);
-    setActiveField(fieldName); // Set active field to ensure only one box appears
     SpeechRecognition.startListening({
       continuous: true,
       language: language === "en" ? "en-US" : "es-ES",
@@ -36,8 +34,7 @@ export const VoiceRecorder = ({ language, onVoiceInput, fieldName }: VoiceRecord
     setIsRecording(false);
 
     if (transcript.trim()) {
-      onVoiceInput(fieldName, transcript);
-      setActiveField(null); // Clear active field after updating form data
+      onSymptomsUpdate(transcript);
     } else {
       toast({
         title: language === "en" ? "No Input Detected" : "No se detectó entrada",
@@ -46,7 +43,6 @@ export const VoiceRecorder = ({ language, onVoiceInput, fieldName }: VoiceRecord
           : "Por favor, hable claramente e intente de nuevo.",
         variant: "destructive",
       });
-      setActiveField(null); // Clear even if no input was detected
     }
   };
 
@@ -70,8 +66,7 @@ export const VoiceRecorder = ({ language, onVoiceInput, fieldName }: VoiceRecord
         )}
       </Button>
 
-      {/* ✅ Only show transcript if this field is currently active */}
-      {activeField === fieldName && transcript && !isRecording && (
+      {transcript && (
         <p className="p-2 border border-gray-300 rounded-md bg-gray-100 text-sm">
           <span className="font-semibold">{transcript}</span>
         </p>
