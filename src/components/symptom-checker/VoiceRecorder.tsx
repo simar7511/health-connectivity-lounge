@@ -7,14 +7,15 @@ import { Mic, StopCircle } from "lucide-react";
 
 interface VoiceRecorderProps {
   language: "en" | "es";
-  onVoiceInput: (input: string) => void;
+  fieldName: string;
+  onVoiceInput: (field: string, input: string) => void;
 }
 
-export const VoiceRecorder = ({ language, onVoiceInput }: VoiceRecorderProps) => {
+export const VoiceRecorder = ({ language, onVoiceInput, fieldName }: VoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
+  const [activeField, setActiveField] = useState<string | null>(null); // Track which field is active
   const { toast } = useToast();
-  const { resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
-  const [transcript, setTranscript] = useState("");
+  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
     return <span className="text-red-500">⚠️ Your browser does not support speech recognition.</span>;
@@ -22,21 +23,11 @@ export const VoiceRecorder = ({ language, onVoiceInput }: VoiceRecorderProps) =>
 
   const handleStartListening = () => {
     resetTranscript();
-    setTranscript(""); // Reset local transcript
     setIsRecording(true);
-    
+    setActiveField(fieldName); // Set active field to ensure only one box appears
     SpeechRecognition.startListening({
       continuous: true,
       language: language === "en" ? "en-US" : "es-ES",
-      onResult: (event: any) => {
-        let newTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            newTranscript += event.results[i][0].transcript + " ";
-          }
-        }
-        setTranscript(newTranscript);
-      }
     });
   };
 
@@ -45,7 +36,8 @@ export const VoiceRecorder = ({ language, onVoiceInput }: VoiceRecorderProps) =>
     setIsRecording(false);
 
     if (transcript.trim()) {
-      onVoiceInput(transcript); // Update the corresponding text field only
+      onVoiceInput(fieldName, transcript);
+      setActiveField(null); // Clear active field after updating form data
     } else {
       toast({
         title: language === "en" ? "No Input Detected" : "No se detectó entrada",
@@ -54,6 +46,7 @@ export const VoiceRecorder = ({ language, onVoiceInput }: VoiceRecorderProps) =>
           : "Por favor, hable claramente e intente de nuevo.",
         variant: "destructive",
       });
+      setActiveField(null); // Clear even if no input was detected
     }
   };
 
@@ -77,10 +70,10 @@ export const VoiceRecorder = ({ language, onVoiceInput }: VoiceRecorderProps) =>
         )}
       </Button>
 
-      {/* Show the transcribed text for this field only */}
-      {transcript && (
+      {/* ✅ Only show transcript if this field is currently active */}
+      {activeField === fieldName && transcript && !isRecording && (
         <p className="p-2 border border-gray-300 rounded-md bg-gray-100 text-sm">
-          {language === "en" ? "Recorded:" : "Grabado:"} <span className="font-semibold">{transcript}</span>
+          <span className="font-semibold">{transcript}</span>
         </p>
       )}
     </div>

@@ -14,7 +14,7 @@ interface MedicalInfoSectionProps {
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleCheckboxChange: (name: string, checked: boolean) => void;
-  onVoiceInput: (field: string, input: string) => void;
+  onVoiceInput: (fieldName: string, input: string) => void; // ✅ Updated function signature
 }
 
 export const MedicalInfoSection = ({ 
@@ -44,7 +44,7 @@ export const MedicalInfoSection = ({
         />
         <VoiceRecorder 
           language={language} 
-          fieldName="symptoms" // ✅ Pass the fieldName prop
+          fieldName="symptoms"  // ✅ Correctly passes `fieldName`
           onVoiceInput={onVoiceInput}  
         />
       </div>
@@ -61,7 +61,7 @@ export const MedicalInfoSection = ({
         />
         <VoiceRecorder 
           language={language} 
-          fieldName="medicalHistory" // ✅ Pass the fieldName prop
+          fieldName="medicalHistory"  // ✅ Correctly passes `fieldName`
           onVoiceInput={onVoiceInput} 
         />
       </div>
@@ -78,7 +78,7 @@ export const MedicalInfoSection = ({
         />
         <VoiceRecorder 
           language={language} 
-          fieldName="medicationsAndAllergies" // ✅ Pass the fieldName prop
+          fieldName="medicationsAndAllergies"  // ✅ Correctly passes `fieldName`
           onVoiceInput={onVoiceInput} 
         />
       </div>
@@ -109,16 +109,16 @@ export const MedicalInfoSection = ({
             <Label className="text-sm font-medium">
               {language === "en" ? "Where did you receive care?" : "¿Dónde recibió atención?"}
             </Label>
-            <VoiceRecorder 
-              language={language} 
-              fieldName="hospitalVisitLocation" // ✅ Pass the fieldName prop
-              onVoiceInput={onVoiceInput} 
-            />
             <Input
               name="hospitalVisitLocation"
               value={formData.hospitalVisitLocation}
               onChange={handleChange}
               placeholder={language === "en" ? "Enter location" : "Ingrese ubicación"}
+            />
+            <VoiceRecorder 
+              language={language} 
+              fieldName="hospitalVisitLocation"  // ✅ Correctly passes `fieldName`
+              onVoiceInput={onVoiceInput} 
             />
           </div>
         )}

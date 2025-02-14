@@ -2,32 +2,28 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns"; // ✅ Ensure date formatting works
 import { Clock, CheckCircle, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 
 interface AppointmentPageProps {
   language: "en" | "es";
-  onProceed: (appointmentDetails: {
-    date: Date;
-    time: string;
-    isVirtual: boolean;
-  }) => void;
 }
 
-const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }) => {
-  const navigate = useNavigate(); // ✅ Use React Router navigate
+const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isVirtual, setIsVirtual] = useState<boolean | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [confirming, setConfirming] = useState(false);
-  const { toast } = useToast();
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   const availableTimes = ["09:00", "09:30", "10:00", "10:30", "11:00", "14:00", "15:30"];
 
+  // ✅ Prevent page refresh & handle validation
   const handleConfirmSelection = (event: React.FormEvent) => {
-    event.preventDefault(); // ✅ Prevent page refresh
+    event.preventDefault();
 
     if (isVirtual === null || !selectedDate || !selectedTime) {
       toast({
@@ -40,20 +36,21 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
       });
       return;
     }
-    setConfirming(true);
+
+    setIsConfirmed(true); // ✅ Show confirmation summary before proceeding
   };
 
+  // ✅ Navigate to confirmation page with correct appointment details
   const handleProceed = () => {
     if (!selectedDate || !selectedTime) return;
 
-    onProceed({
-      date: selectedDate,
-      time: selectedTime,
-      isVirtual,
+    navigate("/appointment-confirmation", {
+      state: {
+        appointmentType: isVirtual ? "Virtual Visit" : "In-Person Visit",
+        date: selectedDate.toISOString(), // ✅ Send ISO format
+        time: selectedTime,
+      },
     });
-
-    // ✅ Ensure correct navigation without page refresh
-    navigate("/confirmation");
   };
 
   return (
@@ -78,8 +75,9 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
                 className="w-full py-3"
                 onClick={() => {
                   setIsVirtual(true);
-                  setSelectedDate(null); // ✅ Reset date when switching
-                  setSelectedTime(null); // ✅ Reset time when switching
+                  setSelectedDate(null);
+                  setSelectedTime(null);
+                  setIsConfirmed(false);
                 }}
               >
                 🖥 {language === "en" ? "Virtual Visit" : "Visita Virtual"}
@@ -89,8 +87,9 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
                 className="w-full py-3"
                 onClick={() => {
                   setIsVirtual(false);
-                  setSelectedDate(null); // ✅ Reset date when switching
-                  setSelectedTime(null); // ✅ Reset time when switching
+                  setSelectedDate(null);
+                  setSelectedTime(null);
+                  setIsConfirmed(false);
                 }}
               >
                 🏥 {language === "en" ? "In-Person Visit" : "Visita en Persona"}
@@ -147,7 +146,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
       </Card>
 
       {/* ✅ Confirmation Summary */}
-      {confirming && (
+      {isConfirmed && (
         <div className="mt-6 p-4 border rounded-md bg-gray-50">
           <h3 className="text-xl font-bold flex items-center space-x-2">
             <CheckCircle className="h-6 w-6 text-green-500" />

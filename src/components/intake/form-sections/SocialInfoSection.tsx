@@ -2,7 +2,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { InfoIcon } from "lucide-react";
-import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder"; // Ensure correct import path
+import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder"; // ✅ Ensure correct import path
 
 interface SocialInfoSectionProps {
   language: "en" | "es";
@@ -13,7 +13,7 @@ interface SocialInfoSectionProps {
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleCheckboxChange: (name: string, checked: boolean) => void;
-  onVoiceInput: (field: string, input: string) => void;
+  onVoiceInput: (field: string, input: string) => void; // ✅ Ensures onVoiceInput accepts both arguments
 }
 
 export const SocialInfoSection = ({ 
@@ -30,6 +30,7 @@ export const SocialInfoSection = ({
       </h3>
 
       <div className="space-y-4">
+        {/* Health Insurance Question */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
             {language === "en" ? "Do you have health insurance?" : "¿Tiene seguro médico?"}
@@ -57,6 +58,7 @@ export const SocialInfoSection = ({
             </label>
           </div>
 
+          {/* Show Alert if No Insurance */}
           {!formData.hasInsurance && (
             <Alert className="mt-2 bg-blue-50 border-blue-200">
               <InfoIcon className="h-4 w-4 text-blue-600" />
@@ -69,6 +71,7 @@ export const SocialInfoSection = ({
           )}
         </div>
 
+        {/* Low-Cost Health Services */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
             {language === "en" ? "Would you like information on free/low-cost health services?" : "¿Desea información sobre servicios de salud gratuitos o de bajo costo?"}
@@ -97,6 +100,7 @@ export const SocialInfoSection = ({
           </div>
         </div>
 
+        {/* Other Concerns */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
             {language === "en" ? "Other concerns affecting access to healthcare?" : "¿Otras preocupaciones que afecten el acceso a la atención médica?"}
@@ -108,8 +112,8 @@ export const SocialInfoSection = ({
           />
           <VoiceRecorder 
             language={language} 
-            fieldName="otherConcerns"  // ✅ Corrected prop
-            onVoiceInput={onVoiceInput} // ✅ Corrected function name
+            fieldName="otherConcerns"  // ✅ Pass the fieldName
+            onVoiceInput={onVoiceInput} // ✅ Corrected function signature
           />
         </div>
       </div>

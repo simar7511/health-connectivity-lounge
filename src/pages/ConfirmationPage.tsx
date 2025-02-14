@@ -1,14 +1,7 @@
-import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { format } from "date-fns"; // ✅ Fix: Import format from date-fns
+import { useNavigate } from "react-router-dom";
+import { CheckCircle, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, CalendarDays, Video, MapPin } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 
 interface ConfirmationPageProps {
   language: "en" | "es";
@@ -16,56 +9,37 @@ interface ConfirmationPageProps {
 
 const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const appointmentDetails = location.state; // ✅ Extracting appointment details correctly
-
-  useEffect(() => {
-    if (!appointmentDetails) {
-      navigate("/appointment"); // ✅ Redirect to appointment if no details exist
-    }
-  }, [appointmentDetails, navigate]);
-
-  if (!appointmentDetails) return null;
-
-  const { date, time, isVirtual } = appointmentDetails;
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">
       <Card className="shadow-lg p-6">
         <CardHeader>
           <h1 className="text-3xl font-bold flex items-center space-x-2">
-            <CheckCircle className="h-7 w-7 text-green-500" />
-            <span>{language === "en" ? "Appointment Confirmed!" : "¡Cita Confirmada!"}</span>
+            <ClipboardCheck className="h-7 w-7 text-green-500" />
+            <span>{language === "en" ? "Form Submitted!" : "¡Formulario Enviado!"}</span>
           </h1>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <p className="text-lg">
+          <p className="text-lg text-gray-700">
             {language === "en"
-              ? "Your appointment has been successfully scheduled!"
-              : "¡Su cita ha sido programada con éxito!"}
+              ? "Your intake form has been successfully submitted to the clinic."
+              : "Su formulario de ingreso ha sido enviado con éxito a la clínica."}
           </p>
 
-          <div className="bg-gray-100 p-4 rounded-md">
+          <div className="bg-gray-100 p-4 rounded-md text-gray-800">
             <h2 className="font-semibold text-xl">
-              {language === "en" ? "Appointment Details" : "Detalles de la Cita"}
+              {language === "en" ? "What Happens Next?" : "¿Qué Sucede Ahora?"}
             </h2>
             <p className="mt-2">
-              📅 <strong>{language === "en" ? "Date:" : "Fecha:"}</strong> {format(new Date(date), "PPP")}
+              {language === "en"
+                ? "A clinic representative will review your information and contact you if additional details are needed."
+                : "Un representante de la clínica revisará su información y se pondrá en contacto con usted si se necesitan más detalles."}
             </p>
             <p>
-              ⏰ <strong>{language === "en" ? "Time:" : "Hora:"}</strong> {time}
-            </p>
-            <p>
-              {isVirtual ? (
-                <>
-                  🎥 <strong>{language === "en" ? "Visit Type:" : "Tipo de Cita:"}</strong> Virtual Visit
-                </>
-              ) : (
-                <>
-                  🏥 <strong>{language === "en" ? "Visit Type:" : "Tipo de Cita:"}</strong> In-Person Visit
-                </>
-              )}
+              {language === "en"
+                ? "If you have any urgent medical concerns, please visit the clinic or contact a healthcare provider."
+                : "Si tiene preocupaciones médicas urgentes, visite la clínica o contacte a un proveedor de salud."}
             </p>
           </div>
         </CardContent>
@@ -74,8 +48,12 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
           <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/")}>
             {language === "en" ? "Return to Home" : "Volver a Inicio"}
           </Button>
-          <Button className="w-full bg-red-600 hover:bg-red-700" variant="outline" onClick={() => navigate("/appointment")}>
-            {language === "en" ? "Reschedule or Cancel Appointment" : "Reprogramar o Cancelar Cita"}
+          <Button
+            className="w-full bg-green-600 hover:bg-green-700"
+            variant="outline"
+            onClick={() => navigate("/appointment")}
+          >
+            {language === "en" ? "Schedule an Appointment" : "Agendar una Cita"}
           </Button>
         </CardFooter>
       </Card>
@@ -84,4 +62,3 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
 };
 
 export default ConfirmationPage;
-

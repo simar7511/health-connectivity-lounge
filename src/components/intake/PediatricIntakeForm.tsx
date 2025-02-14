@@ -6,6 +6,8 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
 import { BasicInfoSection } from "./form-sections/BasicInfoSection";
+
+// ✅ Ensure MedicalInfoSection is imported correctly
 import { MedicalInfoSection } from "./form-sections/MedicalInfoSection";
 import { SocialInfoSection } from "./form-sections/SocialInfoSection";
 import { ConsentSection } from "./form-sections/ConsentSection";
@@ -50,8 +52,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     phoneNumber: "",
     emergencyContactName: "",
     emergencyContactRelation: "",
-    needsTransportation: false,
-    needsChildcare: false,
     symptoms: "",
     medicalHistory: "",
     medicationsAndAllergies: "",
@@ -178,7 +178,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
               handleCheckboxChange={handleCheckboxChange} 
             />
 
-            {/* ✅ Pass `handleVoiceInput` to fix the missing prop issue */}
+            {/* ✅ Pass `handleVoiceInput` to fix missing prop issue */}
             <MedicalInfoSection 
               language={language} 
               formData={formData} 
