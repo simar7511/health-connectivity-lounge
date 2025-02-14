@@ -31,6 +31,9 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     phoneNumber: "",
     emergencyContactName: "",
     emergencyContactRelation: "",
+    preferVirtual: false,
+    needsTransportation: false,
+    needsChildcare: false,
     
     // Medical Info
     reasonForVisit: "",
@@ -42,8 +45,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     // Social Info
     hasInsurance: false,
     wantsLowCostInfo: false,
-    needsTransportation: false,
-    needsChildcare: false,
     otherConcerns: "",
     
     // Consent
@@ -156,6 +157,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
               formData={formData}
               handleChange={handleChange}
               handleCheckboxChange={handleCheckboxChange}
+              onVoiceInput={handleVoiceInput}
             />
 
             <ConsentSection 
