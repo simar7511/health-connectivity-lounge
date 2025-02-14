@@ -27,28 +27,28 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     childName: "",
     dob: "",
     languagePreference: "",
-    needsInterpreter: false,
+    needsInterpreter: null,
     phoneNumber: "",
     emergencyContactName: "",
     emergencyContactRelation: "",
-    preferVirtual: false,
-    needsTransportation: false,
-    needsChildcare: false,
+    preferVirtual: null,
+    needsTransportation: null,
+    needsChildcare: null,
     
     // Medical Info
     reasonForVisit: "",
     medicalHistory: "",
     medicationsAndAllergies: "",
-    hasRecentHospitalVisits: false,
+    hasRecentHospitalVisits: null,
     hospitalVisitLocation: "",
     
     // Social Info
-    hasInsurance: false,
-    wantsLowCostInfo: false,
+    hasInsurance: null,
+    wantsLowCostInfo: null,
     otherConcerns: "",
     
     // Consent
-    consentToTreatment: false,
+    consentToTreatment: null,
   });
 
   useEffect(() => {
