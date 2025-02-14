@@ -1,4 +1,3 @@
-
 import 'regenerator-runtime/runtime';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognitio
 import { useSpeechSynthesis } from "react-speech-kit";
 import { Mic, StopCircle } from "lucide-react";
 import { Input } from "./ui/input";
+import { TranslationServiceClient } from '@google-cloud/translate';
 
 interface VoiceRecorderProps {
   language: "en" | "es";
@@ -91,8 +91,8 @@ export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
       toast({
         title: language === "en" ? "API Key Required" : "Se requiere clave API",
         description: language === "en" 
-          ? "Please enter your Perplexity API key" 
-          : "Por favor ingrese su clave API de Perplexity",
+          ? "Please enter your Google Cloud API key" 
+          : "Por favor ingrese su clave API de Google Cloud",
         variant: "destructive"
       });
       return;
@@ -100,47 +100,35 @@ export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('https://api.perplexity.ai/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
-          messages: [
-            {
-              role: 'system',
-              content: language === "en" 
-                ? 'You are a translator. Translate the following English text to Spanish.' 
-                : 'Eres un traductor. Traduce el siguiente texto en español al inglés.'
-            },
-            {
-              role: 'user',
-              content: transcript
-            }
-          ],
-          temperature: 0.2,
-        }),
+      const translationClient = new TranslationServiceClient({ 
+        credentials: { private_key: apiKey }
       });
 
-      if (!response.ok) throw new Error('API request failed');
+      const targetLanguage = language === "en" ? "es" : "en";
+      const request = {
+        parent: `projects/${process.env.GOOGLE_PROJECT_ID}`,
+        contents: [transcript],
+        mimeType: 'text/plain',
+        sourceLanguageCode: language,
+        targetLanguageCode: targetLanguage,
+      };
 
-      const data = await response.json();
-      const translatedContent = data.choices[0].message.content;
-      setTranslatedText(translatedContent);
+      const [response] = await translationClient.translateText(request);
+      const translation = response.translations[0].translatedText;
+      setTranslatedText(translation);
       
       speak({ 
-        text: translatedContent, 
+        text: translation, 
         lang: language === "en" ? "es-ES" : "en-US"
       });
 
     } catch (error) {
+      console.error('Translation error:', error);
       toast({
         title: language === "en" ? "Error" : "Error",
         description: language === "en" 
-          ? "Failed to translate. Please try again." 
-          : "No se pudo traducir. Por favor intente de nuevo.",
+          ? "Failed to translate. Please check your API key and try again." 
+          : "No se pudo traducir. Por favor verifique su clave API e intente nuevamente.",
         variant: "destructive"
       });
     } finally {
@@ -154,7 +142,7 @@ export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
         <div className="space-y-2">
           <Input
             type="password"
-            placeholder={language === "en" ? "Enter Perplexity API Key" : "Ingrese la clave API de Perplexity"}
+            placeholder={language === "en" ? "Enter Google Cloud API Key" : "Ingrese la clave API de Google Cloud"}
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             className="w-full"
