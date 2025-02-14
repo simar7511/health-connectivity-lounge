@@ -9,7 +9,6 @@ import ProviderLogin from "./components/ProviderLogin";
 import ProviderDashboard from "./components/ProviderDashboard";
 import PatientLogin from "./components/PatientLogin";
 import PatientDashboard from "./components/PatientDashboard";
-import PatientIntakeForm from "./components/intake/PatientIntakeForm";
 import PediatricIntakeForm from "./components/intake/PediatricIntakeForm";
 import AppointmentPage from "./pages/AppointmentPage";
 import TransportationPage from "./pages/TransportationPage";
@@ -41,7 +40,6 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/patient/login" element={<PatientLogin language={language} onBack={() => {}} onLogin={() => {}} />} />
-        <Route path="/patient/intake" element={<PatientIntakeForm />} />
         <Route path="/pediatric-intake" element={<PediatricIntakeForm language={language} />} />
         <Route path="/patient/dashboard" element={<PatientDashboard language={language} />} />
         <Route 
