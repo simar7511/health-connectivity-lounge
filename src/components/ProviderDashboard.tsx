@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -7,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Globe, Phone } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { makeCall } from "@/utils/twilioService";
+import { ProviderHeader } from "./layout/ProviderHeader";
+import { ProviderFooter } from "./layout/ProviderFooter";
 
 interface ProviderDashboardProps {
   language: "en" | "es";
@@ -87,20 +88,14 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">
-          {translations[currentLanguage].dashboard}
-        </h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={handleTranslate}
-          >
-            <Globe className="h-5 w-5" />
-            {translations[currentLanguage].translate}
-          </Button>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <ProviderHeader 
+        language={currentLanguage}
+        onLanguageChange={handleTranslate}
+      />
+
+      <main className="flex-1 container mx-auto p-6 space-y-6">
+        <div className="flex justify-end mb-8">
           <Button
             variant="default"
             className="flex items-center gap-2"
@@ -111,19 +106,21 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
             {currentLanguage === "en" ? "Start Call" : "Iniciar Llamada"}
           </Button>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <AppointmentsList
-          language={currentLanguage}
-          patients={mockPatients}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <AppointmentsList
+            language={currentLanguage}
+            patients={mockPatients}
+          />
 
-        <MessagingInbox
-          language={currentLanguage}
-          onStartChat={() => {}}
-        />
-      </div>
+          <MessagingInbox
+            language={currentLanguage}
+            onStartChat={() => {}}
+          />
+        </div>
+      </main>
+
+      <ProviderFooter language={currentLanguage} />
     </div>
   );
 };
