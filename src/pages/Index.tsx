@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -15,11 +16,6 @@ const Index = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
   const [loginState, setLoginState] = useState<LoginState>("select"); // Start with Login Page
 
-  // Function to handle role selection
-  const handleRoleSelection = (role: "patient" | "provider") => {
-    setLoginState(role);
-  };
-
   // Function to toggle language
   const toggleLanguage = () => {
     setLanguage((prev) => (prev === "en" ? "es" : "en"));
@@ -32,7 +28,6 @@ const Index = () => {
         return (
           <LoginSelector
             language={language}
-            onSelectRole={handleRoleSelection}
             onLanguageChange={toggleLanguage}
           />
         );
@@ -71,9 +66,6 @@ const Index = () => {
 
   return (
     <div>
-      <button onClick={toggleLanguage} className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded">
-        {language === "en" ? "Switch to Spanish" : "Cambiar a Inglés"}
-      </button>
       {renderComponent()}
     </div>
   );
