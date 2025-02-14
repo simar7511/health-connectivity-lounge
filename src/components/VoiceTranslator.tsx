@@ -1,3 +1,4 @@
+
 import 'regenerator-runtime/runtime';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognitio
 import { useSpeechSynthesis } from "react-speech-kit";
 import { Mic, StopCircle } from "lucide-react";
 import { Input } from "./ui/input";
-import { TranslationServiceClient } from '@google-cloud/translate';
+import { translateText } from "@/utils/twilioService";
 
 interface VoiceRecorderProps {
   language: "en" | "es";
@@ -63,8 +64,6 @@ export const VoiceRecorder = ({ language, onSymptomsUpdate }: VoiceRecorderProps
 export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const [apiKey, setApiKey] = useState('');
-  const [showApiInput, setShowApiInput] = useState(true);
   const [translatedText, setTranslatedText] = useState('');
   const { speak } = useSpeechSynthesis();
 
@@ -81,40 +80,22 @@ export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
 
   const handleStartListening = () => {
     resetTranscript();
-    SpeechRecognition.startListening({ continuous: true, language: language === "en" ? "en-US" : "es-ES" });
+    SpeechRecognition.startListening({ 
+      continuous: true, 
+      language: language === "en" ? "en-US" : "es-ES" 
+    });
   };
 
   const handleStopListening = async () => {
     SpeechRecognition.stopListening();
     if (!transcript.trim()) return;
-    if (!apiKey) {
-      toast({
-        title: language === "en" ? "API Key Required" : "Se requiere clave API",
-        description: language === "en" 
-          ? "Please enter your Google Cloud API key" 
-          : "Por favor ingrese su clave API de Google Cloud",
-        variant: "destructive"
-      });
-      return;
-    }
 
     setIsLoading(true);
     try {
-      const translationClient = new TranslationServiceClient({ 
-        credentials: { private_key: apiKey }
-      });
-
-      const targetLanguage = language === "en" ? "es" : "en";
-      const request = {
-        parent: `projects/${process.env.GOOGLE_PROJECT_ID}`,
-        contents: [transcript],
-        mimeType: 'text/plain',
-        sourceLanguageCode: language,
-        targetLanguageCode: targetLanguage,
-      };
-
-      const [response] = await translationClient.translateText(request);
-      const translation = response.translations[0].translatedText;
+      const fromLang = language === "en" ? "en" : "es";
+      const toLang = language === "en" ? "es" : "en";
+      
+      const translation = await translateText(transcript, fromLang, toLang);
       setTranslatedText(translation);
       
       speak({ 
@@ -127,8 +108,8 @@ export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
       toast({
         title: language === "en" ? "Error" : "Error",
         description: language === "en" 
-          ? "Failed to translate. Please check your API key and try again." 
-          : "No se pudo traducir. Por favor verifique su clave API e intente nuevamente.",
+          ? "Failed to translate. Please try again." 
+          : "No se pudo traducir. Por favor intente nuevamente.",
         variant: "destructive"
       });
     } finally {
@@ -138,25 +119,6 @@ export const VoiceTranslator = ({ language }: { language: "en" | "es" }) => {
 
   return (
     <div className="w-full max-w-md mx-auto p-4 space-y-4 bg-white rounded-lg shadow-lg">
-      {showApiInput && (
-        <div className="space-y-2">
-          <Input
-            type="password"
-            placeholder={language === "en" ? "Enter Google Cloud API Key" : "Ingrese la clave API de Google Cloud"}
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="w-full"
-          />
-          <Button 
-            onClick={() => setShowApiInput(false)}
-            disabled={!apiKey}
-            className="w-full"
-          >
-            {language === "en" ? "Save API Key" : "Guardar clave API"}
-          </Button>
-        </div>
-      )}
-
       <div className="space-y-4">
         <div className="text-center">
           <Button
