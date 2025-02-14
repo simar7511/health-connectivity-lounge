@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Globe, LogOut } from "lucide-react";
+import { Globe, LogOut, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface ProviderHeaderProps {
@@ -16,11 +16,9 @@ export const ProviderHeader = ({ language, onLanguageChange }: ProviderHeaderPro
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <img
-              src="/placeholder.svg"
-              alt="Health Connectivity Lounge"
-              className="h-10 w-auto"
-            />
+            <div className="flex items-center justify-center w-10 h-10">
+              <Stethoscope className="h-8 w-8 text-primary-foreground" />
+            </div>
             <h1 className="text-xl font-semibold hidden md:block">
               {language === "en" ? "Provider Portal" : "Portal del Proveedor"}
             </h1>
