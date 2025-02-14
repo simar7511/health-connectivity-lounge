@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -21,9 +22,8 @@ type LoginState =
 
 const Index = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
-  const [loginState, setLoginState] = useState<LoginState>("select"); // Start with Login Page
+  const [loginState, setLoginState] = useState<LoginState>("select");
 
-  // Function to toggle language
   const toggleLanguage = () => {
     setLanguage((prev) => (prev === "en" ? "es" : "en"));
   };
@@ -40,7 +40,23 @@ const Index = () => {
       case "appointment":
         return <AppointmentPage language={language} onProceed={() => setLoginState("symptoms")} />;
       case "symptoms":
-        return <SymptomCheckerPage language={language} onProceed={() => setLoginState("transportation")} />;
+        return (
+          <SymptomCheckerPage 
+            language={language} 
+            onProceed={() => setLoginState("transportation")} 
+            appointmentDetails={{
+              type: "Initial Visit",
+              date: new Date(),
+              time: "09:00",
+              provider: {
+                id: "1",
+                name: "Dr. Smith",
+                specialty: "General Practice",
+                availability: ["09:00", "10:00", "11:00"]
+              }
+            }}
+          />
+        );
       case "transportation":
         return <TransportationPage language={language} onProceed={() => setLoginState("patient-dashboard")} />;
       case "patient-dashboard":

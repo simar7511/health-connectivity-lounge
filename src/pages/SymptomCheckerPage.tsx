@@ -28,7 +28,7 @@ interface AppointmentDetails {
 interface SymptomCheckerPageProps {
   language: "en" | "es";
   onProceed: () => void;
-  appointmentDetails?: AppointmentDetails;
+  appointmentDetails: AppointmentDetails;
 }
 
 const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({ 
@@ -107,10 +107,10 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({
     doc.setFont("helvetica", "normal");
     doc.text(`📅 Date: ${format(new Date(), "PPP")}`, 10, 20);
     doc.text(`⏰ Time: ${new Date().toLocaleTimeString()}`, 10, 30);
-    doc.text(`👩‍⚕️ Provider: ${appointmentDetails?.provider.name || "Not assigned"}`, 10, 40);
-    doc.text(`🏥 Appointment Type: ${appointmentDetails?.type || "Not specified"}`, 10, 50);
-    doc.text(`📅 Appointment Date: ${appointmentDetails?.date ? format(appointmentDetails.date, "PPP") : "Not specified"}`, 10, 60);
-    doc.text(`⏰ Appointment Time: ${appointmentDetails?.time || "Not specified"}`, 10, 70);
+    doc.text(`👩‍⚕️ Provider: ${appointmentDetails.provider.name}`, 10, 40);
+    doc.text(`🏥 Appointment Type: ${appointmentDetails.type}`, 10, 50);
+    doc.text(`📅 Appointment Date: ${format(appointmentDetails.date, "PPP")}`, 10, 60);
+    doc.text(`⏰ Appointment Time: ${appointmentDetails.time}`, 10, 70);
     doc.text("📝 Symptoms:", 10, 80);
     doc.text(symptoms, 10, 90, { maxWidth: 180 });
 
@@ -131,15 +131,13 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({
         🩺 {language === "en" ? "Symptom Checker" : "Verificador de Síntomas"}
       </h1>
       
-      {appointmentDetails && (
-        <AppointmentDetails 
-          language={language}
-          type={appointmentDetails.type}
-          date={appointmentDetails.date}
-          time={appointmentDetails.time}
-          provider={appointmentDetails.provider}
-        />
-      )}
+      <AppointmentDetails 
+        language={language}
+        type={appointmentDetails.type}
+        date={appointmentDetails.date}
+        time={appointmentDetails.time}
+        provider={appointmentDetails.provider}
+      />
 
       <div className="space-y-4">
         <p className="mb-4">
