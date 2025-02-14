@@ -2,10 +2,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
 import { MessagingInbox } from "./dashboard/MessagingInbox";
-import { Button } from "@/components/ui/button";
-import { Globe, Phone } from "lucide-react";
 import { Patient } from "@/types/patient";
-import { makeCall } from "@/utils/twilioService";
 import { ProviderHeader } from "./layout/ProviderHeader";
 import { ProviderFooter } from "./layout/ProviderFooter";
 
@@ -53,38 +50,12 @@ const translations = {
 const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const { toast } = useToast();
   const [currentLanguage, setCurrentLanguage] = useState(language);
-  const [isCallInProgress, setIsCallInProgress] = useState(false);
 
   const handleTranslate = () => {
     setCurrentLanguage((prev) => (prev === "en" ? "es" : "en"));
     toast({
       title: translations[currentLanguage].translatedTo,
     });
-  };
-
-  const handleCall = async (patientNumber: string) => {
-    if (isCallInProgress) return;
-
-    setIsCallInProgress(true);
-    try {
-      await makeCall(patientNumber);
-      toast({
-        title: currentLanguage === "en" ? "Call Initiated" : "Llamada Iniciada",
-        description: currentLanguage === "en" 
-          ? "Connecting your call..." 
-          : "Conectando su llamada...",
-      });
-    } catch (error) {
-      toast({
-        title: currentLanguage === "en" ? "Call Failed" : "Error de Llamada",
-        description: currentLanguage === "en"
-          ? "Could not initiate call. Please try again."
-          : "No se pudo iniciar la llamada. Por favor intente de nuevo.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCallInProgress(false);
-    }
   };
 
   return (
@@ -95,18 +66,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       />
 
       <main className="flex-1 container mx-auto p-6 space-y-6">
-        <div className="flex justify-end mb-8">
-          <Button
-            variant="default"
-            className="flex items-center gap-2"
-            onClick={() => handleCall("+12066705864")}
-            disabled={isCallInProgress}
-          >
-            <Phone className="h-5 w-5" />
-            {currentLanguage === "en" ? "Start Call" : "Iniciar Llamada"}
-          </Button>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <AppointmentsList
             language={currentLanguage}
