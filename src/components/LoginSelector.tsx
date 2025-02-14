@@ -16,30 +16,44 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
     en: {
       title: "Welcome to Safe Haven Pediatrics",
       subtitle: "Quality Care for Every Child",
-      location: "Free & Low-Cost Pediatric Care in Adams County",
-      noIdRequired: "No Insurance or ID Required – Open to All Families",
+      benefits: [
+        "Free & Low-Cost Pediatric Care for every child, regardless of insurance or immigration status.",
+        "Easy & Quick Appointments with no long wait times.",
+        "Virtual & In-Person Visits so you can choose what works best for your family.",
+        "No ID, No Insurance? No Problem! We ensure safe, confidential care.",
+        "Bilingual Staff & Interpreters Available to make your experience stress-free.",
+      ],
       welcomeMessage1: "We provide safe, compassionate, and culturally sensitive pediatric care for every child, regardless of insurance or immigration status.",
       welcomeMessage2: "We offer virtual and in-person visits – choose what works best for your family!",
       getStarted: "Get Started – Complete Intake Form",
-      findClinics: "Find Free & Low-Cost Clinics Nearby",
+      formDescription: "Fill out this form in less than 5 minutes to get started with your child's care.",
       providerLogin: "Provider Login",
       switchLanguage: "Cambiar a Español",
       virtualVisits: "Virtual Visits Available",
+      virtualDescription: "See a doctor from home – great for follow-ups & quick questions!",
       inPersonVisits: "In-Person Care",
+      inPersonDescription: "Visit our clinic for check-ups, vaccines, and more.",
     },
     es: {
       title: "Bienvenido a Safe Haven Pediatrics",
       subtitle: "Atención de Calidad para Cada Niño",
-      location: "Atención Pediátrica Gratuita y de Bajo Costo en el Condado de Adams",
-      noIdRequired: "No Se Requiere Seguro ni Identificación – Abierto a Todas las Familias",
+      benefits: [
+        "Atención pediátrica gratuita y de bajo costo para cada niño, sin importar el seguro o estatus migratorio.",
+        "Citas fáciles y rápidas sin largas esperas.",
+        "Visitas virtuales y en persona para que elija lo que mejor funcione para su familia.",
+        "¿Sin identificación, sin seguro? ¡No hay problema! Garantizamos atención segura y confidencial.",
+        "Personal bilingüe e intérpretes disponibles para hacer su experiencia libre de estrés.",
+      ],
       welcomeMessage1: "Brindamos atención pediátrica segura, compasiva y culturalmente sensible para cada niño, sin importar su seguro o estatus migratorio.",
       welcomeMessage2: "¡Ofrecemos visitas virtuales y en persona – elija lo que mejor funcione para su familia!",
       getStarted: "Comenzar – Completar Formulario de Admisión",
-      findClinics: "Encontrar Clínicas Gratuitas y de Bajo Costo",
+      formDescription: "Complete este formulario en menos de 5 minutos para comenzar con la atención de su hijo.",
       providerLogin: "Acceso para Proveedores",
       switchLanguage: "Switch to English",
       virtualVisits: "Visitas Virtuales Disponibles",
+      virtualDescription: "Consulte a un médico desde casa – ¡ideal para seguimientos y consultas rápidas!",
       inPersonVisits: "Atención en Persona",
+      inPersonDescription: "Visite nuestra clínica para chequeos, vacunas y más.",
     },
   };
 
@@ -79,14 +93,13 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
           <p className="text-2xl md:text-3xl text-primary/80">
             {content[language].subtitle}
           </p>
-          <div className="space-y-2">
-            <p className="text-lg text-primary/70">
-              <MapPin className="inline mr-2" />
-              {content[language].location}
-            </p>
-            <p className="text-lg font-medium text-primary/90">
-              {content[language].noIdRequired}
-            </p>
+          <div className="space-y-3 mt-8">
+            {content[language].benefits.map((benefit, index) => (
+              <p key={index} className="text-lg text-primary/90 flex items-center justify-center gap-2">
+                {["🏥", "📅", "🏡", "🛑", "🌎"][index]}
+                {benefit}
+              </p>
+            ))}
           </div>
         </div>
 
@@ -107,10 +120,12 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
               <div className="text-center p-4 rounded-lg bg-primary/5">
                 <VideoIcon className="w-8 h-8 mx-auto text-primary mb-2" />
                 <p className="font-medium">{content[language].virtualVisits}</p>
+                <p className="text-sm mt-2 text-gray-600">💻 {content[language].virtualDescription}</p>
               </div>
               <div className="text-center p-4 rounded-lg bg-primary/5">
                 <Calendar className="w-8 h-8 mx-auto text-primary mb-2" />
                 <p className="font-medium">{content[language].inPersonVisits}</p>
+                <p className="text-sm mt-2 text-gray-600">🏥 {content[language].inPersonDescription}</p>
               </div>
             </div>
 
@@ -122,15 +137,9 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
                 {content[language].getStarted}
                 <ArrowRight className="w-5 h-5" />
               </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => navigate("/free-clinic")}
-                className="w-full py-6 text-lg flex items-center justify-center gap-2"
-              >
-                <MapPin className="w-5 h-5" />
-                {content[language].findClinics}
-              </Button>
+              <p className="text-sm text-center text-gray-600">
+                ✅ {content[language].formDescription}
+              </p>
             </div>
           </div>
         </Card>
