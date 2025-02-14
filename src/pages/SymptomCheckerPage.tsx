@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
@@ -125,6 +124,10 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({
     }
   };
 
+  const handleVoiceInput = (_fieldName: string, input: string) => {
+    setSymptoms(input);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4">
@@ -148,7 +151,8 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({
 
         <VoiceRecorder 
           language={language}
-          onSymptomsUpdate={setSymptoms}
+          fieldName="symptoms"
+          onVoiceInput={handleVoiceInput}
         />
 
         <SymptomsDisplay 

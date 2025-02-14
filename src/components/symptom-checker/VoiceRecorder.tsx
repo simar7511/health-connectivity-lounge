@@ -8,10 +8,11 @@ import { Mic, StopCircle } from "lucide-react";
 
 interface VoiceRecorderProps {
   language: "en" | "es";
-  onSymptomsUpdate: (symptoms: string) => void;
+  fieldName: string;
+  onVoiceInput: (fieldName: string, input: string) => void;
 }
 
-export const VoiceRecorder = ({ language, onSymptomsUpdate }: VoiceRecorderProps) => {
+export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
@@ -34,7 +35,7 @@ export const VoiceRecorder = ({ language, onSymptomsUpdate }: VoiceRecorderProps
     setIsRecording(false);
 
     if (transcript.trim()) {
-      onSymptomsUpdate(transcript);
+      onVoiceInput(fieldName, transcript);
     } else {
       toast({
         title: language === "en" ? "No Input Detected" : "No se detectó entrada",

@@ -1,7 +1,8 @@
+
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder"; // Ensure correct import path
+import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder";
 
 interface MedicalInfoSectionProps {
   language: "en" | "es";
@@ -14,7 +15,7 @@ interface MedicalInfoSectionProps {
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleCheckboxChange: (name: string, checked: boolean) => void;
-  onVoiceInput: (fieldName: string, input: string) => void; // ✅ Updated function signature
+  onVoiceInput: (fieldName: string, input: string) => void;
 }
 
 export const MedicalInfoSection = ({ 
@@ -24,7 +25,6 @@ export const MedicalInfoSection = ({
   handleCheckboxChange,
   onVoiceInput 
 }: MedicalInfoSectionProps) => {
-
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">
@@ -43,9 +43,9 @@ export const MedicalInfoSection = ({
           required
         />
         <VoiceRecorder 
-          language={language} 
-          fieldName="symptoms"  // ✅ Correctly passes `fieldName`
-          onVoiceInput={onVoiceInput}  
+          language={language}
+          fieldName="symptoms"
+          onVoiceInput={onVoiceInput}
         />
       </div>
 
@@ -60,9 +60,9 @@ export const MedicalInfoSection = ({
           onChange={handleChange}
         />
         <VoiceRecorder 
-          language={language} 
-          fieldName="medicalHistory"  // ✅ Correctly passes `fieldName`
-          onVoiceInput={onVoiceInput} 
+          language={language}
+          fieldName="medicalHistory"
+          onVoiceInput={onVoiceInput}
         />
       </div>
 
@@ -77,9 +77,9 @@ export const MedicalInfoSection = ({
           onChange={handleChange}
         />
         <VoiceRecorder 
-          language={language} 
-          fieldName="medicationsAndAllergies"  // ✅ Correctly passes `fieldName`
-          onVoiceInput={onVoiceInput} 
+          language={language}
+          fieldName="medicationsAndAllergies"
+          onVoiceInput={onVoiceInput}
         />
       </div>
 
@@ -116,9 +116,9 @@ export const MedicalInfoSection = ({
               placeholder={language === "en" ? "Enter location" : "Ingrese ubicación"}
             />
             <VoiceRecorder 
-              language={language} 
-              fieldName="hospitalVisitLocation"  // ✅ Correctly passes `fieldName`
-              onVoiceInput={onVoiceInput} 
+              language={language}
+              fieldName="hospitalVisitLocation"
+              onVoiceInput={onVoiceInput}
             />
           </div>
         )}

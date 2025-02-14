@@ -1,8 +1,9 @@
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { InfoIcon } from "lucide-react";
-import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder"; // ✅ Ensure correct import path
+import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder";
 
 interface SocialInfoSectionProps {
   language: "en" | "es";
@@ -13,7 +14,7 @@ interface SocialInfoSectionProps {
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleCheckboxChange: (name: string, checked: boolean) => void;
-  onVoiceInput: (field: string, input: string) => void; // ✅ Ensures onVoiceInput accepts both arguments
+  onVoiceInput: (fieldName: string, input: string) => void;
 }
 
 export const SocialInfoSection = ({ 
@@ -111,9 +112,9 @@ export const SocialInfoSection = ({
             onChange={handleChange}
           />
           <VoiceRecorder 
-            language={language} 
-            fieldName="otherConcerns"  // ✅ Pass the fieldName
-            onVoiceInput={onVoiceInput} // ✅ Corrected function signature
+            language={language}
+            fieldName="otherConcerns"
+            onVoiceInput={onVoiceInput}
           />
         </div>
       </div>
