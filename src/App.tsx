@@ -15,7 +15,7 @@ import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import PatientOverviewPage from "./pages/PatientOverviewPage";
 import { ChatPage } from "./pages/ChatPage";
-import ConfirmationPage from "./pages/ConfirmationPage";
+import ConfirmationPage, { ConfirmationPageProps } from "./pages/ConfirmationPage";
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">(() => {
@@ -28,7 +28,6 @@ const App = () => {
   }, [language]);
 
   const handleProceed = () => {
-    // Handle navigation or state changes
     console.log("Proceeding to next step");
   };
 
