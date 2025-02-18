@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { generateBloodPressureReport } from "@/utils/bloodPressureReport";
 import {
   Dialog,
@@ -81,7 +83,7 @@ const commonExams = [
 
 const displayedExams = commonExams.slice(0, 3);
 
-const treatmentPlan = {
+const defaultTreatmentPlan = {
   diagnosis: [
     {
       condition: "Gestational Hypertension",
@@ -153,6 +155,13 @@ const PatientOverviewPage = () => {
   const patient = mockPatients.find(p => p.id === patientId);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [currentReport, setCurrentReport] = useState("");
+  const [treatmentPlan, setTreatmentPlan] = useState(defaultTreatmentPlan);
+  const [editMode, setEditMode] = useState({
+    diagnosis: false,
+    medications: false,
+    lifestyleChanges: false,
+    doctorNotes: false
+  });
 
   if (!patient) {
     return <div>Patient not found</div>;
@@ -402,6 +411,59 @@ const PatientOverviewPage = () => {
     });
   };
 
+  const handleEditToggle = (section: keyof typeof editMode) => {
+    setEditMode(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const handleSaveSection = (section: keyof typeof editMode) => {
+    setEditMode(prev => ({ ...prev, [section]: false }));
+    toast({
+      title: "Changes Saved",
+      description: `${section.charAt(0).toUpperCase() + section.slice(1)} has been updated.`,
+    });
+  };
+
+  const updateDiagnosis = (index: number, field: string, value: string) => {
+    setTreatmentPlan(prev => ({
+      ...prev,
+      diagnosis: prev.diagnosis.map((d, i) => 
+        i === index ? { ...d, [field]: value } : d
+      )
+    }));
+  };
+
+  const updateMedication = (index: number, field: string, value: string) => {
+    setTreatmentPlan(prev => ({
+      ...prev,
+      medications: prev.medications.map((m, i) => 
+        i === index ? { ...m, [field]: value } : m
+      )
+    }));
+  };
+
+  const updateLifestyleChange = (categoryIndex: number, recIndex: number, value: string) => {
+    setTreatmentPlan(prev => ({
+      ...prev,
+      lifestyleChanges: prev.lifestyleChanges.map((lc, i) => 
+        i === categoryIndex ? {
+          ...lc,
+          recommendations: lc.recommendations.map((r, j) => 
+            j === recIndex ? value : r
+          )
+        } : lc
+      )
+    }));
+  };
+
+  const updateDoctorNote = (index: number, value: string) => {
+    setTreatmentPlan(prev => ({
+      ...prev,
+      doctorNotes: prev.doctorNotes.map((note, i) => 
+        i === index ? value : note
+      )
+    }));
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -494,62 +556,221 @@ const PatientOverviewPage = () => {
             <div className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-medium mb-2">Diagnosis</h3>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-medium">Diagnosis</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditToggle('diagnosis')}
+                    >
+                      {editMode.diagnosis ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                    </Button>
+                  </div>
                   {treatmentPlan.diagnosis.map((diagnosis, index) => (
                     <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">{diagnosis.condition}</h4>
-                        <Badge className={
-                          diagnosis.severity === "High" ? "bg-red-500" :
-                          diagnosis.severity === "Moderate" ? "bg-yellow-500" : "bg-green-500"
-                        }>
-                          {diagnosis.severity}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">{diagnosis.details}</p>
+                      {editMode.diagnosis ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={diagnosis.condition}
+                            onChange={(e) => updateDiagnosis(index, 'condition', e.target.value)}
+                            placeholder="Condition"
+                          />
+                          <Select
+                            value={diagnosis.severity}
+                            onValueChange={(value) => updateDiagnosis(index, 'severity', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select severity" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Low">Low</SelectItem>
+                              <SelectItem value="Moderate">Moderate</SelectItem>
+                              <SelectItem value="High">High</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Textarea
+                            value={diagnosis.details}
+                            onChange={(e) => updateDiagnosis(index, 'details', e.target.value)}
+                            placeholder="Details"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium">{diagnosis.condition}</h4>
+                            <Badge className={
+                              diagnosis.severity === "High" ? "bg-red-500" :
+                              diagnosis.severity === "Moderate" ? "bg-yellow-500" : "bg-green-500"
+                            }>
+                              {diagnosis.severity}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">{diagnosis.details}</p>
+                        </>
+                      )}
                     </div>
                   ))}
+                  {editMode.diagnosis && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSaveSection('diagnosis')}
+                      className="mt-2"
+                    >
+                      Save Changes
+                    </Button>
+                  )}
                 </div>
 
                 <div>
-                  <h3 className="font-medium mb-2">Prescribed Medications</h3>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-medium">Prescribed Medications</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditToggle('medications')}
+                    >
+                      {editMode.medications ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                    </Button>
+                  </div>
                   {treatmentPlan.medications.map((medication, index) => (
                     <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
-                      <h4 className="font-medium">{medication.name}</h4>
-                      <p className="text-sm text-gray-600">
-                        {medication.dosage} - {medication.frequency}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">{medication.purpose}</p>
+                      {editMode.medications ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={medication.name}
+                            onChange={(e) => updateMedication(index, 'name', e.target.value)}
+                            placeholder="Medication name"
+                          />
+                          <Input
+                            value={medication.dosage}
+                            onChange={(e) => updateMedication(index, 'dosage', e.target.value)}
+                            placeholder="Dosage"
+                          />
+                          <Input
+                            value={medication.frequency}
+                            onChange={(e) => updateMedication(index, 'frequency', e.target.value)}
+                            placeholder="Frequency"
+                          />
+                          <Input
+                            value={medication.purpose}
+                            onChange={(e) => updateMedication(index, 'purpose', e.target.value)}
+                            placeholder="Purpose"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <h4 className="font-medium">{medication.name}</h4>
+                          <p className="text-sm text-gray-600">
+                            {medication.dosage} - {medication.frequency}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">{medication.purpose}</p>
+                        </>
+                      )}
                     </div>
                   ))}
+                  {editMode.medications && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSaveSection('medications')}
+                      className="mt-2"
+                    >
+                      Save Changes
+                    </Button>
+                  )}
                 </div>
 
                 <div>
-                  <h3 className="font-medium mb-2">Lifestyle Changes</h3>
-                  {treatmentPlan.lifestyleChanges.map((category, index) => (
-                    <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-medium">Lifestyle Changes</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditToggle('lifestyleChanges')}
+                    >
+                      {editMode.lifestyleChanges ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  {treatmentPlan.lifestyleChanges.map((category, categoryIndex) => (
+                    <div key={categoryIndex} className="mb-2 p-3 bg-gray-50 rounded-lg">
                       <h4 className="font-medium mb-2">{category.category}</h4>
-                      <ul className="list-disc pl-5 space-y-1">
-                        {category.recommendations.map((rec, recIndex) => (
-                          <li key={recIndex} className="text-sm text-gray-600">{rec}</li>
+                      {editMode.lifestyleChanges ? (
+                        <div className="space-y-2">
+                          {category.recommendations.map((rec, recIndex) => (
+                            <Input
+                              key={recIndex}
+                              value={rec}
+                              onChange={(e) => updateLifestyleChange(categoryIndex, recIndex, e.target.value)}
+                              placeholder="Recommendation"
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {category.recommendations.map((rec, recIndex) => (
+                            <li key={recIndex} className="text-sm text-gray-600">{rec}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                  {editMode.lifestyleChanges && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSaveSection('lifestyleChanges')}
+                      className="mt-2"
+                    >
+                      Save Changes
+                    </Button>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-medium">Doctor's Notes & Special Instructions</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditToggle('doctorNotes')}
+                    >
+                      {editMode.doctorNotes ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    {editMode.doctorNotes ? (
+                      <div className="space-y-2">
+                        {treatmentPlan.doctorNotes.map((note, index) => (
+                          <Input
+                            key={index}
+                            value={note}
+                            onChange={(e) => updateDoctorNote(index, e.target.value)}
+                            placeholder="Note"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <ul className="space-y-2">
+                        {treatmentPlan.doctorNotes.map((note, index) => (
+                          <li key={index} className="text-sm text-gray-600 flex items-start">
+                            <span className="mr-2">•</span>
+                            {note}
+                          </li>
                         ))}
                       </ul>
-                    </div>
-                  ))}
-                </div>
-
-                <div>
-                  <h3 className="font-medium mb-2">Doctor's Notes & Special Instructions</h3>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <ul className="space-y-2">
-                      {treatmentPlan.doctorNotes.map((note, index) => (
-                        <li key={index} className="text-sm text-gray-600 flex items-start">
-                          <span className="mr-2">•</span>
-                          {note}
-                        </li>
-                      ))}
-                    </ul>
+                    )}
                   </div>
+                  {editMode.doctorNotes && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSaveSection('doctorNotes')}
+                      className="mt-2"
+                    >
+                      Save Changes
+                    </Button>
+                  )}
                 </div>
               </div>
 
