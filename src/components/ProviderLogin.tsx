@@ -1,115 +1,44 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Mail, Lock, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { auth } from "@/lib/firebase";
-import { 
-  signInWithEmailAndPassword, 
-  RecaptchaVerifier,
-  PhoneAuthProvider,
-  PhoneMultiFactorGenerator
-} from "firebase/auth";
 
 interface ProviderLoginProps {
   language: "en" | "es";
   onBack?: () => void;
-  onLogin: () => void;
+  onLogin: () => void; // ✅ Ensure `onLogin` is included in props
 }
 
 const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [is2FARequired, setIs2FARequired] = useState(false);
-  const [verificationId, setVerificationId] = useState("");
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const generatedOtp = "123456";
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    try {
-      // Only initialize if not already initialized
-      if (!window.recaptchaVerifier) {
-        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible'
-        });
-        window.recaptchaVerifier = verifier;
-        setRecaptchaVerifier(verifier);
-      }
-    } catch (error) {
-      console.error("RecaptchaVerifier initialization error:", error);
-    }
-  }, []);
-
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      if (!recaptchaVerifier) {
-        toast({
-          variant: "destructive",
-          title: language === "en" ? "Error" : "Error",
-          description: language === "en" 
-            ? "Please wait for the security check to initialize" 
-            : "Por favor espere que se inicialice el control de seguridad"
-        });
-        return;
-      }
-
-      await signInWithEmailAndPassword(auth, email, password);
-      
-      // Send verification code to phone
-      const phoneAuthProvider = new PhoneAuthProvider(auth);
-      const verId = await phoneAuthProvider.verifyPhoneNumber(
-        phoneNumber,
-        recaptchaVerifier
-      );
-      
-      setVerificationId(verId);
-      setIs2FARequired(true);
-      
-      toast({ 
-        title: language === "en" 
-          ? "Verification code sent" 
-          : "Código de verificación enviado",
-        description: language === "en"
-          ? "Please check your phone for the verification code"
-          : "Por favor revise su teléfono para el código de verificación"
-      });
-    } catch (error: any) {
-      toast({ 
-        variant: "destructive",
-        title: language === "en" ? "Login Failed" : "Error de inicio de sesión",
-        description: error.message
-      });
-    }
+    toast({ title: "A 6-digit verification code has been sent to your email." });
+    setIsOtpSent(true);
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
+  const handleOtpSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const cred = PhoneAuthProvider.credential(verificationId, verificationCode);
-      const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
-      
-      // Complete sign-in
-      await auth.currentUser?.multiFactor.enroll(multiFactorAssertion, "Phone 2FA");
-      
-      toast({ 
-        title: language === "en" ? "Login Successful" : "Inicio de sesión exitoso" 
-      });
-      
+    if (otp === generatedOtp) {
+      toast({ title: "Login successful! Redirecting..." });
+
+      // ✅ Ensure `onLogin` is called after successful OTP verification
       onLogin();
+
+      // ✅ Redirect to Provider Dashboard
       navigate("/provider/dashboard");
-    } catch (error: any) {
-      toast({ 
-        variant: "destructive",
-        title: language === "en" ? "Verification Failed" : "Error de verificación",
-        description: error.message
-      });
+    } else {
+      toast({ title: "Invalid OTP. Please try again.", variant: "destructive" });
     }
   };
 
@@ -120,7 +49,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
           {language === "en" ? "Provider Login" : "Acceso para Proveedores"}
         </h1>
 
-        {!is2FARequired ? (
+        {!isOtpSent ? (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
@@ -146,46 +75,33 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
               />
             </div>
 
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-              <Input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder={language === "en" ? "Enter your phone number" : "Ingrese su número de teléfono"}
-                className="pl-10 text-lg py-6"
-                required
-              />
-            </div>
-
-            <div id="recaptcha-container"></div>
-
             <Button type="submit" className="w-full text-lg py-6">
               {language === "en" ? "Login" : "Ingresar"}
             </Button>
           </form>
         ) : (
-          <form onSubmit={handleVerifyCode} className="space-y-4">
+          <form onSubmit={handleOtpSubmit} className="space-y-4">
             <div className="relative">
               <ShieldCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               <Input
                 type="text"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                placeholder={language === "en" ? "Enter 2FA code" : "Ingrese el código 2FA"}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder={language === "en" ? "Enter your verification code" : "Ingrese su código de verificación"}
                 className="pl-10 text-lg py-6"
+                maxLength={6}
                 required
               />
             </div>
 
             <Button type="submit" className="w-full text-lg py-6">
-              {language === "en" ? "Verify 2FA Code" : "Verificar código 2FA"}
+              {language === "en" ? "Verify Code" : "Verificar Código"}
             </Button>
           </form>
         )}
       </Card>
 
-      {!is2FARequired && onBack && (
+      {!isOtpSent && onBack && (
         <Button variant="ghost" onClick={onBack}>
           {language === "en" ? "Back" : "Volver"}
         </Button>
@@ -198,11 +114,6 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   );
 };
 
-// Use module augmentation instead of global
-declare module "react" {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-  }
-}
+export default ProviderLogin; // ✅ Ensure default export is used!
 
-export default ProviderLogin;
+
