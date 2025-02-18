@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -9,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "@/lib/firebase";
 import { 
   signInWithEmailAndPassword, 
-  multiFactor,
+  RecaptchaVerifier,
   PhoneAuthProvider,
-  PhoneMultiFactorGenerator 
+  PhoneMultiFactorGenerator,
+  MultiFactorResolver
 } from "firebase/auth";
 
 interface ProviderLoginProps {
@@ -26,39 +27,43 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [is2FARequired, setIs2FARequired] = useState(false);
+  const [verificationId, setVerificationId] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Initialize reCAPTCHA verifier
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      'size': 'invisible',
+      'callback': () => {
+        // reCAPTCHA solved
+      }
+    });
+  }, []);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Sign in with email and password first
       await signInWithEmailAndPassword(auth, email, password);
       
-      // Check if 2FA is required
-      const multiFactorUser = multiFactor(auth.currentUser);
-      if (multiFactorUser.enrolledFactors.length > 0) {
-        setIs2FARequired(true);
-        // Send verification code to phone
-        const phoneAuthProvider = new PhoneAuthProvider(auth);
-        const verificationId = await phoneAuthProvider.verifyPhoneNumber(
-          phoneNumber,
-          60 // Timeout
-        );
-        
-        toast({ 
-          title: language === "en" 
-            ? "Verification code sent" 
-            : "Código de verificación enviado",
-          description: language === "en"
-            ? "Please check your phone for the verification code"
-            : "Por favor revise su teléfono para el código de verificación"
-        });
-      } else {
-        // If 2FA is not set up, proceed with login
-        onLogin();
-        navigate("/provider/dashboard");
-      }
+      // Send verification code to phone
+      const phoneAuthProvider = new PhoneAuthProvider(auth);
+      const verId = await phoneAuthProvider.verifyPhoneNumber(
+        phoneNumber,
+        window.recaptchaVerifier
+      );
+      
+      setVerificationId(verId);
+      setIs2FARequired(true);
+      
+      toast({ 
+        title: language === "en" 
+          ? "Verification code sent" 
+          : "Código de verificación enviado",
+        description: language === "en"
+          ? "Please check your phone for the verification code"
+          : "Por favor revise su teléfono para el código de verificación"
+      });
     } catch (error: any) {
       toast({ 
         variant: "destructive",
@@ -71,10 +76,11 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const multiFactorAssertion = PhoneMultiFactorGenerator.assertion({
-        verificationCode
-      });
-      await multiFactor(auth.currentUser).enroll(multiFactorAssertion);
+      const cred = PhoneAuthProvider.credential(verificationId, verificationCode);
+      const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
+      
+      // Complete sign-in
+      await auth.currentUser?.multiFactor.enroll(multiFactorAssertion, "Phone 2FA");
       
       toast({ 
         title: language === "en" ? "Login Successful" : "Inicio de sesión exitoso" 
@@ -136,6 +142,8 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
               />
             </div>
 
+            <div id="recaptcha-container"></div>
+
             <Button type="submit" className="w-full text-lg py-6">
               {language === "en" ? "Login" : "Ingresar"}
             </Button>
@@ -173,5 +181,12 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
     </div>
   );
 };
+
+// Add RecaptchaVerifier to the window object type
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier;
+  }
+}
 
 export default ProviderLogin;
