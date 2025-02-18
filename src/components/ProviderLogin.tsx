@@ -1,41 +1,44 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
 
 interface ProviderLoginProps {
   language: "en" | "es";
   onBack?: () => void;
-  onLogin: () => void;
+  onLogin: () => void; // ✅ Ensure `onLogin` is included in props
 }
 
 const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const generatedOtp = "123456";
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ 
-        title: language === "en" ? "Login Successful" : "Inicio de sesión exitoso" 
-      });
+    toast({ title: "A 6-digit verification code has been sent to your email." });
+    setIsOtpSent(true);
+  };
+
+  const handleOtpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp === generatedOtp) {
+      toast({ title: "Login successful! Redirecting..." });
+
+      // ✅ Ensure `onLogin` is called after successful OTP verification
       onLogin();
+
+      // ✅ Redirect to Provider Dashboard
       navigate("/provider/dashboard");
-    } catch (error: any) {
-      toast({ 
-        variant: "destructive",
-        title: language === "en" ? "Login Failed" : "Error de inicio de sesión",
-        description: error.message
-      });
+    } else {
+      toast({ title: "Invalid OTP. Please try again.", variant: "destructive" });
     }
   };
 
@@ -46,38 +49,59 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
           {language === "en" ? "Provider Login" : "Acceso para Proveedores"}
         </h1>
 
-        <form onSubmit={handleLoginSubmit} className="space-y-4">
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={language === "en" ? "Enter your email" : "Ingrese su correo electrónico"}
-              className="pl-10 text-lg py-6"
-              required
-            />
-          </div>
+        {!isOtpSent ? (
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={language === "en" ? "Enter your email" : "Ingrese su correo electrónico"}
+                className="pl-10 text-lg py-6"
+                required
+              />
+            </div>
 
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={language === "en" ? "Enter your password" : "Ingrese su contraseña"}
-              className="pl-10 text-lg py-6"
-              required
-            />
-          </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={language === "en" ? "Enter your password" : "Ingrese su contraseña"}
+                className="pl-10 text-lg py-6"
+                required
+              />
+            </div>
 
-          <Button type="submit" className="w-full text-lg py-6">
-            {language === "en" ? "Login" : "Ingresar"}
-          </Button>
-        </form>
+            <Button type="submit" className="w-full text-lg py-6">
+              {language === "en" ? "Login" : "Ingresar"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleOtpSubmit} className="space-y-4">
+            <div className="relative">
+              <ShieldCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              <Input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder={language === "en" ? "Enter your verification code" : "Ingrese su código de verificación"}
+                className="pl-10 text-lg py-6"
+                maxLength={6}
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full text-lg py-6">
+              {language === "en" ? "Verify Code" : "Verificar Código"}
+            </Button>
+          </form>
+        )}
       </Card>
 
-      {onBack && (
+      {!isOtpSent && onBack && (
         <Button variant="ghost" onClick={onBack}>
           {language === "en" ? "Back" : "Volver"}
         </Button>
@@ -90,4 +114,6 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   );
 };
 
-export default ProviderLogin;
+export default ProviderLogin; // ✅ Ensure default export is used!
+
+
