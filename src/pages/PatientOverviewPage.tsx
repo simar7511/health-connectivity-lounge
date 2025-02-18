@@ -1,5 +1,4 @@
-
-import { useState } from "react"; // Added this import
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
@@ -81,6 +80,61 @@ const commonExams = [
 ];
 
 const displayedExams = commonExams.slice(0, 3);
+
+const treatmentPlan = {
+  diagnosis: [
+    {
+      condition: "Gestational Hypertension",
+      severity: "Moderate",
+      details: "Blood pressure consistently elevated above normal range",
+    },
+    {
+      condition: "Gestational Diabetes Risk",
+      severity: "Low",
+      details: "Blood glucose levels at upper limit of normal range",
+    }
+  ],
+  medications: [
+    {
+      name: "Methyldopa",
+      dosage: "250mg",
+      frequency: "Twice daily",
+      duration: "Until next appointment",
+      purpose: "Blood pressure management"
+    },
+    {
+      name: "Prenatal Vitamins",
+      dosage: "1 tablet",
+      frequency: "Once daily",
+      duration: "Throughout pregnancy",
+      purpose: "Nutritional support"
+    }
+  ],
+  lifestyleChanges: [
+    {
+      category: "Diet",
+      recommendations: [
+        "Reduce sodium intake to less than 2,300mg per day",
+        "Increase protein intake to 75-100g per day",
+        "Stay hydrated with 8-10 glasses of water daily"
+      ]
+    },
+    {
+      category: "Exercise",
+      recommendations: [
+        "30 minutes of moderate walking daily",
+        "Prenatal yoga twice weekly",
+        "Avoid strenuous activities"
+      ]
+    }
+  ],
+  doctorNotes: [
+    "Monitor blood pressure twice daily and maintain a log",
+    "Report any severe headaches or visual changes immediately",
+    "Schedule follow-up appointment in 2 weeks",
+    "Rest with left side positioning when possible"
+  ]
+};
 
 const getStatusBadge = (results: string) => {
   if (results.toLowerCase().includes('normal')) {
@@ -254,6 +308,100 @@ const PatientOverviewPage = () => {
     });
   };
 
+  const handleSendTreatmentPlan = () => {
+    const treatmentMessage = `Treatment Plan Summary:\n\nDiagnosis:\n${treatmentPlan.diagnosis.map(d => 
+      `- ${d.condition} (${d.severity}): ${d.details}`
+    ).join('\n')}\n\nMedications:\n${treatmentPlan.medications.map(m =>
+      `- ${m.name} ${m.dosage} ${m.frequency} - ${m.purpose}`
+    ).join('\n')}\n\nLifestyle Recommendations:\n${treatmentPlan.lifestyleChanges.map(l =>
+      `${l.category}:\n${l.recommendations.map(r => `- ${r}`).join('\n')}`
+    ).join('\n\n')}\n\nSpecial Instructions:\n${treatmentPlan.doctorNotes.map(n => `- ${n}`).join('\n')}`;
+
+    navigate(`/chat/Maria Garcia`, { state: { initialMessage: treatmentMessage } });
+    
+    toast({
+      title: "Treatment Plan Sent",
+      description: "Treatment plan has been sent to patient's chat.",
+    });
+  };
+
+  const handleGenerateTreatmentPDF = (language: string) => {
+    const pdf = new jsPDF();
+    const currentDate = new Date().toLocaleDateString();
+    
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(language === 'es' ? 'PLAN DE TRATAMIENTO' : 'TREATMENT PLAN', 105, 10, { align: 'center' });
+    
+    let yOffset = 30;
+    
+    pdf.setFontSize(14);
+    pdf.text(language === 'es' ? 'Diagnóstico:' : 'Diagnosis:', 10, yOffset);
+    yOffset += 10;
+    
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    treatmentPlan.diagnosis.forEach(d => {
+      pdf.text(`• ${d.condition} (${d.severity})`, 15, yOffset);
+      yOffset += 7;
+      pdf.text(`  ${d.details}`, 20, yOffset);
+      yOffset += 10;
+    });
+    
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(language === 'es' ? 'Medicamentos:' : 'Medications:', 10, yOffset);
+    yOffset += 10;
+    
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    treatmentPlan.medications.forEach(m => {
+      pdf.text(`• ${m.name} - ${m.dosage}`, 15, yOffset);
+      yOffset += 7;
+      pdf.text(`  ${m.frequency} - ${m.purpose}`, 20, yOffset);
+      yOffset += 10;
+    });
+    
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(language === 'es' ? 'Cambios en el Estilo de Vida:' : 'Lifestyle Changes:', 10, yOffset);
+    yOffset += 10;
+    
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    treatmentPlan.lifestyleChanges.forEach(l => {
+      pdf.text(`• ${l.category}:`, 15, yOffset);
+      yOffset += 7;
+      l.recommendations.forEach(r => {
+        pdf.text(`  - ${r}`, 20, yOffset);
+        yOffset += 7;
+      });
+      yOffset += 3;
+    });
+    
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(language === 'es' ? 'Notas del Doctor:' : "Doctor's Notes:", 10, yOffset);
+    yOffset += 10;
+    
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    treatmentPlan.doctorNotes.forEach(note => {
+      pdf.text(`• ${note}`, 15, yOffset);
+      yOffset += 7;
+    });
+    
+    pdf.setFontSize(8);
+    pdf.text(`Generated on: ${currentDate}`, 10, pdf.internal.pageSize.height - 10);
+    
+    pdf.save(`treatment_plan_${patient?.name.replace(/\s+/g, '_')}_${language}.pdf`);
+    
+    toast({
+      title: "Treatment Plan PDF Generated",
+      description: `Treatment plan has been generated in ${language === 'es' ? 'Spanish' : 'English'} and downloaded.`,
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -338,6 +486,96 @@ const PatientOverviewPage = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Treatment Plan</h2>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-2">Diagnosis</h3>
+                  {treatmentPlan.diagnosis.map((diagnosis, index) => (
+                    <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">{diagnosis.condition}</h4>
+                        <Badge className={
+                          diagnosis.severity === "High" ? "bg-red-500" :
+                          diagnosis.severity === "Moderate" ? "bg-yellow-500" : "bg-green-500"
+                        }>
+                          {diagnosis.severity}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{diagnosis.details}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-2">Prescribed Medications</h3>
+                  {treatmentPlan.medications.map((medication, index) => (
+                    <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium">{medication.name}</h4>
+                      <p className="text-sm text-gray-600">
+                        {medication.dosage} - {medication.frequency}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">{medication.purpose}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-2">Lifestyle Changes</h3>
+                  {treatmentPlan.lifestyleChanges.map((category, index) => (
+                    <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium mb-2">{category.category}</h4>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {category.recommendations.map((rec, recIndex) => (
+                          <li key={recIndex} className="text-sm text-gray-600">{rec}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-2">Doctor's Notes & Special Instructions</h3>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <ul className="space-y-2">
+                      {treatmentPlan.doctorNotes.map((note, index) => (
+                        <li key={index} className="text-sm text-gray-600 flex items-start">
+                          <span className="mr-2">•</span>
+                          {note}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendTreatmentPlan}
+                  className="flex items-center"
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Send to Patient
+                </Button>
+                <Select
+                  onValueChange={handleGenerateTreatmentPDF}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Generate PDF
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
