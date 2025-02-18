@@ -3,10 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText } from "lucide-react";
 import { Patient } from "@/types/patient";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { generateBloodPressureReport } from "@/utils/bloodPressureReport";
 import {
@@ -79,13 +76,7 @@ const commonExams = [
       oneHour: 125,
       twoHour: 110
     }
-  },
-  { id: "cbc", name: "Complete Blood Count", purpose: "Check for anemia and infection", results: "Normal blood cell counts" },
-  { id: "urine", name: "Urine Analysis", purpose: "Check for protein, bacteria, and sugar", results: "Normal levels" },
-  { id: "thyroid", name: "Thyroid Function Test", purpose: "Monitor thyroid hormone levels", results: "Within normal range" },
-  { id: "strep", name: "Group B Strep Culture", purpose: "Screen for bacterial infection", results: "Negative for GBS" },
-  { id: "hiv", name: "HIV Test", purpose: "Screen for HIV infection", results: "Non-reactive" },
-  { id: "iron", name: "Iron Studies", purpose: "Check iron levels and storage", results: "Normal ferritin levels" },
+  }
 ];
 
 const displayedExams = commonExams.slice(0, 3);
@@ -105,9 +96,6 @@ const PatientOverviewPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const patient = mockPatients.find(p => p.id === patientId);
-  const [selectedExams, setSelectedExams] = useState<string[]>([]);
-  const [otherExam, setOtherExam] = useState("");
-  const [customExams, setCustomExams] = useState<string[]>([]);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [currentReport, setCurrentReport] = useState("");
 
@@ -115,63 +103,9 @@ const PatientOverviewPage = () => {
     return <div>Patient not found</div>;
   }
 
-  const handleExamSelect = (examId: string, checked: boolean) => {
-    setSelectedExams(prev => {
-      if (checked) {
-        return [...prev, examId];
-      }
-      return prev.filter(id => id !== examId);
-    });
-  };
-
-  const handleAddOtherExam = () => {
-    if (otherExam.trim()) {
-      setCustomExams(prev => [...prev, otherExam.trim()]);
-      setOtherExam("");
-    }
-  };
-
-  const handleOrderExams = () => {
-    if (selectedExams.length === 0 && customExams.length === 0) {
-      toast({
-        title: "No Exams Selected",
-        description: "Please select at least one exam to order.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const allExams = [
-      ...selectedExams.map(id => commonExams.find(e => e.id === id)?.name).filter(Boolean),
-      ...customExams
-    ].join(", ");
-
-    console.log("Showing first toast");
-    toast({
-      title: "Exam Request Sent",
-      description: `The exam request has been sent to the provider. You will be notified when it's reviewed.`,
-      variant: "default",
-    });
-
-    console.log("Setting timeout for second toast");
-    setTimeout(() => {
-      console.log("Showing second toast");
-      toast({
-        title: "Exam Request Details",
-        description: `Ordered the following exams for ${patient.name}: ${allExams}`,
-        variant: "default",
-      });
-    }, 1000);
-
-    // Clear selections after order
-    setSelectedExams([]);
-    setCustomExams([]);
-  };
-
   const handleSendResult = (examId: string) => {
     const exam = commonExams.find(e => e.id === examId);
     if (exam) {
-      // Create a formatted message for the exam result
       let resultMessage = "";
       
       if (exam.id === "bp") {
@@ -187,7 +121,6 @@ const PatientOverviewPage = () => {
         resultMessage = `${exam.name} Results:\nDate: ${exam.date}\nResults: ${exam.results}`;
       }
 
-      // Navigate to chat with the specific patient and pre-filled message
       navigate(`/chat/Maria Garcia`, { state: { initialMessage: resultMessage } });
       
       toast({
@@ -204,7 +137,6 @@ const PatientOverviewPage = () => {
     const pdf = new jsPDF();
     const currentDate = new Date().toLocaleDateString();
     
-    // Set up PDF header
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
     pdf.text(language === 'es' ? 'INFORME MÉDICO' : 'MEDICAL REPORT', 105, 10, { align: 'center' });
@@ -222,16 +154,13 @@ const PatientOverviewPage = () => {
       setCurrentReport(report);
       setReportDialogOpen(true);
       
-      // Generate PDF with proper formatting
       const splitReport = report.split('\n');
       let yOffset = 20;
       
-      // Add hospital logo or header
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
       pdf.text(language === 'es' ? 'INFORME MÉDICO' : 'MEDICAL REPORT', 105, 10, { align: 'center' });
       
-      // Reset font for content
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'normal');
       
@@ -250,16 +179,6 @@ const PatientOverviewPage = () => {
             yOffset += 7;
           }
         }
-      });
-      
-      pdf.setFontSize(8);
-      pdf.text(`Generated on: ${currentDate}`, 10, pdf.internal.pageSize.height - 10);
-      
-      pdf.save(`blood_pressure_report_${patient.name.replace(/\s+/g, '_')}_${language}.pdf`);
-      
-      toast({
-        title: "Report Generated",
-        description: `Blood pressure report has been generated in ${language === 'es' ? 'Spanish' : 'English'} and downloaded.`,
       });
     } 
     else if (exam.id === "ultrasound") {
@@ -323,11 +242,9 @@ const PatientOverviewPage = () => {
       });
     }
 
-    // Add footer
     pdf.setFontSize(8);
     pdf.text(`Generated on: ${currentDate}`, 10, pdf.internal.pageSize.height - 10);
     
-    // Save the PDF
     pdf.save(`${exam.id}_report_${patient?.name.replace(/\s+/g, '_')}_${language}.pdf`);
     
     toast({
@@ -380,72 +297,6 @@ const PatientOverviewPage = () => {
                 ))}
               </ul>
             </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Recommended Exams</h2>
-            <div className="space-y-4">
-              {commonExams.map((exam) => (
-                <div key={exam.id} className="flex items-start space-x-3">
-                  <Checkbox 
-                    id={exam.id}
-                    checked={selectedExams.includes(exam.id)}
-                    onCheckedChange={(checked) => handleExamSelect(exam.id, checked as boolean)}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor={exam.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {exam.name}
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      {exam.purpose}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              <div className="mt-6 border-t pt-4">
-                <h3 className="text-lg font-medium mb-3">Other Exams</h3>
-                <div className="flex gap-2 mb-4">
-                  <Input
-                    placeholder="Enter other exam name"
-                    value={otherExam}
-                    onChange={(e) => setOtherExam(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={handleAddOtherExam}
-                    variant="secondary"
-                  >
-                    Add Exam
-                  </Button>
-                </div>
-
-                {customExams.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="font-medium">Added Custom Exams:</p>
-                    <ul className="list-disc pl-5">
-                      {customExams.map((exam, index) => (
-                        <li key={index}>{exam}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {(selectedExams.length > 0 || customExams.length > 0) && (
-              <div className="mt-6">
-                <Button 
-                  onClick={handleOrderExams}
-                  className="w-full"
-                >
-                  Order Exam Request ({selectedExams.length + customExams.length} selected)
-                </Button>
-              </div>
-            )}
           </div>
 
           <div className="p-6 bg-white rounded-lg shadow">
