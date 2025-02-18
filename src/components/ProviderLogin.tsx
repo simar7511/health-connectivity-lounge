@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,40 +6,88 @@ import { Card } from "@/components/ui/card";
 import { Mail, Lock, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { auth } from "@/lib/firebase";
+import { 
+  signInWithEmailAndPassword, 
+  multiFactor,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator 
+} from "firebase/auth";
 
 interface ProviderLoginProps {
   language: "en" | "es";
   onBack?: () => void;
-  onLogin: () => void; // ✅ Ensure `onLogin` is included in props
+  onLogin: () => void;
 }
 
 const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const generatedOtp = "123456";
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [is2FARequired, setIs2FARequired] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "A 6-digit verification code has been sent to your email." });
-    setIsOtpSent(true);
+    try {
+      // Sign in with email and password first
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check if 2FA is required
+      const multiFactorUser = multiFactor(auth.currentUser);
+      if (multiFactorUser.enrolledFactors.length > 0) {
+        setIs2FARequired(true);
+        // Send verification code to phone
+        const phoneAuthProvider = new PhoneAuthProvider(auth);
+        const verificationId = await phoneAuthProvider.verifyPhoneNumber(
+          phoneNumber,
+          60 // Timeout
+        );
+        
+        toast({ 
+          title: language === "en" 
+            ? "Verification code sent" 
+            : "Código de verificación enviado",
+          description: language === "en"
+            ? "Please check your phone for the verification code"
+            : "Por favor revise su teléfono para el código de verificación"
+        });
+      } else {
+        // If 2FA is not set up, proceed with login
+        onLogin();
+        navigate("/provider/dashboard");
+      }
+    } catch (error: any) {
+      toast({ 
+        variant: "destructive",
+        title: language === "en" ? "Login Failed" : "Error de inicio de sesión",
+        description: error.message
+      });
+    }
   };
 
-  const handleOtpSubmit = (e: React.FormEvent) => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp === generatedOtp) {
-      toast({ title: "Login successful! Redirecting..." });
-
-      // ✅ Ensure `onLogin` is called after successful OTP verification
+    try {
+      const multiFactorAssertion = PhoneMultiFactorGenerator.assertion({
+        verificationCode
+      });
+      await multiFactor(auth.currentUser).enroll(multiFactorAssertion);
+      
+      toast({ 
+        title: language === "en" ? "Login Successful" : "Inicio de sesión exitoso" 
+      });
+      
       onLogin();
-
-      // ✅ Redirect to Provider Dashboard
       navigate("/provider/dashboard");
-    } else {
-      toast({ title: "Invalid OTP. Please try again.", variant: "destructive" });
+    } catch (error: any) {
+      toast({ 
+        variant: "destructive",
+        title: language === "en" ? "Verification Failed" : "Error de verificación",
+        description: error.message
+      });
     }
   };
 
@@ -49,7 +98,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
           {language === "en" ? "Provider Login" : "Acceso para Proveedores"}
         </h1>
 
-        {!isOtpSent ? (
+        {!is2FARequired ? (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
@@ -75,33 +124,44 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
               />
             </div>
 
-            <Button type="submit" className="w-full text-lg py-6">
-              {language === "en" ? "Login" : "Ingresar"}
-            </Button>
-          </form>
-        ) : (
-          <form onSubmit={handleOtpSubmit} className="space-y-4">
             <div className="relative">
-              <ShieldCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               <Input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder={language === "en" ? "Enter your verification code" : "Ingrese su código de verificación"}
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder={language === "en" ? "Enter your phone number" : "Ingrese su número de teléfono"}
                 className="pl-10 text-lg py-6"
-                maxLength={6}
                 required
               />
             </div>
 
             <Button type="submit" className="w-full text-lg py-6">
-              {language === "en" ? "Verify Code" : "Verificar Código"}
+              {language === "en" ? "Login" : "Ingresar"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyCode} className="space-y-4">
+            <div className="relative">
+              <ShieldCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              <Input
+                type="text"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                placeholder={language === "en" ? "Enter 2FA code" : "Ingrese el código 2FA"}
+                className="pl-10 text-lg py-6"
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full text-lg py-6">
+              {language === "en" ? "Verify 2FA Code" : "Verificar código 2FA"}
             </Button>
           </form>
         )}
       </Card>
 
-      {!isOtpSent && onBack && (
+      {!is2FARequired && onBack && (
         <Button variant="ghost" onClick={onBack}>
           {language === "en" ? "Back" : "Volver"}
         </Button>
@@ -114,6 +174,4 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   );
 };
 
-export default ProviderLogin; // ✅ Ensure default export is used!
-
-
+export default ProviderLogin;
