@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save, Trash2 } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -464,6 +464,55 @@ const PatientOverviewPage = () => {
     }));
   };
 
+  const deleteDiagnosis = (index: number) => {
+    setTreatmentPlan(prev => ({
+      ...prev,
+      diagnosis: prev.diagnosis.filter((_, i) => i !== index)
+    }));
+    toast({
+      title: "Diagnosis Deleted",
+      description: "The diagnosis has been removed from the treatment plan.",
+    });
+  };
+
+  const deleteMedication = (index: number) => {
+    setTreatmentPlan(prev => ({
+      ...prev,
+      medications: prev.medications.filter((_, i) => i !== index)
+    }));
+    toast({
+      title: "Medication Deleted",
+      description: "The medication has been removed from the treatment plan.",
+    });
+  };
+
+  const deleteLifestyleRecommendation = (categoryIndex: number, recIndex: number) => {
+    setTreatmentPlan(prev => ({
+      ...prev,
+      lifestyleChanges: prev.lifestyleChanges.map((category, i) => 
+        i === categoryIndex ? {
+          ...category,
+          recommendations: category.recommendations.filter((_, j) => j !== recIndex)
+        } : category
+      ).filter(category => category.recommendations.length > 0)
+    }));
+    toast({
+      title: "Recommendation Deleted",
+      description: "The lifestyle recommendation has been removed.",
+    });
+  };
+
+  const deleteDoctorNote = (index: number) => {
+    setTreatmentPlan(prev => ({
+      ...prev,
+      doctorNotes: prev.doctorNotes.filter((_, i) => i !== index)
+    }));
+    toast({
+      title: "Note Deleted",
+      description: "The doctor's note has been removed.",
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -568,46 +617,56 @@ const PatientOverviewPage = () => {
                   </div>
                   {treatmentPlan.diagnosis.map((diagnosis, index) => (
                     <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
-                      {editMode.diagnosis ? (
-                        <div className="space-y-2">
-                          <Input
-                            value={diagnosis.condition}
-                            onChange={(e) => updateDiagnosis(index, 'condition', e.target.value)}
-                            placeholder="Condition"
-                          />
-                          <Select
-                            value={diagnosis.severity}
-                            onValueChange={(value) => updateDiagnosis(index, 'severity', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select severity" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Low">Low</SelectItem>
-                              <SelectItem value="Moderate">Moderate</SelectItem>
-                              <SelectItem value="High">High</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Textarea
-                            value={diagnosis.details}
-                            onChange={(e) => updateDiagnosis(index, 'details', e.target.value)}
-                            placeholder="Details"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium">{diagnosis.condition}</h4>
-                            <Badge className={
-                              diagnosis.severity === "High" ? "bg-red-500" :
-                              diagnosis.severity === "Moderate" ? "bg-yellow-500" : "bg-green-500"
-                            }>
-                              {diagnosis.severity}
-                            </Badge>
+                      <div className="flex justify-between items-start">
+                        {editMode.diagnosis ? (
+                          <div className="space-y-2 flex-grow">
+                            <Input
+                              value={diagnosis.condition}
+                              onChange={(e) => updateDiagnosis(index, 'condition', e.target.value)}
+                              placeholder="Condition"
+                            />
+                            <Select
+                              value={diagnosis.severity}
+                              onValueChange={(value) => updateDiagnosis(index, 'severity', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select severity" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Low">Low</SelectItem>
+                                <SelectItem value="Moderate">Moderate</SelectItem>
+                                <SelectItem value="High">High</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Textarea
+                              value={diagnosis.details}
+                              onChange={(e) => updateDiagnosis(index, 'details', e.target.value)}
+                              placeholder="Details"
+                            />
                           </div>
-                          <p className="text-sm text-gray-600 mt-1">{diagnosis.details}</p>
-                        </>
-                      )}
+                        ) : (
+                          <div className="flex-grow">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium">{diagnosis.condition}</h4>
+                              <Badge className={
+                                diagnosis.severity === "High" ? "bg-red-500" :
+                                diagnosis.severity === "Moderate" ? "bg-yellow-500" : "bg-green-500"
+                              }>
+                                {diagnosis.severity}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{diagnosis.details}</p>
+                          </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteDiagnosis(index)}
+                          className="ml-2"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   {editMode.diagnosis && (
@@ -635,38 +694,48 @@ const PatientOverviewPage = () => {
                   </div>
                   {treatmentPlan.medications.map((medication, index) => (
                     <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
-                      {editMode.medications ? (
-                        <div className="space-y-2">
-                          <Input
-                            value={medication.name}
-                            onChange={(e) => updateMedication(index, 'name', e.target.value)}
-                            placeholder="Medication name"
-                          />
-                          <Input
-                            value={medication.dosage}
-                            onChange={(e) => updateMedication(index, 'dosage', e.target.value)}
-                            placeholder="Dosage"
-                          />
-                          <Input
-                            value={medication.frequency}
-                            onChange={(e) => updateMedication(index, 'frequency', e.target.value)}
-                            placeholder="Frequency"
-                          />
-                          <Input
-                            value={medication.purpose}
-                            onChange={(e) => updateMedication(index, 'purpose', e.target.value)}
-                            placeholder="Purpose"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <h4 className="font-medium">{medication.name}</h4>
-                          <p className="text-sm text-gray-600">
-                            {medication.dosage} - {medication.frequency}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">{medication.purpose}</p>
-                        </>
-                      )}
+                      <div className="flex justify-between items-start">
+                        {editMode.medications ? (
+                          <div className="space-y-2 flex-grow">
+                            <Input
+                              value={medication.name}
+                              onChange={(e) => updateMedication(index, 'name', e.target.value)}
+                              placeholder="Medication name"
+                            />
+                            <Input
+                              value={medication.dosage}
+                              onChange={(e) => updateMedication(index, 'dosage', e.target.value)}
+                              placeholder="Dosage"
+                            />
+                            <Input
+                              value={medication.frequency}
+                              onChange={(e) => updateMedication(index, 'frequency', e.target.value)}
+                              placeholder="Frequency"
+                            />
+                            <Input
+                              value={medication.purpose}
+                              onChange={(e) => updateMedication(index, 'purpose', e.target.value)}
+                              placeholder="Purpose"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex-grow">
+                            <h4 className="font-medium">{medication.name}</h4>
+                            <p className="text-sm text-gray-600">
+                              {medication.dosage} - {medication.frequency}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">{medication.purpose}</p>
+                          </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteMedication(index)}
+                          className="ml-2"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   {editMode.medications && (
@@ -698,18 +767,36 @@ const PatientOverviewPage = () => {
                       {editMode.lifestyleChanges ? (
                         <div className="space-y-2">
                           {category.recommendations.map((rec, recIndex) => (
-                            <Input
-                              key={recIndex}
-                              value={rec}
-                              onChange={(e) => updateLifestyleChange(categoryIndex, recIndex, e.target.value)}
-                              placeholder="Recommendation"
-                            />
+                            <div key={recIndex} className="flex items-center gap-2">
+                              <Input
+                                value={rec}
+                                onChange={(e) => updateLifestyleChange(categoryIndex, recIndex, e.target.value)}
+                                placeholder="Recommendation"
+                                className="flex-grow"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteLifestyleRecommendation(categoryIndex, recIndex)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
                           ))}
                         </div>
                       ) : (
                         <ul className="list-disc pl-5 space-y-1">
                           {category.recommendations.map((rec, recIndex) => (
-                            <li key={recIndex} className="text-sm text-gray-600">{rec}</li>
+                            <li key={recIndex} className="text-sm text-gray-600 flex justify-between items-center">
+                              <span>{rec}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteLifestyleRecommendation(categoryIndex, recIndex)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </li>
                           ))}
                         </ul>
                       )}
@@ -742,20 +829,38 @@ const PatientOverviewPage = () => {
                     {editMode.doctorNotes ? (
                       <div className="space-y-2">
                         {treatmentPlan.doctorNotes.map((note, index) => (
-                          <Input
-                            key={index}
-                            value={note}
-                            onChange={(e) => updateDoctorNote(index, e.target.value)}
-                            placeholder="Note"
-                          />
+                          <div key={index} className="flex items-center gap-2">
+                            <Input
+                              value={note}
+                              onChange={(e) => updateDoctorNote(index, e.target.value)}
+                              placeholder="Note"
+                              className="flex-grow"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteDoctorNote(index)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
                         ))}
                       </div>
                     ) : (
                       <ul className="space-y-2">
                         {treatmentPlan.doctorNotes.map((note, index) => (
-                          <li key={index} className="text-sm text-gray-600 flex items-start">
-                            <span className="mr-2">•</span>
-                            {note}
+                          <li key={index} className="text-sm text-gray-600 flex items-start justify-between">
+                            <div className="flex items-start">
+                              <span className="mr-2">•</span>
+                              {note}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteDoctorNote(index)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
                           </li>
                         ))}
                       </ul>
