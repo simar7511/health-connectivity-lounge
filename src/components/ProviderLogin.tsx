@@ -11,8 +11,7 @@ import {
   signInWithEmailAndPassword, 
   RecaptchaVerifier,
   PhoneAuthProvider,
-  PhoneMultiFactorGenerator,
-  MultiFactorResolver
+  PhoneMultiFactorGenerator
 } from "firebase/auth";
 
 interface ProviderLoginProps {
@@ -28,29 +27,46 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const [verificationCode, setVerificationCode] = useState("");
   const [is2FARequired, setIs2FARequired] = useState(false);
   const [verificationId, setVerificationId] = useState("");
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<RecaptchaVerifier | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initialize reCAPTCHA verifier
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible',
-      'callback': () => {
-        // reCAPTCHA solved
+    try {
+      // Only initialize if not already initialized
+      if (!window.recaptchaVerifier) {
+        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible'
+        });
+        window.recaptchaVerifier = verifier;
+        setRecaptchaVerifier(verifier);
       }
-    });
+    } catch (error) {
+      console.error("RecaptchaVerifier initialization error:", error);
+    }
   }, []);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (!recaptchaVerifier) {
+        toast({
+          variant: "destructive",
+          title: language === "en" ? "Error" : "Error",
+          description: language === "en" 
+            ? "Please wait for the security check to initialize" 
+            : "Por favor espere que se inicialice el control de seguridad"
+        });
+        return;
+      }
+
       await signInWithEmailAndPassword(auth, email, password);
       
       // Send verification code to phone
       const phoneAuthProvider = new PhoneAuthProvider(auth);
       const verId = await phoneAuthProvider.verifyPhoneNumber(
         phoneNumber,
-        window.recaptchaVerifier
+        recaptchaVerifier
       );
       
       setVerificationId(verId);
@@ -182,10 +198,10 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   );
 };
 
-// Add RecaptchaVerifier to the window object type
-declare global {
+// Use module augmentation instead of global
+declare module "react" {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
+    recaptchaVerifier?: RecaptchaVerifier;
   }
 }
 
