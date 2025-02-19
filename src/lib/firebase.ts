@@ -13,17 +13,49 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Check if all required Firebase config values are present
+const requiredKeys = [
+  'apiKey',
+  'authDomain',
+  'projectId',
+  'storageBucket',
+  'messagingSenderId',
+  'appId'
+];
+
+const missingKeys = requiredKeys.filter(key => !firebaseConfig[key]);
+
+if (missingKeys.length > 0) {
+  const errorMessage = `Missing required Firebase configuration keys: ${missingKeys.join(', ')}. Please check your .env file.`;
+  console.error('❌ Firebase Config Error:', errorMessage);
+  
+  toast({
+    variant: "destructive",
+    title: "Firebase Configuration Error",
+    description: "Firebase is not properly configured. Please check environment variables.",
+  });
+
+  throw new Error(errorMessage);
+}
+
 let db;
 let auth;
 
 try {
+  console.log('Initializing Firebase with config:', {
+    ...firebaseConfig,
+    apiKey: firebaseConfig.apiKey ? '***' : undefined // Hide actual API key in logs
+  });
+
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
 
-  // 🔥 Enable Firestore Debug Logging
-  setLogLevel("debug");
+  // Enable Firestore Debug Logging
+  if (import.meta.env.DEV) {
+    setLogLevel("debug");
+  }
 
   console.log("✅ Firebase initialized:", app);
   console.log("✅ Firestore initialized:", db);
@@ -35,7 +67,7 @@ try {
   toast({
     variant: "destructive",
     title: "Firebase Configuration Error",
-    description: "Please ensure Firebase is properly configured. Error: " + error.message
+    description: error.message || "Failed to initialize Firebase"
   });
 
   // Create empty objects to prevent runtime errors
