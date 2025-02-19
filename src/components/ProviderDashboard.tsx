@@ -75,7 +75,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
               language={currentLanguage}
               patients={mockPatients}
             />
-            <HealthDataLogs patients={mockPatients} />
+            <HealthDataLogs patient={mockPatients[0]} />
           </div>
 
           {/* Right Column */}

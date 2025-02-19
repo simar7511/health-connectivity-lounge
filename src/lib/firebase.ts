@@ -4,34 +4,26 @@ import { getFirestore, setLogLevel } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 
-// Development configuration - Replace these with your Firebase config values
 const firebaseConfig = {
-  apiKey: "AIzaSyBkkFF0XhNZeWuDmOfEhsgdfX1VBG7WTas",
-  authDomain: "divhealth-dev.firebaseapp.com",
-  projectId: "divhealth-dev",
-  storageBucket: "divhealth-dev.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:a1b2c3d4e5f6abcdef1234"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 let db;
 let auth;
 
 try {
-  console.log('Initializing Firebase with config:', {
-    ...firebaseConfig,
-    apiKey: '***' // Hide API key in logs
-  });
-
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
 
-  // Enable Firestore Debug Logging
-  if (import.meta.env.DEV) {
-    setLogLevel("debug");
-  }
+  // 🔥 Enable Firestore Debug Logging
+  setLogLevel("debug");
 
   console.log("✅ Firebase initialized:", app);
   console.log("✅ Firestore initialized:", db);
@@ -39,10 +31,11 @@ try {
 } catch (error: any) {
   console.error("❌ Firebase initialization error:", error);
   
+  // Show error using toast
   toast({
     variant: "destructive",
     title: "Firebase Configuration Error",
-    description: error.message || "Failed to initialize Firebase"
+    description: "Please ensure Firebase is properly configured. Error: " + error.message
   });
 
   // Create empty objects to prevent runtime errors
