@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Languages, ArrowRightLeft } from "lucide-react";
+import { Languages, ArrowRightLeft, Mic, StopCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 interface TranslationPluginProps {
   language: "en" | "es";
@@ -13,24 +14,28 @@ interface TranslationPluginProps {
 
 const translations = {
   en: {
-    title: "Real-time Translation",
-    inputPlaceholder: "Type or paste text to translate",
+    title: "Voice Translation",
+    inputPlaceholder: "Speak or type text to translate",
     translate: "Translate",
     swap: "Swap Languages",
     from: "From",
     to: "To",
     english: "English",
     spanish: "Spanish",
+    startRecording: "Start Recording",
+    stopRecording: "Stop Recording",
   },
   es: {
-    title: "Traducción en tiempo real",
-    inputPlaceholder: "Escriba o pegue el texto a traducir",
+    title: "Traducción por Voz",
+    inputPlaceholder: "Hable o escriba el texto a traducir",
     translate: "Traducir",
     swap: "Intercambiar idiomas",
     from: "De",
     to: "A",
     english: "Inglés",
     spanish: "Español",
+    startRecording: "Iniciar Grabación",
+    stopRecording: "Detener Grabación",
   }
 };
 
@@ -40,6 +45,28 @@ export const TranslationPlugin = ({ language }: TranslationPluginProps) => {
   const [outputText, setOutputText] = useState("");
   const [fromLang, setFromLang] = useState<"en" | "es">("en");
   const [toLang, setToLang] = useState<"en" | "es">("es");
+  const [isRecording, setIsRecording] = useState(false);
+
+  const {
+    transcript,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
+
+  const handleStartListening = () => {
+    setIsRecording(true);
+    resetTranscript();
+    SpeechRecognition.startListening({
+      continuous: true,
+      language: fromLang === "en" ? "en-US" : "es-ES"
+    });
+  };
+
+  const handleStopListening = () => {
+    setIsRecording(false);
+    SpeechRecognition.stopListening();
+    setInputText(transcript);
+  };
 
   const handleTranslate = async () => {
     if (!inputText.trim()) {
@@ -47,15 +74,14 @@ export const TranslationPlugin = ({ language }: TranslationPluginProps) => {
         variant: "destructive",
         title: language === "en" ? "Error" : "Error",
         description: language === "en" ? 
-          "Please enter some text to translate" : 
-          "Por favor ingrese texto para traducir"
+          "Please enter or speak some text to translate" : 
+          "Por favor ingrese o hable el texto para traducir"
       });
       return;
     }
 
     try {
-      // For now, we'll use a mock translation
-      // In a real implementation, you would call your translation API here
+      // Mock translation for now
       setOutputText(inputText + (toLang === "es" ? " (translated to Spanish)" : " (translated to English)"));
       
       toast({
@@ -81,6 +107,20 @@ export const TranslationPlugin = ({ language }: TranslationPluginProps) => {
     setInputText(outputText);
     setOutputText(inputText);
   };
+
+  if (!browserSupportsSpeechRecognition) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-4">
+          <p className="text-destructive">
+            {language === "en" 
+              ? "Browser doesn't support speech recognition."
+              : "El navegador no soporta reconocimiento de voz."}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full">
@@ -129,6 +169,24 @@ export const TranslationPlugin = ({ language }: TranslationPluginProps) => {
             </Select>
           </div>
         </div>
+
+        <Button 
+          onClick={isRecording ? handleStopListening : handleStartListening}
+          variant={isRecording ? "destructive" : "default"}
+          className="w-full"
+        >
+          {isRecording ? (
+            <>
+              <StopCircle className="h-4 w-4 mr-2" />
+              {translations[language].stopRecording}
+            </>
+          ) : (
+            <>
+              <Mic className="h-4 w-4 mr-2" />
+              {translations[language].startRecording}
+            </>
+          )}
+        </Button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

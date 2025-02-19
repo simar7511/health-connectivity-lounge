@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Languages, AlertTriangle, Clock } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useNavigate } from "react-router-dom";
+import { TranslationPlugin } from "../provider/TranslationPlugin";
 
 interface AppointmentsListProps {
   language: "en" | "es";
@@ -43,7 +44,6 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
             <div
               key={patient.id}
               className="p-6 border rounded-lg hover:bg-accent cursor-pointer transition-colors animate-fade-in"
-              onClick={() => navigate(`/patient/${patient.id}`)}
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-4 flex-1">
@@ -54,6 +54,10 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
                       {new Date(patient.nextAppointment).toLocaleString()}
                     </div>
                   </div>
+
+                  {patient.demographics?.preferredLanguage !== language && (
+                    <TranslationPlugin language={language} />
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
