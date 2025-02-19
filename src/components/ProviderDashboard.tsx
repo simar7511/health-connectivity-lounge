@@ -7,6 +7,7 @@ import { HealthDataLogs } from "./dashboard/HealthDataLogs";
 import { Patient } from "@/types/patient";
 import { ProviderHeader } from "./layout/ProviderHeader";
 import { ProviderFooter } from "./layout/ProviderFooter";
+import { TranslationPlugin } from "./provider/TranslationPlugin";
 
 interface ProviderDashboardProps {
   language: "en" | "es";
@@ -79,7 +80,8 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-4 space-y-6">
+            <TranslationPlugin language={currentLanguage} />
             <MessagingInbox
               language={currentLanguage}
               onStartChat={() => {}}
