@@ -4,39 +4,15 @@ import { getFirestore, setLogLevel } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 
+// Development configuration - Replace these with your Firebase config values
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBkkFF0XhNZeWuDmOfEhsgdfX1VBG7WTas",
+  authDomain: "divhealth-dev.firebaseapp.com",
+  projectId: "divhealth-dev",
+  storageBucket: "divhealth-dev.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:a1b2c3d4e5f6abcdef1234"
 };
-
-// Check if all required Firebase config values are present
-const requiredKeys = [
-  'apiKey',
-  'authDomain',
-  'projectId',
-  'storageBucket',
-  'messagingSenderId',
-  'appId'
-];
-
-const missingKeys = requiredKeys.filter(key => !firebaseConfig[key]);
-
-if (missingKeys.length > 0) {
-  const errorMessage = `Missing required Firebase configuration keys: ${missingKeys.join(', ')}. Please check your .env file.`;
-  console.error('❌ Firebase Config Error:', errorMessage);
-  
-  toast({
-    variant: "destructive",
-    title: "Firebase Configuration Error",
-    description: "Firebase is not properly configured. Please check environment variables.",
-  });
-
-  throw new Error(errorMessage);
-}
 
 let db;
 let auth;
@@ -44,7 +20,7 @@ let auth;
 try {
   console.log('Initializing Firebase with config:', {
     ...firebaseConfig,
-    apiKey: firebaseConfig.apiKey ? '***' : undefined // Hide actual API key in logs
+    apiKey: '***' // Hide API key in logs
   });
 
   // Initialize Firebase
@@ -63,7 +39,6 @@ try {
 } catch (error: any) {
   console.error("❌ Firebase initialization error:", error);
   
-  // Show error using toast
   toast({
     variant: "destructive",
     title: "Firebase Configuration Error",
