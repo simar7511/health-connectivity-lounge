@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Patient } from "@/types/patient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -144,11 +143,11 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
     .filter(log => severityFilter === "all" || log.severity === severityFilter)
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-  const addProviderNote = () => {
+  const sendNoteToPatient = () => {
     if (providerNote.trim()) {
       toast({
-        title: "Note Added",
-        description: "Provider note has been saved successfully.",
+        title: "Note Sent",
+        description: "Message has been sent to the patient via secure messaging.",
       });
       setProviderNote("");
     }
@@ -236,7 +235,7 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
       <div className="mt-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl font-semibold">Patient Symptom History</CardTitle>
+            <CardTitle className="text-xl font-semibold">Reported Symptoms</CardTitle>
             <div className="flex items-center gap-4">
               <Select value={timeFilter} onValueChange={(value: TimeFilter) => setTimeFilter(value)}>
                 <SelectTrigger className="w-32">
@@ -282,11 +281,6 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
                             Related: {log.relatedCondition}
                           </Badge>
                         )}
-                        {log.bp && (
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            BP: {log.bp[0]}/{log.bp[1]} mmHg
-                          </p>
-                        )}
                       </AlertDescription>
                     </div>
                     <span className="text-sm text-muted-foreground">
@@ -300,20 +294,20 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
             <div className="mt-6 space-y-4">
               <h3 className="font-medium flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Add Provider Note
+                Send Message to Patient
               </h3>
               <Textarea
                 value={providerNote}
                 onChange={(e) => setProviderNote(e.target.value)}
-                placeholder="Add observations, follow-up actions, or treatment adjustments..."
+                placeholder="Write a message to the patient regarding their symptoms..."
                 className="min-h-[100px]"
               />
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setProviderNote("")}>
                   Clear
                 </Button>
-                <Button onClick={addProviderNote}>
-                  Save Note
+                <Button onClick={sendNoteToPatient}>
+                  Send Message
                 </Button>
               </div>
             </div>
