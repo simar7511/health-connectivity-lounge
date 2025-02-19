@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Patient } from "@/types/patient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts";
-import { Activity, AlertTriangle, CheckCircle, FileText, Filter, MoreVertical, Search } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle, FileText, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface HealthDataLogsProps {
@@ -122,6 +121,39 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
     return "Normal";
   };
 
+  const getSeverityColor = (severity: Severity) => {
+    return {
+      severe: "bg-red-500",
+      moderate: "bg-orange-500",
+      mild: "bg-green-500"
+    }[severity];
+  };
+
+  const getAlertIcon = (severity: Severity) => {
+    switch (severity) {
+      case "severe":
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+      case "moderate":
+        return <Activity className="h-5 w-5 text-orange-500" />;
+      case "mild":
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+    }
+  };
+
+  const filteredLogs = mockSymptomLogs
+    .filter(log => severityFilter === "all" || log.severity === severityFilter)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  const addProviderNote = () => {
+    if (providerNote.trim()) {
+      toast({
+        title: "Note Added",
+        description: "Provider note has been saved successfully.",
+      });
+      setProviderNote("");
+    }
+  };
+
   const renderSummaryView = () => (
     <Card>
       <CardHeader>
@@ -204,7 +236,7 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
       <div className="mt-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl font-semibold">Detailed Health Data</CardTitle>
+            <CardTitle className="text-xl font-semibold">Patient Symptom History</CardTitle>
             <div className="flex items-center gap-4">
               <Select value={timeFilter} onValueChange={(value: TimeFilter) => setTimeFilter(value)}>
                 <SelectTrigger className="w-32">
@@ -231,25 +263,6 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px] mb-6">
-              <ChartContainer config={{
-                line1: { theme: { light: "#ef4444", dark: "#ef4444" } },
-                line2: { theme: { light: "#84cc16", dark: "#84cc16" } },
-              }}>
-                <LineChart data={mockSymptomLogs.map(log => ({
-                  date: new Date(log.timestamp).toLocaleDateString(),
-                  systolic: log.bp ? log.bp[0] : null,
-                  diastolic: log.bp ? log.bp[1] : null,
-                }))}>
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <ChartTooltip />
-                  <Line type="monotone" dataKey="systolic" stroke="#ef4444" name="Systolic BP" />
-                  <Line type="monotone" dataKey="diastolic" stroke="#84cc16" name="Diastolic BP" />
-                </LineChart>
-              </ChartContainer>
-            </div>
-
             <div className="space-y-4">
               {filteredLogs.map((log, index) => (
                 <Alert key={index} className="relative">
@@ -308,39 +321,6 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
         </Card>
       </div>
     );
-  };
-
-  const getSeverityColor = (severity: Severity) => {
-    return {
-      severe: "bg-red-500",
-      moderate: "bg-orange-500",
-      mild: "bg-green-500"
-    }[severity];
-  };
-
-  const getAlertIcon = (severity: Severity) => {
-    switch (severity) {
-      case "severe":
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case "moderate":
-        return <Activity className="h-5 w-5 text-orange-500" />;
-      case "mild":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-    }
-  };
-
-  const filteredLogs = mockSymptomLogs
-    .filter(log => severityFilter === "all" || log.severity === severityFilter)
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-  const addProviderNote = () => {
-    if (providerNote.trim()) {
-      toast({
-        title: "Note Added",
-        description: "Provider note has been saved successfully.",
-      });
-      setProviderNote("");
-    }
   };
 
   return (
