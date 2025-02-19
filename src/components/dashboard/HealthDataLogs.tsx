@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { Patient } from "@/types/patient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -117,10 +117,10 @@ export const HealthDataLogs = ({ patients }: HealthDataLogsProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/patient/${patient.id}`)}
+                      onClick={() => navigate(`/health-summary/${patient.id}`)}
                       className="flex items-center gap-2"
                     >
-                      View Details
+                      View Summary
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </td>
