@@ -79,7 +79,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4">
             <MessagingInbox
               language={currentLanguage}
               onStartChat={() => {}}

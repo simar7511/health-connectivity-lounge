@@ -43,6 +43,7 @@ export const AppointmentsList = ({ language, patients }: AppointmentsListProps) 
             <div
               key={patient.id}
               className="p-6 border rounded-lg hover:bg-accent cursor-pointer transition-colors animate-fade-in"
+              onClick={() => navigate(`/patient/${patient.id}`)}
             >
               <div className="flex justify-between items-start">
                 <div className="space-y-4 flex-1">
