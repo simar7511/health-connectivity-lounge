@@ -1,7 +1,9 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
 import { MessagingInbox } from "./dashboard/MessagingInbox";
+import { HealthDataLogs } from "./dashboard/HealthDataLogs";
 import { Patient } from "@/types/patient";
 import { ProviderHeader } from "./layout/ProviderHeader";
 import { ProviderFooter } from "./layout/ProviderFooter";
@@ -66,16 +68,23 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       />
 
       <main className="flex-1 container mx-auto p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <AppointmentsList
-            language={currentLanguage}
-            patients={mockPatients}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column */}
+          <div className="lg:col-span-8 space-y-6">
+            <AppointmentsList
+              language={currentLanguage}
+              patients={mockPatients}
+            />
+            <HealthDataLogs patient={mockPatients[0]} />
+          </div>
 
-          <MessagingInbox
-            language={currentLanguage}
-            onStartChat={() => {}}
-          />
+          {/* Right Column */}
+          <div className="lg:col-span-4">
+            <MessagingInbox
+              language={currentLanguage}
+              onStartChat={() => {}}
+            />
+          </div>
         </div>
       </main>
 
