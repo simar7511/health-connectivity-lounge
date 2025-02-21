@@ -708,7 +708,7 @@ const PatientOverviewPage = () => {
                 <Select onValueChange={handleGenerateIntakeForm}>
                   <SelectTrigger className="w-[180px]">
                     <FileText className="mr-2 h-4 w-4" />
-                    Generate Intake Form
+                    Intake Form
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
@@ -869,7 +869,17 @@ const PatientOverviewPage = () => {
                       <>
                         <div className="flex justify-between mb-2">
                           <h4 className="font-medium">{d.condition}</h4>
-                          <Badge>{d.severity}</Badge>
+                          <Badge 
+                            className={
+                              d.severity === "High" 
+                                ? "bg-red-500 hover:bg-red-600" 
+                                : d.severity === "Moderate"
+                                ? "bg-orange-500 hover:bg-orange-600"
+                                : "bg-green-500 hover:bg-green-600"
+                            }
+                          >
+                            {d.severity}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">{d.details}</p>
                       </>
