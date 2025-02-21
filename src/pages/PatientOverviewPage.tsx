@@ -148,6 +148,86 @@ const getStatusBadge = (results: string) => {
   return <Badge className="bg-yellow-500"><AlertCircle className="w-4 h-4 mr-1" /> Attention Needed</Badge>;
 };
 
+const mockIntakeForm = {
+  patientInfo: {
+    name: "Maria Garcia",
+    dob: "1995-05-15",
+    address: "123 Main St, Anytown, USA",
+    phone: "(555) 123-4567",
+    emergency_contact: "Juan Garcia - (555) 987-6543"
+  },
+  medicalHistory: {
+    allergies: ["Penicillin"],
+    currentMedications: ["Prenatal vitamins", "Iron supplements"],
+    previousPregnancies: 1,
+    chronicConditions: ["None"],
+    familyHistory: ["Diabetes (maternal)", "Hypertension (paternal)"]
+  },
+  lifestyle: {
+    occupation: "Office worker",
+    exercise: "30 min walking, 3 times/week",
+    diet: "Balanced, following nutritionist recommendations",
+    smoking: "Never",
+    alcohol: "None during pregnancy"
+  },
+  currentPregnancy: {
+    lastPeriod: "2023-08-15",
+    dueDate: "2024-05-22",
+    firstPrenatalVisit: "2023-10-01",
+    complications: "Mild morning sickness in first trimester"
+  }
+};
+
+const generateIntakeFormPDF = (patientData: any, language: string) => {
+  const pdf = new jsPDF();
+  const lineHeight = 7;
+  let yPosition = 20;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(16);
+  pdf.text(language === "es" ? "FORMULARIO DE ADMISIÓN" : "PATIENT INTAKE FORM", 105, yPosition, { align: "center" });
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  yPosition += lineHeight * 2;
+
+  // Patient Information
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Información del Paciente" : "Patient Information", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Nombre" : "Name"}: ${patientData.patientInfo.name}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fecha de Nacimiento" : "Date of Birth"}: ${patientData.patientInfo.dob}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Teléfono" : "Phone"}: ${patientData.patientInfo.phone}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Medical History
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Historia Médica" : "Medical History", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Alergias" : "Allergies"}: ${patientData.medicalHistory.allergies.join(", ")}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Medicamentos Actuales" : "Current Medications"}: ${patientData.medicalHistory.currentMedications.join(", ")}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Current Pregnancy
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Embarazo Actual" : "Current Pregnancy", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fecha Probable de Parto" : "Due Date"}: ${patientData.currentPregnancy.dueDate}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Complicaciones" : "Complications"}: ${patientData.currentPregnancy.complications}`, 20, yPosition);
+
+  pdf.setFontSize(10);
+  pdf.text(`${language === "es" ? "Generado el" : "Generated on"}: ${new Date().toLocaleDateString()}`, 20, pdf.internal.pageSize.height - 10);
+
+  return pdf;
+};
+
 const PatientOverviewPage = () => {
   const { patientId } = useParams();
   const navigate = useNavigate();
@@ -560,6 +640,18 @@ const PatientOverviewPage = () => {
     setEditMode(prev => ({ ...prev, doctorNotes: true }));
   };
 
+  const handleGenerateIntakeForm = (language: string) => {
+    const pdf = generateIntakeFormPDF(mockIntakeForm, language);
+    pdf.save(`intake_form_${patient?.name.replace(/\s+/g, '_')}_${language}.pdf`);
+    
+    toast({
+      title: language === "es" ? "Formulario Generado" : "Form Generated",
+      description: language === "es" 
+        ? "El formulario de admisión ha sido descargado."
+        : "The intake form has been downloaded.",
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -603,6 +695,18 @@ const PatientOverviewPage = () => {
                   <li key={index}>{symptom}</li>
                 ))}
               </ul>
+              <div className="mt-4">
+                <Select onValueChange={handleGenerateIntakeForm}>
+                  <SelectTrigger className="w-[180px]">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Generate Intake Form
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
