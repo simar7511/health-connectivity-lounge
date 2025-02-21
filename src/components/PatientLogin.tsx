@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,7 @@ interface PatientLoginProps {
   onLogin: () => void;
 }
 
-const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
+const PatientLogin: React.FC<PatientLoginProps> = ({ language, onBack, onLogin }) => {
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -38,24 +37,32 @@ const PatientLogin = ({ language, onBack, onLogin }: PatientLoginProps) => {
       return;
     }
 
+    // Store language preference in sessionStorage before async operation
+    sessionStorage.setItem("preferredLanguage", language);
+
     setIsLoading(true);
     try {
-      // Store language preference in sessionStorage
-      sessionStorage.setItem('preferredLanguage', language);
-      
-      // For now, just proceed with login
-      // In a real app, you'd want to implement proper authentication here
+      // Implement Firebase authentication (signInWithPhoneNumber) here
+      // This is a placeholder for demonstration purposes
+
       toast({ 
         title: language === "en" ? "Login Successful" : "Inicio de Sesión Exitoso"
       });
+
+      onLogin(); // Call onLogin callback if needed
       navigate("/pediatric-intake");
-    } catch (error: any) {
+    } catch (error) {
       console.error("❌ Error during login:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : language === "en"
+          ? "Failed to login. Try again."
+          : "Error al iniciar sesión. Intente nuevamente.";
+
       toast({ 
         title: language === "en" ? "Error" : "Error", 
-        description: error.message || (language === "en" 
-          ? "Failed to login. Try again." 
-          : "Error al iniciar sesión. Intente nuevamente.")
+        description: errorMessage
       });
     } finally {
       setIsLoading(false);

@@ -7,27 +7,24 @@ interface BasicInfoSectionProps {
     childName: string;
     dob: string;
     languagePreference: string;
-    needsInterpreter: boolean;
     phoneNumber: string;
     emergencyContactName: string;
     emergencyContactRelation: string;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  handleCheckboxChange: (name: string, checked: boolean) => void;
 }
 
 export const BasicInfoSection = ({ 
   language, 
   formData, 
-  handleChange,
-  handleCheckboxChange 
+  handleChange
 }: BasicInfoSectionProps) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h3 className="text-lg font-semibold">
         {language === "en" ? "1️⃣ Basic Information" : "1️⃣ Información Básica"}
       </h3>
-      
+
       {/* Child's Name */}
       <div className="space-y-2">
         <Label htmlFor="childName">
@@ -76,35 +73,6 @@ export const BasicInfoSection = ({
           <option value="english">{language === "en" ? "English" : "Inglés"}</option>
           <option value="other">{language === "en" ? "Other" : "Otro"}</option>
         </select>
-      </div>
-
-      {/* Needs Interpreter */}
-      <div className="space-y-2">
-        <Label>
-          {language === "en" ? "Do you need an interpreter?" : "¿Necesita un intérprete?"}
-        </Label>
-        <div className="flex items-center space-x-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              name="needsInterpreter"
-              checked={formData.needsInterpreter}
-              onChange={() => handleCheckboxChange("needsInterpreter", true)}
-              className="rounded-full"
-            />
-            <span>{language === "en" ? "Yes" : "Sí"}</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              name="needsInterpreter"
-              checked={!formData.needsInterpreter}
-              onChange={() => handleCheckboxChange("needsInterpreter", false)}
-              className="rounded-full"
-            />
-            <span>{language === "en" ? "No" : "No"}</span>
-          </label>
-        </div>
       </div>
 
       {/* Phone Number */}

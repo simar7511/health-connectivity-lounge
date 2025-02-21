@@ -1,5 +1,4 @@
-
-import 'regenerator-runtime/runtime';
+import "regenerator-runtime/runtime";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +17,11 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
-    return <span className="text-red-500">⚠️ Your browser does not support speech recognition.</span>;
+    return (
+      <p className="text-red-500">
+        ⚠️ {language === "en" ? "Your browser does not support speech recognition." : "Su navegador no admite el reconocimiento de voz."}
+      </p>
+    );
   }
 
   const handleStartListening = () => {
@@ -34,8 +37,14 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
     SpeechRecognition.stopListening();
     setIsRecording(false);
 
+    // ✅ Ensure transcript is not empty
     if (transcript.trim()) {
-      onVoiceInput(fieldName, transcript);
+      onVoiceInput(fieldName, transcript); // ✅ Insert text into corresponding field
+      toast({
+        title: language === "en" ? "Voice Input Recorded" : "Entrada de Voz Registrada",
+        description: transcript,
+        variant: "default",
+      });
     } else {
       toast({
         title: language === "en" ? "No Input Detected" : "No se detectó entrada",
@@ -50,9 +59,8 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
   return (
     <div className="flex flex-col items-center space-y-2">
       <Button
-        className="w-full py-4"
+        className={`w-full py-4 ${isRecording ? "bg-red-600 text-white" : "bg-blue-600 text-white"}`}
         onClick={isRecording ? handleStopListening : handleStartListening}
-        variant={isRecording ? "destructive" : "default"}
       >
         {isRecording ? (
           <>
@@ -66,12 +74,6 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
           </>
         )}
       </Button>
-
-      {transcript && (
-        <p className="p-2 border border-gray-300 rounded-md bg-gray-100 text-sm">
-          <span className="font-semibold">{transcript}</span>
-        </p>
-      )}
     </div>
   );
 };

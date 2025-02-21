@@ -6,8 +6,6 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
 import { BasicInfoSection } from "./form-sections/BasicInfoSection";
-
-// ✅ Ensure MedicalInfoSection is imported correctly
 import { MedicalInfoSection } from "./form-sections/MedicalInfoSection";
 import { SocialInfoSection } from "./form-sections/SocialInfoSection";
 import { ConsentSection } from "./form-sections/ConsentSection";
@@ -44,24 +42,23 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     return () => unsubscribe();
   }, []);
 
-  const [formData, setFormData] = useState({
+  // ✅ Ensure `hasInsurance` and `hasRecentHospitalVisits` are `null` initially (not pre-selected)
+  const [formData, setFormData] = useState(() => ({
     childName: "",
     dob: "",
     languagePreference: "",
-    needsInterpreter: false,
     phoneNumber: "",
     emergencyContactName: "",
     emergencyContactRelation: "",
     symptoms: "",
     medicalHistory: "",
     medicationsAndAllergies: "",
-    hasRecentHospitalVisits: false,
+    hasRecentHospitalVisits: null, // ✅ Prevents auto-selection
     hospitalVisitLocation: "",
-    hasInsurance: false,
-    wantsLowCostInfo: false,
+    hasInsurance: null, // ✅ Prevents auto-selection
     otherConcerns: "",
     consentToTreatment: false,
-  });
+  }));
 
   useEffect(() => {
     const savedLanguage = sessionStorage.getItem("preferredLanguage") as "en" | "es" | null;
@@ -88,7 +85,14 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     }));
   };
 
-  // ✅ Ensures each field updates correctly when using voice input
+  const handleRadioChange = (name: string, value: boolean | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // ✅ Ensure onVoiceInput exists for `MedicalInfoSection` and `SocialInfoSection`
   const handleVoiceInput = (field: string, input: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -139,6 +143,25 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       });
 
       sessionStorage.setItem("intakeId", docRef.id);
+
+      // ✅ Clears form fields after submission
+      setFormData({
+        childName: "",
+        dob: "",
+        languagePreference: "",
+        phoneNumber: "",
+        emergencyContactName: "",
+        emergencyContactRelation: "",
+        symptoms: "",
+        medicalHistory: "",
+        medicationsAndAllergies: "",
+        hasRecentHospitalVisits: null, 
+        hospitalVisitLocation: "",
+        hasInsurance: null, 
+        otherConcerns: "",
+        consentToTreatment: false,
+      });
+
       navigate("/confirmation");
 
     } catch (error: any) {
@@ -175,10 +198,8 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
               language={language} 
               formData={formData} 
               handleChange={handleChange} 
-              handleCheckboxChange={handleCheckboxChange} 
             />
 
-            {/* ✅ Pass `handleVoiceInput` to fix missing prop issue */}
             <MedicalInfoSection 
               language={language} 
               formData={formData} 
