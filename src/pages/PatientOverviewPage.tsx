@@ -1,3 +1,4 @@
+<lov-code>
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -786,4 +787,4 @@ const PatientOverviewPage = () => {
               onClick={() => setShowTreatmentPlan(true)}
               className="w-full"
             >
-              <FileText className="mr
+              <FileText
