@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 interface ProviderLoginProps {
   language: "en" | "es";
   onBack?: () => void;
-  onLogin: () => void; // ✅ Ensure `onLogin` is included in props
+  onLogin: () => void;
 }
 
 const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
@@ -31,11 +32,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
     e.preventDefault();
     if (otp === generatedOtp) {
       toast({ title: "Login successful! Redirecting..." });
-
-      // ✅ Ensure `onLogin` is called after successful OTP verification
       onLogin();
-
-      // ✅ Redirect to Provider Dashboard
       navigate("/provider/dashboard");
     } else {
       toast({ title: "Invalid OTP. Please try again.", variant: "destructive" });
@@ -84,13 +81,15 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
             <div className="relative">
               <ShieldCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               <Input
-                type="text"
+                type="password"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder={language === "en" ? "Enter your verification code" : "Ingrese su código de verificación"}
-                className="pl-10 text-lg py-6"
+                className="pl-10 text-lg py-6 tracking-widest"
                 maxLength={6}
                 required
+                inputMode="numeric"
+                pattern="[0-9]*"
               />
             </div>
 
@@ -114,6 +113,4 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   );
 };
 
-export default ProviderLogin; // ✅ Ensure default export is used!
-
-
+export default ProviderLogin;
