@@ -249,6 +249,13 @@ const PatientOverviewPage = () => {
     return <div>Patient not found</div>;
   }
 
+  const handleSaveNotes = () => {
+    toast({
+      title: "Notes Saved",
+      description: "Doctor's notes have been saved successfully.",
+    });
+  };
+
   const handleSendResult = (examId: string) => {
     const exam = commonExams.find(e => e.id === examId);
     if (exam) {
@@ -654,13 +661,6 @@ const PatientOverviewPage = () => {
     });
   };
 
-  const handleSaveNotes = () => {
-    toast({
-      title: "Notes Saved",
-      description: "Doctor's notes have been saved successfully.",
-    });
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -760,7 +760,6 @@ const PatientOverviewPage = () => {
             </div>
           </div>
 
-          {/* Doctor Notes Section */}
           <div className="p-6 bg-white rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Doctor Notes</h2>
@@ -781,8 +780,68 @@ const PatientOverviewPage = () => {
             />
           </div>
 
-          {/* Generate Treatment Plan Button */}
           <div className="p-6 bg-white rounded-lg shadow">
             <Button
               variant="default"
               onClick={() => setShowTreatmentPlan(true)}
+              className="w-full"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Generate Treatment Plan
+            </Button>
+          </div>
+
+          {showTreatmentPlan && (
+            <div className="p-6 bg-white rounded-lg shadow">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Treatment Plan</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTreatmentPlan(false)}
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendTreatmentPlan}
+                  className="flex items-center"
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Send to Patient
+                </Button>
+                <Select
+                  onValueChange={handleGenerateTreatmentPDF}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Generate PDF
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Blood Pressure Report</DialogTitle>
+          </DialogHeader>
+          <div className="whitespace-pre-wrap font-mono">{currentReport}</div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default PatientOverviewPage;
