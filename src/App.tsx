@@ -44,7 +44,7 @@ const App = () => {
         <Route path="/" element={<Index />} />
         <Route path="/patient/login" element={<PatientLogin language={language} onBack={() => {}} onLogin={() => {}} />} />
         <Route path="/pediatric-intake" element={<PediatricIntakeForm language={language} />} />
-        <Route path="/confirmation" element={<ConfirmationPage />} />
+        <Route path="/confirmation" element={<ConfirmationPage language={language} />} />
         <Route path="/patient/dashboard" element={<PatientDashboard language={language} />} />
         <Route path="/appointment" element={<AppointmentPage language={language} onProceed={handleProceed} />} />
         <Route path="/appointment-confirmation" element={<AppointmentConfirmationPage />} />

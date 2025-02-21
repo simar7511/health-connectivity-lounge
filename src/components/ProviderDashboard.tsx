@@ -7,6 +7,7 @@ import { HealthDataLogs } from "./dashboard/HealthDataLogs";
 import { Patient } from "@/types/patient";
 import { ProviderHeader } from "./layout/ProviderHeader";
 import { ProviderFooter } from "./layout/ProviderFooter";
+import { Link } from "react-router-dom";
 
 interface ProviderDashboardProps {
   language: "en" | "es";
@@ -41,11 +42,13 @@ const translations = {
     dashboard: "Provider Dashboard",
     translate: "Translate",
     translatedTo: "Translated to Spanish",
+    viewHealth: "View Health Summary",
   },
   es: {
     dashboard: "Panel del Proveedor",
     translate: "Traducir",
     translatedTo: "Traducido al inglés",
+    viewHealth: "Ver Resumen de Salud",
   }
 };
 
@@ -75,6 +78,14 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
               language={currentLanguage}
               patients={mockPatients}
             />
+            <div className="flex justify-center">
+              <Link 
+                to={`/patient/${mockPatients[0].id}/health`}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                {translations[currentLanguage].viewHealth}
+              </Link>
+            </div>
             <HealthDataLogs patient={mockPatients[0]} />
           </div>
 
