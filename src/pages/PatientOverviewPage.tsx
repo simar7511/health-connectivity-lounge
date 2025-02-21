@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle, FileText, Search, Send, XCircle, Pencil, Save, Trash2, AlertCircle } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -136,6 +136,105 @@ const defaultTreatmentPlan = {
     "Schedule follow-up appointment in 2 weeks",
     "Rest with left side positioning when possible"
   ]
+};
+
+const mockIntakeForm = {
+  patientInfo: {
+    name: "Maria Garcia",
+    dob: "1995-05-15",
+    address: "123 Main St, Anytown, USA",
+    phone: "(555) 123-4567",
+    emergency_contact: "Juan Garcia - (555) 987-6543"
+  },
+  medicalHistory: {
+    allergies: ["Penicillin"],
+    currentMedications: ["Prenatal vitamins", "Iron supplements"],
+    previousPregnancies: 1,
+    chronicConditions: ["None"],
+    familyHistory: ["Diabetes (maternal)", "Hypertension (paternal)"]
+  },
+  lifestyle: {
+    occupation: "Office worker",
+    exercise: "30 min walking, 3 times/week",
+    diet: "Balanced, following nutritionist recommendations",
+    smoking: "Never",
+    alcohol: "None during pregnancy"
+  },
+  currentPregnancy: {
+    lastPeriod: "2023-08-15",
+    dueDate: "2024-05-22",
+    firstPrenatalVisit: "2023-10-01",
+    complications: "Mild morning sickness in first trimester"
+  }
+};
+
+const generateIntakeFormPDF = (patientData: any, language: string) => {
+  const pdf = new jsPDF();
+  const lineHeight = 7;
+  let yPosition = 20;
+
+  // Set font styles
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(16);
+  pdf.text(language === "es" ? "FORMULARIO DE ADMISIÓN" : "PATIENT INTAKE FORM", 105, yPosition, { align: "center" });
+  
+  // Reset font for content
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  yPosition += lineHeight * 2;
+
+  // Patient Information
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Información del Paciente" : "Patient Information", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Nombre" : "Name"}: ${patientData.patientInfo.name}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fecha de Nacimiento" : "Date of Birth"}: ${patientData.patientInfo.dob}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Teléfono" : "Phone"}: ${patientData.patientInfo.phone}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Medical History
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Historia Médica" : "Medical History", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Alergias" : "Allergies"}: ${patientData.medicalHistory.allergies.join(", ")}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Medicamentos Actuales" : "Current Medications"}: ${patientData.medicalHistory.currentMedications.join(", ")}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Embarazos Previos" : "Previous Pregnancies"}: ${patientData.medicalHistory.previousPregnancies}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Lifestyle Information
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Estilo de Vida" : "Lifestyle", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Ocupación" : "Occupation"}: ${patientData.lifestyle.occupation}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Ejercicio" : "Exercise"}: ${patientData.lifestyle.exercise}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fumar" : "Smoking"}: ${patientData.lifestyle.smoking}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Current Pregnancy
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Embarazo Actual" : "Current Pregnancy", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fecha Probable de Parto" : "Due Date"}: ${patientData.currentPregnancy.dueDate}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Primera Visita Prenatal" : "First Prenatal Visit"}: ${patientData.currentPregnancy.firstPrenatalVisit}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Complicaciones" : "Complications"}: ${patientData.currentPregnancy.complications}`, 20, yPosition);
+
+  // Add footer with date
+  pdf.setFontSize(10);
+  pdf.text(`${language === "es" ? "Generado el" : "Generated on"}: ${new Date().toLocaleDateString()}`, 20, pdf.internal.pageSize.height - 10);
+
+  return pdf;
 };
 
 const getStatusBadge = (results: string) => {
@@ -560,6 +659,18 @@ const PatientOverviewPage = () => {
     setEditMode(prev => ({ ...prev, doctorNotes: true }));
   };
 
+  const handleGenerateIntakeForm = (language: string) => {
+    const pdf = generateIntakeFormPDF(mockIntakeForm, language);
+    pdf.save(`intake_form_${patient.name.replace(/\s+/g, '_')}_${language}.pdf`);
+    
+    toast({
+      title: language === "es" ? "Formulario Generado" : "Form Generated",
+      description: language === "es" 
+        ? "El formulario de admisión ha sido descargado."
+        : "The intake form has been downloaded.",
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -603,6 +714,20 @@ const PatientOverviewPage = () => {
                   <li key={index}>{symptom}</li>
                 ))}
               </ul>
+              <div className="mt-4">
+                <Select
+                  onValueChange={handleGenerateIntakeForm}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Generate Intake Form
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -637,387 +762,4 @@ const PatientOverviewPage = () => {
                         Generate PDF
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Treatment Plan</h2>
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">Diagnosis</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={addDiagnosis}
-                      >
-                        + Add Diagnosis
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditToggle('diagnosis')}
-                      >
-                        {editMode.diagnosis ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  {treatmentPlan.diagnosis.map((diagnosis, index) => (
-                    <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        {editMode.diagnosis ? (
-                          <div className="space-y-2 flex-grow">
-                            <Input
-                              value={diagnosis.condition}
-                              onChange={(e) => updateDiagnosis(index, 'condition', e.target.value)}
-                              placeholder="Condition"
-                            />
-                            <Select
-                              value={diagnosis.severity}
-                              onValueChange={(value) => updateDiagnosis(index, 'severity', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select severity" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Low">Low</SelectItem>
-                                <SelectItem value="Moderate">Moderate</SelectItem>
-                                <SelectItem value="High">High</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Textarea
-                              value={diagnosis.details}
-                              onChange={(e) => updateDiagnosis(index, 'details', e.target.value)}
-                              placeholder="Details"
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex-grow">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium">{diagnosis.condition}</h4>
-                              <Badge className={
-                                diagnosis.severity === "High" ? "bg-red-500" :
-                                diagnosis.severity === "Moderate" ? "bg-yellow-500" : "bg-green-500"
-                              }>
-                                {diagnosis.severity}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600 mt-1">{diagnosis.details}</p>
-                          </div>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteDiagnosis(index)}
-                          className="ml-2"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {editMode.diagnosis && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSaveSection('diagnosis')}
-                      className="mt-2"
-                    >
-                      Save Changes
-                    </Button>
-                  )}
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">Prescribed Medications</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={addMedication}
-                      >
-                        + Add Medication
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditToggle('medications')}
-                      >
-                        {editMode.medications ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  {treatmentPlan.medications.map((medication, index) => (
-                    <div key={index} className="mb-2 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        {editMode.medications ? (
-                          <div className="space-y-2 flex-grow">
-                            <Input
-                              value={medication.name}
-                              onChange={(e) => updateMedication(index, 'name', e.target.value)}
-                              placeholder="Medication name"
-                            />
-                            <Input
-                              value={medication.dosage}
-                              onChange={(e) => updateMedication(index, 'dosage', e.target.value)}
-                              placeholder="Dosage"
-                            />
-                            <Input
-                              value={medication.frequency}
-                              onChange={(e) => updateMedication(index, 'frequency', e.target.value)}
-                              placeholder="Frequency"
-                            />
-                            <Input
-                              value={medication.purpose}
-                              onChange={(e) => updateMedication(index, 'purpose', e.target.value)}
-                              placeholder="Purpose"
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex-grow">
-                            <h4 className="font-medium">{medication.name}</h4>
-                            <p className="text-sm text-gray-600">
-                              {medication.dosage} - {medication.frequency}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">{medication.purpose}</p>
-                          </div>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteMedication(index)}
-                          className="ml-2"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {editMode.medications && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSaveSection('medications')}
-                      className="mt-2"
-                    >
-                      Save Changes
-                    </Button>
-                  )}
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">Lifestyle Changes</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addLifestyleRecommendation(0)}
-                      >
-                        + Add Recommendation
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditToggle('lifestyleChanges')}
-                      >
-                        {editMode.lifestyleChanges ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  {treatmentPlan.lifestyleChanges.map((category, categoryIndex) => (
-                    <div key={categoryIndex} className="mb-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-medium">{category.category}</h3>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => addLifestyleRecommendation(categoryIndex)}
-                          >
-                            + Add Recommendation
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditToggle('lifestyleChanges')}
-                          >
-                            {editMode.lifestyleChanges ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </div>
-                      {editMode.lifestyleChanges ? (
-                        <div className="space-y-2">
-                          {category.recommendations.map((rec, recIndex) => (
-                            <div key={recIndex} className="flex items-center gap-2">
-                              <Input
-                                value={rec}
-                                onChange={(e) => updateLifestyleChange(categoryIndex, recIndex, e.target.value)}
-                                placeholder="Recommendation"
-                                className="flex-grow"
-                              />
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteLifestyleRecommendation(categoryIndex, recIndex)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <ul className="list-disc pl-5 space-y-1">
-                          {category.recommendations.map((rec, recIndex) => (
-                            <li key={recIndex} className="text-sm text-gray-600 flex justify-between items-center">
-                              <span>{rec}</span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteLifestyleRecommendation(categoryIndex, recIndex)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
-                  {editMode.lifestyleChanges && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSaveSection('lifestyleChanges')}
-                      className="mt-2"
-                    >
-                      Save Changes
-                    </Button>
-                  )}
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">Doctor's Notes & Special Instructions</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addDoctorNote()}
-                      >
-                        + Add Note
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditToggle('doctorNotes')}
-                      >
-                        {editMode.doctorNotes ? <Save className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    {editMode.doctorNotes ? (
-                      <div className="space-y-2">
-                        {treatmentPlan.doctorNotes.map((note, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <Input
-                              value={note}
-                              onChange={(e) => updateDoctorNote(index, e.target.value)}
-                              placeholder="Note"
-                              className="flex-grow"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteDoctorNote(index)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <ul className="space-y-2">
-                        {treatmentPlan.doctorNotes.map((note, index) => (
-                          <li key={index} className="text-sm text-gray-600 flex items-start justify-between">
-                            <div className="flex items-start">
-                              <span className="mr-2">•</span>
-                              {note}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteDoctorNote(index)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  {editMode.doctorNotes && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSaveSection('doctorNotes')}
-                      className="mt-2"
-                    >
-                      Save Changes
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSendTreatmentPlan}
-                  className="flex items-center"
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  Send to Patient
-                </Button>
-                <Select
-                  onValueChange={handleGenerateTreatmentPDF}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Generate PDF
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Blood Pressure Report</DialogTitle>
-          </DialogHeader>
-          <div className="whitespace-pre-wrap font-mono">{currentReport}</div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default PatientOverviewPage;
+                        <SelectItem value="en">English</SelectItem
