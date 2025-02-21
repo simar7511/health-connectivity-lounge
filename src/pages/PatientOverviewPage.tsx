@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -632,7 +632,7 @@ const PatientOverviewPage = () => {
           ...category,
           recommendations: [...category.recommendations, ""]
         } : category
-      )
+      ))
     }));
     setEditMode(prev => ({ ...prev, lifestyleChanges: true }));
   };
@@ -692,6 +692,10 @@ const PatientOverviewPage = () => {
     }
   };
 
+  if (!patient) {
+    return <div>Patient not found</div>;
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -711,43 +715,6 @@ const PatientOverviewPage = () => {
             <h2 className="text-xl font-semibold mb-4">Appointment Details</h2>
             <p><strong>Date:</strong> {new Date(patient.nextAppointment).toLocaleString()}</p>
             <p><strong>Reason:</strong> {patient.reasonForVisit}</p>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Patient Information</h2>
-            <p><strong>Age:</strong> {patient.demographics.age}</p>
-            <p><strong>Preferred Language:</strong> {patient.demographics.preferredLanguage === 'es' ? 'Spanish' : 'English'}</p>
-            <p><strong>Insurance Status:</strong> {patient.demographics.insuranceStatus}</p>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Clinical Notes</h2>
-            <div className="space-y-2">
-              <p><strong>Risks:</strong></p>
-              <ul className="list-disc pl-5">
-                {patient.risks.map((risk, index) => (
-                  <li key={index} className="text-red-600">{risk}</li>
-                ))}
-              </ul>
-              <p><strong>Recent Symptoms:</strong></p>
-              <ul className="list-disc pl-5">
-                {patient.recentSymptoms.map((symptom, index) => (
-                  <li key={index}>{symptom}</li>
-                ))}
-              </ul>
-              <div className="mt-4">
-                <Select onValueChange={handleGenerateIntakeForm}>
-                  <SelectTrigger className="w-[180px]">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Intake Form
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
           </div>
 
           <div className="p-6 bg-white rounded-lg shadow">
@@ -773,9 +740,7 @@ const PatientOverviewPage = () => {
                       <Send className="mr-2 h-4 w-4" />
                       Send to Patient
                     </Button>
-                    <Select
-                      onValueChange={(value) => handleGeneratePDF(exam.id, value)}
-                    >
+                    <Select onValueChange={(value) => handleGeneratePDF(exam.id, value)}>
                       <SelectTrigger className="w-[180px]">
                         <FileText className="mr-2 h-4 w-4" />
                         Generate PDF
@@ -788,3 +753,61 @@ const PatientOverviewPage = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {showTreatmentPlan && (
+            <div className="p-6 bg-white rounded-lg shadow">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Treatment Plan</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSendTreatmentPlan}
+                    className="flex items-center"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Send to Patient
+                  </Button>
+                  <Select onValueChange={handleGenerateTreatmentPDF}>
+                    <SelectTrigger className="w-[180px]">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Generate PDF
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Spanish</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t">
+                <Button
+                  variant="default"
+                  onClick={handleSaveRecord}
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Save Patient Record
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Blood Pressure Report</DialogTitle>
+          </DialogHeader>
+          <pre className="whitespace-pre-wrap">{currentReport}</pre>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default PatientOverviewPage;
