@@ -1,3 +1,4 @@
+<lov-code>
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -301,7 +302,7 @@ const PatientOverviewPage = () => {
         resultMessage = `Blood Pressure Results:\nDate: ${exam.date}\nReading: ${exam.values.systolic}/${exam.values.diastolic} mmHg\nStatus: ${exam.results}`;
       } 
       else if (exam.id === "ultrasound") {
-        resultMessage = `Ultrasound Results:\nDate: ${exam.date}\nFetal Heart Rate: ${exam.values.fetalHeartRate} bpm\nEstimated Fetal Weight: ${exam.values.fetalWeight}\nPlacental Position: ${exam.values.placentaPosition}\nStatus: ${exam.results}`;
+        resultMessage = `Ultrasound Results:\nDate: ${exam.date}\nFetal Heart Rate: ${exam.values.fetalHeartRate} bpm\nEstimated Fetal Weight: ${exam.values.fetalWeight} \nPlacental Position: ${exam.values.placentaPosition}\nStatus: ${exam.results}`;
       }
       else if (exam.id === "gtt") {
         resultMessage = `Glucose Tolerance Test Results:\nDate: ${exam.date}\nFasting: ${exam.values.fasting} mg/dL\n1 Hour: ${exam.values.oneHour} mg/dL\n2 Hour: ${exam.values.twoHour} mg/dL\nStatus: ${exam.results}`;
@@ -786,4 +787,4 @@ const PatientOverviewPage = () => {
                         Generate PDF
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="en">English
+                        <SelectItem value
