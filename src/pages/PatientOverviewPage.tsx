@@ -245,10 +245,6 @@ const PatientOverviewPage = () => {
   });
   const [showTreatmentPlan, setShowTreatmentPlan] = useState(false);
 
-  if (!patient) {
-    return <div>Patient not found</div>;
-  }
-
   const handleSaveNotes = () => {
     toast({
       title: "Notes Saved",
@@ -787,3 +783,8 @@ const PatientOverviewPage = () => {
                       <SelectContent>
                         <SelectItem value="en">English</SelectItem>
                         <SelectItem value="es">Spanish</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
