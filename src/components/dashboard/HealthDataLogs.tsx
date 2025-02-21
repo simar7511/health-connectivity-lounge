@@ -66,6 +66,78 @@ const patientSummaries: PatientSummary[] = [
     recentSymptoms: [],
     healthStatus: "normal",
     lastFollowUp: "2024-03-18"
+  },
+  {
+    id: "3",
+    name: "Sarah Johnson",
+    latestVitals: {
+      bp: [135, 88],
+      glucose: 105,
+      temp: 37.0
+    },
+    recentSymptoms: ["Nausea", "Fatigue"],
+    healthStatus: "attention",
+    lastFollowUp: "2024-03-17"
+  },
+  {
+    id: "4",
+    name: "Emily Chen",
+    latestVitals: {
+      bp: [118, 75],
+      glucose: 88,
+      temp: 36.9
+    },
+    recentSymptoms: ["Mild cramps"],
+    healthStatus: "normal",
+    lastFollowUp: "2024-03-19"
+  },
+  {
+    id: "5",
+    name: "David Wilson",
+    latestVitals: {
+      bp: [142, 92],
+      glucose: 110,
+      temp: 37.1
+    },
+    recentSymptoms: ["Dizziness", "Blurred vision"],
+    healthStatus: "high-risk",
+    lastFollowUp: "2024-03-16"
+  },
+  {
+    id: "6",
+    name: "Ana Rodriguez",
+    latestVitals: {
+      bp: [125, 82],
+      glucose: 95,
+      temp: 36.7
+    },
+    recentSymptoms: ["Back pain"],
+    healthStatus: "attention",
+    lastFollowUp: "2024-03-20"
+  },
+  {
+    id: "7",
+    name: "Michael Brown",
+    latestVitals: {
+      bp: [128, 84],
+      glucose: 90,
+      temp: 36.9
+    },
+    recentSymptoms: [],
+    healthStatus: "normal",
+    lastFollowUp: "2024-03-19"
+  },
+  {
+    id: "8",
+    name: "Lisa Taylor",
+    latestVitals: {
+      bp: [145, 94],
+      glucose: 115,
+      temp: 37.3
+    },
+    recentSymptoms: ["Severe headache", "Vision changes"],
+    healthStatus: "high-risk",
+    lastFollowUp: "2024-03-18"
   }
 ];
 
