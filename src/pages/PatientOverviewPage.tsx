@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -206,6 +207,12 @@ const PatientOverviewPage = () => {
     });
   };
 
+  const handleGenerateReport = () => {
+    const report = generateBloodPressureReport(patient.vitals.bp);
+    setCurrentReport(report);
+    setReportDialogOpen(true);
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -248,6 +255,37 @@ const PatientOverviewPage = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+          </div>
+
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Recent Exam Results</h2>
+            <div className="space-y-4">
+              {commonExams.map((exam) => (
+                <div key={exam.id} className="border-b pb-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">{exam.name}</h3>
+                      <p className="text-sm text-muted-foreground">{exam.purpose}</p>
+                      <p className="mt-1">{exam.results}</p>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {new Date(exam.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                  {exam.id === "bp" && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleGenerateReport}
+                      className="mt-2"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Generate BP Report
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
