@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -9,6 +10,10 @@ import { ProviderFooter } from "./layout/ProviderFooter";
 import { jsPDF } from "jspdf";
 import { Button } from "./ui/button";
 import { FileText } from "lucide-react";
+
+interface ProviderDashboardProps {
+  language: "en" | "es";
+}
 
 const mockPatients: Patient[] = [
   {
