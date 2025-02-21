@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -795,13 +795,27 @@ const PatientOverviewPage = () => {
             <div className="p-6 bg-white rounded-lg shadow">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Treatment Plan</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowTreatmentPlan(false)}
-                >
-                  <XCircle className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSendTreatmentPlan}
+                    className="flex items-center"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Send to Patient
+                  </Button>
+                  <Select onValueChange={handleGenerateTreatmentPDF}>
+                    <SelectTrigger className="w-[180px]">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Generate PDF
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Spanish</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="mb-6">
@@ -1083,6 +1097,16 @@ const PatientOverviewPage = () => {
                     <SelectItem value="es">Spanish</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="mt-6 pt-6 border-t">
+                <Button
+                  variant="default"
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Patient Record
+                </Button>
               </div>
             </div>
           )}
