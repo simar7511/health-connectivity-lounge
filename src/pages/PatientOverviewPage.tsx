@@ -636,7 +636,7 @@ const PatientOverviewPage = () => {
           ...category,
           recommendations: [...category.recommendations, ""]
         } : category
-      )
+      ))
     }));
     setEditMode(prev => ({ ...prev, lifestyleChanges: true }));
   };
