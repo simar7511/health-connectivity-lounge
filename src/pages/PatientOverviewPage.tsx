@@ -793,15 +793,14 @@ const PatientOverviewPage = () => {
         </div>
 
         {showTreatmentPlan && (
-          <div className="p-6 bg-white rounded-lg shadow">
-            <div className="flex justify-between items-center mb-4">
+          <div className="p-6 bg-white rounded-lg shadow space-y-6">
+            <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Treatment Plan</h2>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleSendTreatmentPlan}
-                  className="flex items-center"
                 >
                   <Send className="mr-2 h-4 w-4" />
                   Send to Patient
@@ -819,8 +818,285 @@ const PatientOverviewPage = () => {
               </div>
             </div>
 
-            {/* Treatment plan sections */}
-            {/* ... keep existing code (treatment plan sections) */}
+            {/* Diagnosis Section */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Diagnosis</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditToggle('diagnosis')}
+                >
+                  {editMode.diagnosis ? (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </>
+                  )}
+                </Button>
+              </div>
+              {treatmentPlan.diagnosis.map((diagnosis, index) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  {editMode.diagnosis ? (
+                    <div className="space-y-4">
+                      <Input
+                        value={diagnosis.condition}
+                        onChange={(e) => updateDiagnosis(index, 'condition', e.target.value)}
+                        placeholder="Condition"
+                      />
+                      <Select
+                        value={diagnosis.severity}
+                        onValueChange={(value) => updateDiagnosis(index, 'severity', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select severity" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Low">Low</SelectItem>
+                          <SelectItem value="Moderate">Moderate</SelectItem>
+                          <SelectItem value="High">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Textarea
+                        value={diagnosis.details}
+                        onChange={(e) => updateDiagnosis(index, 'details', e.target.value)}
+                        placeholder="Details"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteDiagnosis(index)}
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 className="font-medium">{diagnosis.condition}</h4>
+                      <Badge className="mt-1">{diagnosis.severity}</Badge>
+                      <p className="mt-2 text-sm text-muted-foreground">{diagnosis.details}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {editMode.diagnosis && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={addDiagnosis}
+                >
+                  Add Diagnosis
+                </Button>
+              )}
+            </div>
+
+            {/* Medications Section */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Medications</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditToggle('medications')}
+                >
+                  {editMode.medications ? (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </>
+                  )}
+                </Button>
+              </div>
+              {treatmentPlan.medications.map((medication, index) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  {editMode.medications ? (
+                    <div className="space-y-4">
+                      <Input
+                        value={medication.name}
+                        onChange={(e) => updateMedication(index, 'name', e.target.value)}
+                        placeholder="Medication name"
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input
+                          value={medication.dosage}
+                          onChange={(e) => updateMedication(index, 'dosage', e.target.value)}
+                          placeholder="Dosage"
+                        />
+                        <Input
+                          value={medication.frequency}
+                          onChange={(e) => updateMedication(index, 'frequency', e.target.value)}
+                          placeholder="Frequency"
+                        />
+                      </div>
+                      <Input
+                        value={medication.duration}
+                        onChange={(e) => updateMedication(index, 'duration', e.target.value)}
+                        placeholder="Duration"
+                      />
+                      <Input
+                        value={medication.purpose}
+                        onChange={(e) => updateMedication(index, 'purpose', e.target.value)}
+                        placeholder="Purpose"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteMedication(index)}
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 className="font-medium">{medication.name}</h4>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {medication.dosage} - {medication.frequency}
+                      </p>
+                      <p className="mt-1 text-sm">Duration: {medication.duration}</p>
+                      <p className="mt-2 text-sm text-muted-foreground">{medication.purpose}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {editMode.medications && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={addMedication}
+                >
+                  Add Medication
+                </Button>
+              )}
+            </div>
+
+            {/* Lifestyle Changes */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Lifestyle Changes</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditToggle('lifestyleChanges')}
+                >
+                  {editMode.lifestyleChanges ? (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </>
+                  )}
+                </Button>
+              </div>
+              {treatmentPlan.lifestyleChanges.map((category, categoryIndex) => (
+                <div key={categoryIndex} className="space-y-4">
+                  <h4 className="font-medium">{category.category}</h4>
+                  {category.recommendations.map((recommendation, recIndex) => (
+                    <div key={recIndex} className="p-4 border rounded-lg">
+                      {editMode.lifestyleChanges ? (
+                        <div className="flex gap-2">
+                          <Input
+                            value={recommendation}
+                            onChange={(e) => updateLifestyleChange(categoryIndex, recIndex, e.target.value)}
+                            placeholder="Recommendation"
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteLifestyleRecommendation(categoryIndex, recIndex)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <p className="text-sm">{recommendation}</p>
+                      )}
+                    </div>
+                  ))}
+                  {editMode.lifestyleChanges && (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => addLifestyleRecommendation(categoryIndex)}
+                    >
+                      Add {category.category} Recommendation
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Doctor's Notes */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Special Instructions</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditToggle('doctorNotes')}
+                >
+                  {editMode.doctorNotes ? (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save
+                    </>
+                  ) : (
+                    <>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </>
+                  )}
+                </Button>
+              </div>
+              {treatmentPlan.doctorNotes.map((note, index) => (
+                <div key={index} className="p-4 border rounded-lg">
+                  {editMode.doctorNotes ? (
+                    <div className="flex gap-2">
+                      <Input
+                        value={note}
+                        onChange={(e) => updateDoctorNote(index, e.target.value)}
+                        placeholder="Special instruction"
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteDoctorNote(index)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm">• {note}</p>
+                  )}
+                </div>
+              ))}
+              {editMode.doctorNotes && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={addDoctorNote}
+                >
+                  Add Special Instruction
+                </Button>
+              )}
+            </div>
 
             {/* Save Record Button */}
             <div className="mt-6 pt-6 border-t">
