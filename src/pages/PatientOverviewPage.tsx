@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save, Trash } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -875,7 +875,7 @@ const PatientOverviewPage = () => {
                           onClick={() => deleteDiagnosis(index)}
                           className="mt-2"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash className="h-4 w-4 mr-2" />
                           Delete
                         </Button>
                       </>
@@ -960,7 +960,7 @@ const PatientOverviewPage = () => {
                           size="sm"
                           onClick={() => deleteMedication(index)}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash className="h-4 w-4 mr-2" />
                           Delete
                         </Button>
                       </>
@@ -1017,7 +1017,7 @@ const PatientOverviewPage = () => {
                               size="sm"
                               onClick={() => deleteLifestyleRecommendation(categoryIndex, recIndex)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash className="h-4 w-4" />
                             </Button>
                           </div>
                         ) : (
@@ -1065,7 +1065,7 @@ const PatientOverviewPage = () => {
                           size="sm"
                           onClick={() => deleteDoctorNote(index)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
