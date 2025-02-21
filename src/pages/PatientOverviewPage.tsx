@@ -242,6 +242,7 @@ const PatientOverviewPage = () => {
     lifestyleChanges: false,
     doctorNotes: false
   });
+  const [showTreatmentPlan, setShowTreatmentPlan] = useState(false);
 
   if (!patient) {
     return <div>Patient not found</div>;
@@ -749,12 +750,32 @@ const PatientOverviewPage = () => {
                 </div>
               ))}
             </div>
+            <div className="mt-6">
+              <Button
+                variant="default"
+                onClick={() => setShowTreatmentPlan(true)}
+                className="w-full"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Generate Treatment Plan
+              </Button>
+            </div>
           </div>
 
-          <div className="p-6 bg-white rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Treatment Plan</h2>
-            <div className="space-y-6">
-              <div className="space-y-4">
+          {showTreatmentPlan && (
+            <div className="p-6 bg-white rounded-lg shadow">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Treatment Plan</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTreatmentPlan(false)}
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-6">
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-medium">Diagnosis</h3>
@@ -1108,7 +1129,7 @@ const PatientOverviewPage = () => {
                 </Select>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
