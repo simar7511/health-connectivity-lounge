@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -7,12 +6,10 @@ import { HealthDataLogs } from "./dashboard/HealthDataLogs";
 import { Patient } from "@/types/patient";
 import { ProviderHeader } from "./layout/ProviderHeader";
 import { ProviderFooter } from "./layout/ProviderFooter";
+import { jsPDF } from "jspdf";
+import { Button } from "./ui/button";
+import { FileText } from "lucide-react";
 
-interface ProviderDashboardProps {
-  language: "en" | "es";
-}
-
-// Mock Patient Data
 const mockPatients: Patient[] = [
   {
     id: "1",
@@ -79,6 +76,56 @@ const translations = {
   }
 };
 
+const generateIntakeFormPDF = (patientData: any, language: string) => {
+  const pdf = new jsPDF();
+  const lineHeight = 7;
+  let yPosition = 20;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(16);
+  pdf.text(language === "es" ? "FORMULARIO DE ADMISIÓN" : "PATIENT INTAKE FORM", 105, yPosition, { align: "center" });
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  yPosition += lineHeight * 2;
+
+  // Patient Information
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Información del Paciente" : "Patient Information", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Nombre" : "Name"}: ${patientData.patientInfo.name}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fecha de Nacimiento" : "Date of Birth"}: ${patientData.patientInfo.dob}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Teléfono" : "Phone"}: ${patientData.patientInfo.phone}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Medical History
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Historia Médica" : "Medical History", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Alergias" : "Allergies"}: ${patientData.medicalHistory.allergies.join(", ")}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Medicamentos Actuales" : "Current Medications"}: ${patientData.medicalHistory.currentMedications.join(", ")}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Current Pregnancy
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Embarazo Actual" : "Current Pregnancy", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fecha Probable de Parto" : "Due Date"}: ${patientData.currentPregnancy.dueDate}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Complicaciones" : "Complications"}: ${patientData.currentPregnancy.complications}`, 20, yPosition);
+
+  pdf.setFontSize(10);
+  pdf.text(`${language === "es" ? "Generado el" : "Generated on"}: ${new Date().toLocaleDateString()}`, 20, pdf.internal.pageSize.height - 10);
+
+  return pdf;
+};
+
 const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const { toast } = useToast();
   const [currentLanguage, setCurrentLanguage] = useState(language);
@@ -87,6 +134,18 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     setCurrentLanguage((prev) => (prev === "en" ? "es" : "en"));
     toast({
       title: translations[currentLanguage].translatedTo,
+    });
+  };
+
+  const handleGenerateIntakeForm = (language: string) => {
+    const pdf = generateIntakeFormPDF(mockIntakeForm, language);
+    pdf.save(`intake_form_${mockIntakeForm.patientInfo.name.replace(/\s+/g, '_')}_${language}.pdf`);
+    
+    toast({
+      title: language === "es" ? "Formulario Generado" : "Form Generated",
+      description: language === "es" 
+        ? "El formulario de admisión ha sido descargado."
+        : "The intake form has been downloaded.",
     });
   };
 
@@ -106,64 +165,38 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
               patients={mockPatients}
             />
 
-            {/* Patient Health Summary Section with Intake Form */}
+            {/* Reported Symptoms Section */}
             <div className="p-6 bg-white rounded-lg shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">
-                {currentLanguage === "en" ? "Patient Health Summary" : "Resumen de Salud del Paciente"}
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">
+                  {currentLanguage === "en" ? "Reported Symptoms" : "Síntomas Reportados"}
+                </h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateIntakeForm('en')}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Intake Form (EN)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateIntakeForm('es')}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Formulario (ES)
+                  </Button>
+                </div>
+              </div>
               
               <div className="space-y-4">
-                {/* Basic Patient Information */}
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-medium mb-2">
-                    {currentLanguage === "en" ? "Patient Information" : "Información del Paciente"}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Name:" : "Nombre:"}</span> {mockIntakeForm.patientInfo.name}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "DOB:" : "Fecha de Nacimiento:"}</span> {mockIntakeForm.patientInfo.dob}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Phone:" : "Teléfono:"}</span> {mockIntakeForm.patientInfo.phone}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Address:" : "Dirección:"}</span> {mockIntakeForm.patientInfo.address}</p>
+                {mockPatients[0].recentSymptoms.map((symptom, index) => (
+                  <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                    {symptom}
                   </div>
-                </div>
-
-                {/* Medical History */}
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-medium mb-2">
-                    {currentLanguage === "en" ? "Medical History" : "Historia Médica"}
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Allergies:" : "Alergias:"}</span> {mockIntakeForm.medicalHistory.allergies.join(", ")}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Current Medications:" : "Medicamentos Actuales:"}</span> {mockIntakeForm.medicalHistory.currentMedications.join(", ")}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Previous Pregnancies:" : "Embarazos Previos:"}</span> {mockIntakeForm.medicalHistory.previousPregnancies}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Family History:" : "Historia Familiar:"}</span> {mockIntakeForm.medicalHistory.familyHistory.join(", ")}</p>
-                  </div>
-                </div>
-
-                {/* Lifestyle Information */}
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-medium mb-2">
-                    {currentLanguage === "en" ? "Lifestyle Information" : "Información de Estilo de Vida"}
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Occupation:" : "Ocupación:"}</span> {mockIntakeForm.lifestyle.occupation}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Exercise:" : "Ejercicio:"}</span> {mockIntakeForm.lifestyle.exercise}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Diet:" : "Dieta:"}</span> {mockIntakeForm.lifestyle.diet}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Smoking:" : "Fumar:"}</span> {mockIntakeForm.lifestyle.smoking}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Alcohol:" : "Alcohol:"}</span> {mockIntakeForm.lifestyle.alcohol}</p>
-                  </div>
-                </div>
-
-                {/* Current Pregnancy Details */}
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-medium mb-2">
-                    {currentLanguage === "en" ? "Current Pregnancy" : "Embarazo Actual"}
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Due Date:" : "Fecha Probable de Parto:"}</span> {mockIntakeForm.currentPregnancy.dueDate}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "First Prenatal Visit:" : "Primera Visita Prenatal:"}</span> {mockIntakeForm.currentPregnancy.firstPrenatalVisit}</p>
-                    <p><span className="font-medium">{currentLanguage === "en" ? "Complications:" : "Complicaciones:"}</span> {mockIntakeForm.currentPregnancy.complications}</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
