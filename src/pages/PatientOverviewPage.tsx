@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save, Trash2, Search } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Send, FileText, Pencil, Save, Trash2 } from "lucide-react";
 import { Patient } from "@/types/patient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
 import jsPDF from 'jspdf';
 
 const mockPatients: Patient[] = [
@@ -224,76 +218,6 @@ const generateIntakeFormPDF = (patientData: any, language: string) => {
   return pdf;
 };
 
-interface PatientSummary {
-  id: string;
-  name: string;
-  latestVitals: {
-    bp: number[] | null;
-    glucose: number | null;
-  };
-  recentSymptoms: string[];
-  healthStatus: string;
-}
-
-const mockPatientSummaries: PatientSummary[] = [
-  {
-    id: "1",
-    name: "Maria Garcia",
-    latestVitals: {
-      bp: [120, 80],
-      glucose: 90,
-    },
-    recentSymptoms: ["Mild headache", "Swollen ankles"],
-    healthStatus: "stable",
-  },
-  {
-    id: "2",
-    name: "John Doe",
-    latestVitals: {
-      bp: [140, 90],
-      glucose: 110,
-    },
-    recentSymptoms: ["Fatigue", "Blurred vision"],
-    healthStatus: "needs-attention",
-  },
-  {
-    id: "3",
-    name: "Jane Smith",
-    latestVitals: {
-      bp: [110, 70],
-      glucose: 80,
-    },
-    recentSymptoms: [],
-    healthStatus: "healthy",
-  },
-];
-
-const getVitalsStatus = (bp: number[] | null): string => {
-  if (!bp) return "Normal";
-  const [systolic, diastolic] = bp;
-
-  if (systolic > 140 || diastolic > 90) {
-    return "High";
-  } else if (systolic < 90 || diastolic < 60) {
-    return "Low";
-  } else {
-    return "Normal";
-  }
-};
-
-const getHealthStatusIcon = (status: string) => {
-  switch (status) {
-    case "stable":
-      return <CheckCircle className="text-green-500 h-5 w-5" />;
-    case "needs-attention":
-      return <AlertCircle className="text-yellow-500 h-5 w-5" />;
-    case "critical":
-      return <XCircle className="text-red-500 h-5 w-5" />;
-    default:
-      return null;
-  }
-};
-
 const PatientOverviewPage = () => {
   const { patientId } = useParams();
   const navigate = useNavigate();
@@ -310,8 +234,6 @@ const PatientOverviewPage = () => {
     doctorNotes: false
   });
   const [showTreatmentPlan, setShowTreatmentPlan] = useState(false);
-  const [patientSummaries, setPatientSummaries] = useState(mockPatientSummaries);
-  const [expandedPatientId, setExpandedPatientId] = useState<string | null>(null);
 
   if (!patient) {
     return <div>Patient not found</div>;
@@ -729,121 +651,6 @@ const PatientOverviewPage = () => {
     });
   };
 
-  const renderSummaryView = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Patient Health Summary</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Intake Form Summary */}
-        <div className="mb-6 p-4 border rounded-lg">
-          <h3 className="font-semibold text-lg mb-4">Intake Form Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-medium mb-2">Patient Information</h4>
-              <div className="space-y-1 text-sm">
-                <p><span className="font-medium">DOB:</span> {mockIntakeForm.patientInfo.dob}</p>
-                <p><span className="font-medium">Phone:</span> {mockIntakeForm.patientInfo.phone}</p>
-                <p><span className="font-medium">Emergency Contact:</span> {mockIntakeForm.patientInfo.emergency_contact}</p>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Medical History</h4>
-              <div className="space-y-1 text-sm">
-                <p><span className="font-medium">Allergies:</span> {mockIntakeForm.medicalHistory.allergies.join(", ")}</p>
-                <p><span className="font-medium">Current Medications:</span> {mockIntakeForm.medicalHistory.currentMedications.join(", ")}</p>
-                <p><span className="font-medium">Previous Pregnancies:</span> {mockIntakeForm.medicalHistory.previousPregnancies}</p>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Current Pregnancy</h4>
-              <div className="space-y-1 text-sm">
-                <p><span className="font-medium">Due Date:</span> {mockIntakeForm.currentPregnancy.dueDate}</p>
-                <p><span className="font-medium">First Prenatal Visit:</span> {mockIntakeForm.currentPregnancy.firstPrenatalVisit}</p>
-                <p><span className="font-medium">Complications:</span> {mockIntakeForm.currentPregnancy.complications}</p>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Lifestyle</h4>
-              <div className="space-y-1 text-sm">
-                <p><span className="font-medium">Occupation:</span> {mockIntakeForm.lifestyle.occupation}</p>
-                <p><span className="font-medium">Exercise:</span> {mockIntakeForm.lifestyle.exercise}</p>
-                <p><span className="font-medium">Diet:</span> {mockIntakeForm.lifestyle.diet}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Patient Summary Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left border-b">
-                <th className="py-3 px-4">Patient Name</th>
-                <th className="py-3 px-4">Latest Vitals</th>
-                <th className="py-3 px-4">Key Symptoms</th>
-                <th className="py-3 px-4">Health Status</th>
-                <th className="py-3 px-4">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {patientSummaries?.map((patient) => (
-                <tr key={patient.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">{patient.name}</td>
-                  <td className="py-3 px-4">
-                    {patient.latestVitals.bp && (
-                      <div className="flex items-center gap-2">
-                        <span>BP: {patient.latestVitals.bp.join('/')}</span>
-                        <Badge 
-                          className={
-                            getVitalsStatus(patient.latestVitals.bp) === "High" 
-                              ? "bg-red-500" 
-                              : getVitalsStatus(patient.latestVitals.bp) === "Low"
-                              ? "bg-yellow-500"
-                              : "bg-green-500"
-                          }
-                        >
-                          {getVitalsStatus(patient.latestVitals.bp)}
-                        </Badge>
-                      </div>
-                    )}
-                    {patient.latestVitals.glucose && (
-                      <div>Glucose: {patient.latestVitals.glucose} mg/dL</div>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    {patient.recentSymptoms.length > 0 
-                      ? patient.recentSymptoms.join(", ")
-                      : "No symptoms"}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      {getHealthStatusIcon(patient.healthStatus)}
-                      <span className="capitalize">{patient.healthStatus.replace("-", " ")}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setExpandedPatientId(
-                        expandedPatientId === patient.id ? null : patient.id
-                      )}
-                      className="flex items-center gap-2"
-                    >
-                      <Search className="h-4 w-4" />
-                      View Details
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -856,12 +663,55 @@ const PatientOverviewPage = () => {
       </Button>
 
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">{patient?.name}</h1>
-        {renderSummaryView()}
-        {/* ... keep existing code (remaining JSX including treatment plan and dialog) */}
-      </div>
-    </div>
-  );
-};
+        <h1 className="text-3xl font-bold">{patient.name}</h1>
+        
+        <div className="grid gap-6">
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Appointment Details</h2>
+            <p><strong>Date:</strong> {new Date(patient.nextAppointment).toLocaleString()}</p>
+            <p><strong>Reason:</strong> {patient.reasonForVisit}</p>
+          </div>
 
-export default PatientOverviewPage;
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Patient Information</h2>
+            <p><strong>Age:</strong> {patient.demographics.age}</p>
+            <p><strong>Preferred Language:</strong> {patient.demographics.preferredLanguage === 'es' ? 'Spanish' : 'English'}</p>
+            <p><strong>Insurance Status:</strong> {patient.demographics.insuranceStatus}</p>
+          </div>
+
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Clinical Notes</h2>
+            <div className="space-y-2">
+              <p><strong>Risks:</strong></p>
+              <ul className="list-disc pl-5">
+                {patient.risks.map((risk, index) => (
+                  <li key={index} className="text-red-600">{risk}</li>
+                ))}
+              </ul>
+              <p><strong>Recent Symptoms:</strong></p>
+              <ul className="list-disc pl-5">
+                {patient.recentSymptoms.map((symptom, index) => (
+                  <li key={index}>{symptom}</li>
+                ))}
+              </ul>
+              <div className="mt-4">
+                <Select onValueChange={handleGenerateIntakeForm}>
+                  <SelectTrigger className="w-[180px]">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Intake Form
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Exam Results</h2>
+            <div className="space-y-6">
+              {/* Intake Form Summary */}
+              <div className="mb-6 p-4 border rounded-lg">
+                <h3 className="font-semibold text-lg mb-4">Intake Form Information
