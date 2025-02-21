@@ -263,14 +263,11 @@ const PatientOverviewPage = () => {
       
       if (exam.id === "bp") {
         resultMessage = `Blood Pressure Results:\nDate: ${exam.date}\nReading: ${exam.values.systolic}/${exam.values.diastolic} mmHg\nStatus: ${exam.results}`;
-      } 
-      else if (exam.id === "ultrasound") {
+      } else if (exam.id === "ultrasound") {
         resultMessage = `Ultrasound Results:\nDate: ${exam.date}\nFetal Heart Rate: ${exam.values.fetalHeartRate} bpm\nEstimated Fetal Weight: ${exam.values.fetalWeight}\nPlacental Position: ${exam.values.placentaPosition}\nStatus: ${exam.results}`;
-      }
-      else if (exam.id === "gtt") {
+      } else if (exam.id === "gtt") {
         resultMessage = `Glucose Tolerance Test Results:\nDate: ${exam.date}\nFasting: ${exam.values.fasting} mg/dL\n1 Hour: ${exam.values.oneHour} mg/dL\n2 Hour: ${exam.values.twoHour} mg/dL\nStatus: ${exam.results}`;
-      }
-      else {
+      } else {
         resultMessage = `${exam.name} Results:\nDate: ${exam.date}\nResults: ${exam.results}`;
       }
 
