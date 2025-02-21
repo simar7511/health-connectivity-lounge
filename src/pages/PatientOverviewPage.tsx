@@ -540,7 +540,7 @@ const PatientOverviewPage = () => {
             j === recIndex ? value : r
           )
         } : lc
-      )
+      ))
     }));
   };
 
