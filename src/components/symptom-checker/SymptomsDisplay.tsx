@@ -37,6 +37,26 @@ export const SymptomsDisplay = ({ language, symptoms }: SymptomsDisplayProps) =>
     }
   };
 
+  const formattedReport = `
+${language === "en" ? "Patient Report" : "Reporte del Paciente"}:
+----------------------------
+${language === "en" ? "Name" : "Nombre"}: ${mockIntakeForm.patientInfo.name}
+${language === "en" ? "DOB" : "Fecha de Nacimiento"}: ${mockIntakeForm.patientInfo.dob}
+
+${language === "en" ? "Medical History" : "Historia Médica"}:
+- ${language === "en" ? "Allergies" : "Alergias"}: ${mockIntakeForm.medicalHistory.allergies.join(", ")}
+- ${language === "en" ? "Current Medications" : "Medicamentos Actuales"}: ${mockIntakeForm.medicalHistory.currentMedications.join(", ")}
+- ${language === "en" ? "Previous Pregnancies" : "Embarazos Previos"}: ${mockIntakeForm.medicalHistory.previousPregnancies}
+
+${language === "en" ? "Current Pregnancy" : "Embarazo Actual"}:
+- ${language === "en" ? "Due Date" : "Fecha Probable de Parto"}: ${mockIntakeForm.currentPregnancy.dueDate}
+- ${language === "en" ? "First Prenatal Visit" : "Primera Visita Prenatal"}: ${mockIntakeForm.currentPregnancy.firstPrenatalVisit}
+- ${language === "en" ? "Complications" : "Complicaciones"}: ${mockIntakeForm.currentPregnancy.complications}
+
+${language === "en" ? "Current Symptoms" : "Síntomas Actuales"}:
+${symptoms}
+  `.trim();
+
   return (
     <div className="space-y-4">
       {/* Patient Intake Form Summary */}
@@ -68,12 +88,14 @@ export const SymptomsDisplay = ({ language, symptoms }: SymptomsDisplayProps) =>
         </div>
       </div>
 
-      {/* Current Symptoms */}
+      {/* Current Symptoms with Full Report */}
       <div className="p-4 bg-secondary/10 rounded-lg">
         <h3 className="font-semibold mb-2">
-          {language === "en" ? "Current Symptoms:" : "Síntomas Actuales:"}
+          {language === "en" ? "Full Report:" : "Reporte Completo:"}
         </h3>
-        <p>{symptoms}</p>
+        <pre className="whitespace-pre-wrap text-sm font-mono bg-background/50 p-4 rounded-md">
+          {formattedReport}
+        </pre>
       </div>
 
       {/* Current Pregnancy */}
