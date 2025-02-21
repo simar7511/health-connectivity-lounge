@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Activity, AlertTriangle, CheckCircle, FileText, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { jsPDF } from "jspdf";
 
 interface HealthDataLogsProps {
   patient: Patient;
@@ -94,6 +95,72 @@ const mockSymptomLogs: SymptomLog[] = [
   }
 ];
 
+const mockIntakeForm = {
+  patientInfo: {
+    name: "John Doe",
+    dob: "1990-01-01",
+    phone: "123-456-7890"
+  },
+  medicalHistory: {
+    allergies: ["Penicillin", "Lactose"],
+    currentMedications: ["Aspirin", "Ibuprofen"]
+  },
+  currentPregnancy: {
+    dueDate: "2024-06-15",
+    complications: "None"
+  }
+};
+
+const generateIntakeFormPDF = (patientData: any, language: string) => {
+  const pdf = new jsPDF();
+  const lineHeight = 7;
+  let yPosition = 20;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(16);
+  pdf.text(language === "es" ? "FORMULARIO DE ADMISIÓN" : "PATIENT INTAKE FORM", 105, yPosition, { align: "center" });
+  
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  yPosition += lineHeight * 2;
+
+  // Patient Information
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Información del Paciente" : "Patient Information", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Nombre" : "Name"}: ${patientData.patientInfo.name}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fecha de Nacimiento" : "Date of Birth"}: ${patientData.patientInfo.dob}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Teléfono" : "Phone"}: ${patientData.patientInfo.phone}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Medical History
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Historia Médica" : "Medical History", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Alergias" : "Allergies"}: ${patientData.medicalHistory.allergies.join(", ")}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Medicamentos Actuales" : "Current Medications"}: ${patientData.medicalHistory.currentMedications.join(", ")}`, 20, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Current Pregnancy
+  pdf.setFont("helvetica", "bold");
+  pdf.text(language === "es" ? "Embarazo Actual" : "Current Pregnancy", 20, yPosition);
+  pdf.setFont("helvetica", "normal");
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Fecha Probable de Parto" : "Due Date"}: ${patientData.currentPregnancy.dueDate}`, 20, yPosition);
+  yPosition += lineHeight;
+  pdf.text(`${language === "es" ? "Complicaciones" : "Complications"}: ${patientData.currentPregnancy.complications}`, 20, yPosition);
+
+  pdf.setFontSize(10);
+  pdf.text(`${language === "es" ? "Generado el" : "Generated on"}: ${new Date().toLocaleDateString()}`, 20, pdf.internal.pageSize.height - 10);
+
+  return pdf;
+};
+
 export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
   const { toast } = useToast();
   const [severityFilter, setSeverityFilter] = useState<Severity | "all">("all");
@@ -151,6 +218,18 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
       });
       setProviderNote("");
     }
+  };
+
+  const handleGenerateIntakeForm = (language: string) => {
+    const pdf = generateIntakeFormPDF(mockIntakeForm, language);
+    pdf.save(`intake_form_${mockIntakeForm.patientInfo.name.replace(/\s+/g, '_')}_${language}.pdf`);
+    
+    toast({
+      title: language === "es" ? "Formulario Generado" : "Form Generated",
+      description: language === "es" 
+        ? "El formulario de admisión ha sido descargado."
+        : "The intake form has been downloaded.",
+    });
   };
 
   const renderSummaryView = () => (
@@ -237,6 +316,24 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-xl font-semibold">Reported Symptoms</CardTitle>
             <div className="flex items-center gap-4">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGenerateIntakeForm('en')}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Intake Form (EN)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGenerateIntakeForm('es')}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Formulario (ES)
+                </Button>
+              </div>
               <Select value={timeFilter} onValueChange={(value: TimeFilter) => setTimeFilter(value)}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Time Period" />
