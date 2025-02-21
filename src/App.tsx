@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
@@ -14,9 +13,8 @@ import AppointmentConfirmationPage from "./pages/AppointmentConfirmationPage";
 import TransportationPage from "./pages/TransportationPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import PatientOverviewPage from "./pages/PatientOverviewPage";
-import PatientHealthSummaryPage from "./pages/PatientHealthSummaryPage";
 import { ChatPage } from "./pages/ChatPage";
-import ConfirmationPage from "./pages/ConfirmationPage";
+import ConfirmationPage from "./pages/ConfirmationPage"; // ✅ Removed unnecessary named import
 
 const App = () => {
   const [language, setLanguage] = useState<"en" | "es">(() => {
@@ -52,8 +50,7 @@ const App = () => {
         <Route path="/free-clinic" element={<ClinicLocatorPage />} />
         <Route path="/provider/login" element={<ProviderLogin language={language} onLogin={() => {}} />} />
         <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
-        <Route path="/patient/:patientId" element={<PatientOverviewPage language={language} />} />
-        <Route path="/patient/:patientId/health" element={<PatientHealthSummaryPage language={language} />} />
+        <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/chat/:patientName" element={<ChatPage />} />
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
