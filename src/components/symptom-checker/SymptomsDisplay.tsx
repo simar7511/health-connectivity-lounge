@@ -37,26 +37,6 @@ export const SymptomsDisplay = ({ language, symptoms }: SymptomsDisplayProps) =>
     }
   };
 
-  const formattedReport = `
-${language === "en" ? "Patient Report" : "Reporte del Paciente"}:
-----------------------------
-${language === "en" ? "Name" : "Nombre"}: ${mockIntakeForm.patientInfo.name}
-${language === "en" ? "DOB" : "Fecha de Nacimiento"}: ${mockIntakeForm.patientInfo.dob}
-
-${language === "en" ? "Medical History" : "Historia Médica"}:
-- ${language === "en" ? "Allergies" : "Alergias"}: ${mockIntakeForm.medicalHistory.allergies.join(", ")}
-- ${language === "en" ? "Current Medications" : "Medicamentos Actuales"}: ${mockIntakeForm.medicalHistory.currentMedications.join(", ")}
-- ${language === "en" ? "Previous Pregnancies" : "Embarazos Previos"}: ${mockIntakeForm.medicalHistory.previousPregnancies}
-
-${language === "en" ? "Current Pregnancy" : "Embarazo Actual"}:
-- ${language === "en" ? "Due Date" : "Fecha Probable de Parto"}: ${mockIntakeForm.currentPregnancy.dueDate}
-- ${language === "en" ? "First Prenatal Visit" : "Primera Visita Prenatal"}: ${mockIntakeForm.currentPregnancy.firstPrenatalVisit}
-- ${language === "en" ? "Complications" : "Complicaciones"}: ${mockIntakeForm.currentPregnancy.complications}
-
-${language === "en" ? "Current Symptoms" : "Síntomas Actuales"}:
-${symptoms}
-  `.trim();
-
   return (
     <div className="space-y-4">
       {/* Patient Intake Form Summary */}
@@ -88,14 +68,38 @@ ${symptoms}
         </div>
       </div>
 
-      {/* Current Symptoms with Full Report */}
+      {/* Current Symptoms */}
       <div className="p-4 bg-secondary/10 rounded-lg">
         <h3 className="font-semibold mb-2">
-          {language === "en" ? "Full Report:" : "Reporte Completo:"}
+          {language === "en" ? "Current Symptoms:" : "Síntomas Actuales:"}
         </h3>
-        <pre className="whitespace-pre-wrap text-sm font-mono bg-background/50 p-4 rounded-md">
-          {formattedReport}
-        </pre>
+        
+        {/* Display the mock intake form data first */}
+        <div className="space-y-4 mb-4">
+          <div className="space-y-2">
+            <h4 className="font-medium">{language === "en" ? "Patient Details:" : "Detalles del Paciente:"}</h4>
+            <p><span className="font-medium">{language === "en" ? "Name:" : "Nombre:"}</span> {mockIntakeForm.patientInfo.name}</p>
+            <p><span className="font-medium">{language === "en" ? "Address:" : "Dirección:"}</span> {mockIntakeForm.patientInfo.address}</p>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-medium">{language === "en" ? "Medical History:" : "Historia Médica:"}</h4>
+            <p><span className="font-medium">{language === "en" ? "Chronic Conditions:" : "Condiciones Crónicas:"}</span> {mockIntakeForm.medicalHistory.chronicConditions.join(", ")}</p>
+            <p><span className="font-medium">{language === "en" ? "Family History:" : "Historia Familiar:"}</span> {mockIntakeForm.medicalHistory.familyHistory.join(", ")}</p>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-medium">{language === "en" ? "Lifestyle:" : "Estilo de Vida:"}</h4>
+            <p><span className="font-medium">{language === "en" ? "Exercise:" : "Ejercicio:"}</span> {mockIntakeForm.lifestyle.exercise}</p>
+            <p><span className="font-medium">{language === "en" ? "Diet:" : "Dieta:"}</span> {mockIntakeForm.lifestyle.diet}</p>
+          </div>
+        </div>
+
+        {/* Display the reported symptoms */}
+        <div className="mt-4 pt-4 border-t border-secondary/20">
+          <h4 className="font-medium mb-2">{language === "en" ? "Reported Symptoms:" : "Síntomas Reportados:"}</h4>
+          <p className="bg-background/50 p-3 rounded-md">{symptoms}</p>
+        </div>
       </div>
 
       {/* Current Pregnancy */}
