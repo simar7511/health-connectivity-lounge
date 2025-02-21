@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Activity, AlertTriangle, CheckCircle, FileText, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface HealthDataLogsProps {
   patient: Patient;
@@ -155,8 +156,14 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
 
   const renderSummaryView = () => (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Patient Health Summary</CardTitle>
+        <Link 
+          to={`/patient/${patient.id}/health`}
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        >
+          View Details
+        </Link>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
