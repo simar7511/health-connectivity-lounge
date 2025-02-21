@@ -124,7 +124,6 @@ const generateIntakeFormPDF = (patientData: any, language: string) => {
   pdf.setFontSize(12);
   yPosition += lineHeight * 2;
 
-  // Patient Information
   pdf.setFont("helvetica", "bold");
   pdf.text(language === "es" ? "Información del Paciente" : "Patient Information", 20, yPosition);
   pdf.setFont("helvetica", "normal");
@@ -136,7 +135,6 @@ const generateIntakeFormPDF = (patientData: any, language: string) => {
   pdf.text(`${language === "es" ? "Teléfono" : "Phone"}: ${patientData.patientInfo.phone}`, 20, yPosition);
   yPosition += lineHeight * 2;
 
-  // Medical History
   pdf.setFont("helvetica", "bold");
   pdf.text(language === "es" ? "Historia Médica" : "Medical History", 20, yPosition);
   pdf.setFont("helvetica", "normal");
@@ -146,7 +144,6 @@ const generateIntakeFormPDF = (patientData: any, language: string) => {
   pdf.text(`${language === "es" ? "Medicamentos Actuales" : "Current Medications"}: ${patientData.medicalHistory.currentMedications.join(", ")}`, 20, yPosition);
   yPosition += lineHeight * 2;
 
-  // Current Pregnancy
   pdf.setFont("helvetica", "bold");
   pdf.text(language === "es" ? "Embarazo Actual" : "Current Pregnancy", 20, yPosition);
   pdf.setFont("helvetica", "normal");
@@ -163,10 +160,15 @@ const generateIntakeFormPDF = (patientData: any, language: string) => {
 
 export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
   const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
   const [severityFilter, setSeverityFilter] = useState<Severity | "all">("all");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("7days");
   const [providerNote, setProviderNote] = useState("");
   const [expandedPatientId, setExpandedPatientId] = useState<string | null>(null);
+
+  const filteredPatients = patientSummaries.filter(patient => 
+    patient.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getHealthStatusIcon = (status: HealthStatus) => {
     switch (status) {
@@ -235,7 +237,18 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
   const renderSummaryView = () => (
     <Card>
       <CardHeader>
-        <CardTitle>Patient Health Summary</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Patient Health Summary</CardTitle>
+          <div className="relative w-64">
+            <Input
+              placeholder="Search patient name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -250,7 +263,7 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
               </tr>
             </thead>
             <tbody>
-              {patientSummaries.map((patient) => (
+              {filteredPatients.map((patient) => (
                 <tr key={patient.id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4">{patient.name}</td>
                   <td className="py-3 px-4">

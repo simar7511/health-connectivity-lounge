@@ -73,24 +73,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
               language={currentLanguage}
               patients={mockPatients}
             />
-
-            {/* Reported Symptoms Section */}
-            <div className="p-6 bg-white rounded-lg shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">
-                  {currentLanguage === "en" ? "Reported Symptoms" : "Síntomas Reportados"}
-                </h2>
-              </div>
-              
-              <div className="space-y-4">
-                {mockPatients[0].recentSymptoms.map((symptom, index) => (
-                  <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                    {symptom}
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <HealthDataLogs patient={mockPatients[0]} />
           </div>
 
