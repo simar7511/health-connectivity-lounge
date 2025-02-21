@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Activity, AlertTriangle, CheckCircle, FileText, Search } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight, FileText, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
 
@@ -237,10 +237,16 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("7days");
   const [providerNote, setProviderNote] = useState("");
   const [expandedPatientId, setExpandedPatientId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const patientsPerPage = 5;
 
   const filteredPatients = patientSummaries.filter(patient => 
     patient.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredPatients.length / patientsPerPage);
+  const startIndex = (currentPage - 1) * patientsPerPage;
+  const paginatedPatients = filteredPatients.slice(startIndex, startIndex + patientsPerPage);
 
   const getHealthStatusIcon = (status: HealthStatus) => {
     switch (status) {
@@ -315,7 +321,10 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
             <Input
               placeholder="Search patient name..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="pl-10"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -335,7 +344,7 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
               </tr>
             </thead>
             <tbody>
-              {filteredPatients.map((patient) => (
+              {paginatedPatients.map((patient) => (
                 <tr key={patient.id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4">{patient.name}</td>
                   <td className="py-3 px-4">
@@ -387,6 +396,47 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
               ))}
             </tbody>
           </table>
+          
+          <div className="flex justify-between items-center mt-4 px-4">
+            <div className="text-sm text-gray-500">
+              Showing {startIndex + 1}-{Math.min(startIndex + patientsPerPage, filteredPatients.length)} of {filteredPatients.length} patients
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <Button
+                    key={i + 1}
+                    variant={currentPage === i + 1 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(i + 1)}
+                    className="w-8 h-8 p-0"
+                  >
+                    {i + 1}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
