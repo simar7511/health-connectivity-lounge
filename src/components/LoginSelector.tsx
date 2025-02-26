@@ -131,7 +131,7 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
 
             <div className="space-y-4">
               <Button
-                onClick={() => navigate("/patient/login")}
+                onClick={() => navigate("/pediatric-intake")}
                 className="w-full py-6 text-lg bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2"
               >
                 {content[language].getStarted}
