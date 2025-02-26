@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,28 +43,18 @@ const PatientLogin: React.FC<PatientLoginProps> = ({ language, onBack, onLogin }
 
     setIsLoading(true);
     try {
-      // Implement Firebase authentication (signInWithPhoneNumber) here
-      // This is a placeholder for demonstration purposes
-
+      // For now, proceed with navigation even if Firebase auth isn't ready
+      // This ensures users can still access the form
       toast({ 
-        title: language === "en" ? "Login Successful" : "Inicio de Sesión Exitoso"
+        title: language === "en" ? "Proceeding to Intake Form" : "Continuando al Formulario de Ingreso"
       });
 
       onLogin(); // Call onLogin callback if needed
       navigate("/pediatric-intake");
     } catch (error) {
       console.error("❌ Error during login:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : language === "en"
-          ? "Failed to login. Try again."
-          : "Error al iniciar sesión. Intente nuevamente.";
-
-      toast({ 
-        title: language === "en" ? "Error" : "Error", 
-        description: errorMessage
-      });
+      // Even if there's an error, we'll still redirect to the intake form
+      navigate("/pediatric-intake");
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +88,7 @@ const PatientLogin: React.FC<PatientLoginProps> = ({ language, onBack, onLogin }
               {language === "en" ? "Loading..." : "Cargando..."}
             </>
           ) : (
-            language === "en" ? "Login" : "Iniciar Sesión"
+            language === "en" ? "Continue" : "Continuar"
           )}
         </Button>
       </Card>
