@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ClipboardCheck } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { SmsMessageList } from '@/components/SmsMessageList';
 
 export interface ConfirmationPageProps {
   language: "en" | "es";
@@ -44,6 +45,9 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
                 : "Si tiene preocupaciones médicas urgentes, visite la clínica o contacte a un proveedor de salud."}
             </p>
           </div>
+          
+          {/* SMS Message List */}
+          <SmsMessageList />
         </CardContent>
 
         <CardFooter className="flex flex-col gap-4">
