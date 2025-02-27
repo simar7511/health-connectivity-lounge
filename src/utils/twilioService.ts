@@ -156,3 +156,70 @@ export const scheduleAppointmentReminder = async (
     console.error("Error scheduling reminder:", error);
   }
 };
+
+/**
+ * Translate text from one language to another
+ * This function is used by the VoiceTranslator component
+ */
+export const translateText = async (
+  text: string,
+  fromLang: string,
+  toLang: string
+): Promise<string> => {
+  try {
+    console.log(`Translating: "${text}" from ${fromLang} to ${toLang}`);
+    
+    // For now, we'll implement a simple mock translation
+    // In a real implementation, you would call a translation API or service
+    // We'll handle just English-Spanish and Spanish-English translations for common phrases
+    
+    // Simple translation dictionary
+    const translations: Record<string, Record<string, string>> = {
+      "en": {
+        "hello": "hola",
+        "goodbye": "adiós",
+        "thank you": "gracias",
+        "please": "por favor",
+        "yes": "sí",
+        "no": "no",
+        "help": "ayuda",
+        "doctor": "médico",
+        "pain": "dolor",
+        "medication": "medicamento",
+        "appointment": "cita"
+      },
+      "es": {
+        "hola": "hello",
+        "adiós": "goodbye",
+        "gracias": "thank you",
+        "por favor": "please",
+        "sí": "yes",
+        "no": "no",
+        "ayuda": "help",
+        "médico": "doctor",
+        "dolor": "pain",
+        "medicamento": "medication",
+        "cita": "appointment"
+      }
+    };
+    
+    // Mock translation by looking up words in our simple dictionary
+    // For real translation, you would use a service like Google Translate, LibreTranslate, or DeepL
+    const lowerText = text.toLowerCase();
+    
+    // Check if the text is directly in our dictionary
+    if (fromLang in translations && lowerText in translations[fromLang]) {
+      return translations[fromLang][lowerText];
+    }
+    
+    // In a real implementation, we would call a translation API here
+    // For now, just append a note that this is a mock translation
+    const mockTranslation = `[${toLang}] ${text} (mock translation)`;
+    
+    console.log(`Translation result: "${mockTranslation}"`);
+    return mockTranslation;
+  } catch (error) {
+    console.error("Translation error:", error);
+    throw new Error(`Translation failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
+};
