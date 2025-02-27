@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
 import { MessagingInbox } from "./dashboard/MessagingInbox";
 import { HealthDataLogs } from "./dashboard/HealthDataLogs";
-import { IntakeSubmissionsList } from "./dashboard/IntakeSubmissionsList";
+import IntakeSubmissionsList from "./dashboard/IntakeSubmissionsList";
 import { Patient } from "@/types/patient";
 import { ProviderHeader } from "./layout/ProviderHeader";
 import { ProviderFooter } from "./layout/ProviderFooter";
