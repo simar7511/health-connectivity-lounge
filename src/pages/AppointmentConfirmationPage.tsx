@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, MessageCircle } from "lucide-react";
+import { CheckCircle, MessageCircle, Phone } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { sendAppointmentConfirmation, scheduleAppointmentReminder } from "@/utils/twilioService";
+import { toast } from "@/hooks/use-toast";
 
 interface AppointmentConfirmationProps {
-  language: "en" | "es";  // ✅ Ensure language is properly defined as a prop
+  language: "en" | "es";
 }
 
 const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ language }) => {
@@ -18,6 +19,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
   const [copied, setCopied] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [smsSent, setSmsSent] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     // If we don't have appointment details, redirect back to appointment page
@@ -32,12 +34,26 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
     // Send confirmation SMS if we have a phone number
     const sendSMSConfirmation = async () => {
       if (storedPhone && appointmentDetails.date && appointmentDetails.time && !smsSent) {
-        await sendAppointmentConfirmation(storedPhone, appointmentDetails, language);
-        
-        // Schedule a reminder 24 hours before appointment
-        await scheduleAppointmentReminder(storedPhone, appointmentDetails, language);
-        
-        setSmsSent(true);
+        setIsSending(true);
+        try {
+          await sendAppointmentConfirmation(storedPhone, appointmentDetails, language);
+          
+          // Schedule a reminder 24 hours before appointment
+          await scheduleAppointmentReminder(storedPhone, appointmentDetails, language);
+          
+          setSmsSent(true);
+        } catch (error) {
+          console.error("Error sending SMS:", error);
+          toast({
+            title: language === "en" ? "SMS Error" : "Error de SMS",
+            description: language === "en" 
+              ? "There was an error sending the SMS. Please try again." 
+              : "Hubo un error al enviar el SMS. Por favor, inténtelo de nuevo.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsSending(false);
+        }
       }
     };
     
@@ -54,11 +70,43 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
 
   // If user enters a phone number manually
   const handleManualSendSMS = async () => {
+    if (!phoneNumber) {
+      toast({
+        title: language === "en" ? "Phone Number Required" : "Número de Teléfono Requerido",
+        description: language === "en" 
+          ? "Please enter a valid phone number" 
+          : "Por favor, introduzca un número de teléfono válido",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (phoneNumber && appointmentDetails.date && appointmentDetails.time) {
-      await sendAppointmentConfirmation(phoneNumber, appointmentDetails, language);
-      await scheduleAppointmentReminder(phoneNumber, appointmentDetails, language);
-      sessionStorage.setItem("patientPhone", phoneNumber);
-      setSmsSent(true);
+      setIsSending(true);
+      try {
+        await sendAppointmentConfirmation(phoneNumber, appointmentDetails, language);
+        await scheduleAppointmentReminder(phoneNumber, appointmentDetails, language);
+        sessionStorage.setItem("patientPhone", phoneNumber);
+        setSmsSent(true);
+        
+        toast({
+          title: language === "en" ? "SMS Sent" : "SMS Enviado",
+          description: language === "en" 
+            ? "SMS confirmation has been sent successfully" 
+            : "La confirmación por SMS se ha enviado con éxito",
+        });
+      } catch (error) {
+        console.error("Error sending manual SMS:", error);
+        toast({
+          title: language === "en" ? "SMS Error" : "Error de SMS",
+          description: language === "en" 
+            ? "There was an error sending the SMS. Please try again." 
+            : "Hubo un error al enviar el SMS. Por favor, inténtelo de nuevo.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
@@ -91,6 +139,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       transportation: "Transportation Arranged",
       pickupTime: "Pickup Time",
       pickupLocation: "Pickup Location",
+      sending: "Sending...",
     },
     es: {
       title: "¡Cita Confirmada!",
@@ -112,6 +161,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       transportation: "Transporte Arreglado",
       pickupTime: "Hora de Recogida",
       pickupLocation: "Lugar de Recogida",
+      sending: "Enviando...",
     },
   };
 
@@ -167,15 +217,18 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
             <div className="mt-4 bg-gray-100 p-4 rounded-md border">
               <p className="mb-2">{content.smsNotSent}</p>
               <div className="flex gap-2">
-                <input 
-                  type="tel" 
-                  placeholder={content.phoneLabel}
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="border rounded-md px-3 py-2 flex-1"
-                />
-                <Button onClick={handleManualSendSMS} disabled={!phoneNumber}>
-                  {content.sendSMS}
+                <div className="relative flex-1">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <input 
+                    type="tel" 
+                    placeholder={content.phoneLabel}
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="border rounded-md pl-10 pr-3 py-2 w-full"
+                  />
+                </div>
+                <Button onClick={handleManualSendSMS} disabled={!phoneNumber || isSending}>
+                  {isSending ? content.sending : content.sendSMS}
                 </Button>
               </div>
             </div>

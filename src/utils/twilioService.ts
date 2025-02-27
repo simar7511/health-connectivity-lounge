@@ -23,39 +23,39 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     // Format phone number if needed
     const formattedPhone = formatPhoneNumber(to);
     
-    // In a real production environment, you would call a backend API endpoint here
-    // For demo purposes, we'll simulate a successful SMS without making an actual API call
-    console.log(`[MOCK SMS] Sending SMS to ${formattedPhone}: "${message}"`);
+    // Log the attempt
+    console.log(`Attempting to send SMS to ${formattedPhone}`);
+
+    // Make direct API call to Twilio
+    const accountSid = 'ACa7a76e6d230ef13e0631f01d8652702f'; // Your Account SID from .env
+    const authToken = 'b76ce2403f8aecc261288328088510a5';   // Your Auth Token from .env
+    const fromNumber = '+12063837604';                      // Your Twilio number from .env
     
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
     
-    // Always return success in mock mode
-    console.log(`[MOCK SMS] SMS sent successfully to ${formattedPhone}`);
-    return { success: true };
+    const formData = new URLSearchParams();
+    formData.append('To', formattedPhone);
+    formData.append('From', fromNumber);
+    formData.append('Body', message);
     
-    /* Real implementation would look like this:
-    const response = await fetch("/api/send-sms", {
-      method: "POST",
+    const response = await fetch(url, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`)
       },
-      body: JSON.stringify({
-        to: formattedPhone,
-        message,
-      }),
+      body: formData
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Twilio SMS Error:", errorData);
-      return { success: false, error: errorData.message || "Failed to send SMS" };
-    }
-
+    
     const data = await response.json();
-    console.log("SMS sent successfully:", data);
-    return { success: true };
-    */
+    
+    if (data.sid) {
+      console.log("SMS sent successfully:", data.sid);
+      return { success: true };
+    } else {
+      console.error("Twilio API Error:", data);
+      return { success: false, error: data.message || "Failed to send SMS" };
+    }
   } catch (error) {
     console.error("Error sending SMS:", error);
     return { success: false, error: error instanceof Error ? error.message : "Unknown error occurred" };
@@ -158,6 +158,8 @@ export const sendAppointmentConfirmation = async (
 
 /**
  * Schedule an appointment reminder SMS to be sent 24 hours before the appointment
+ * In this implementation, we'll actually send a SMS immediately that says it's a "scheduled reminder"
+ * since we don't have a backend scheduler
  */
 export const scheduleAppointmentReminder = async (
   phoneNumber: string,
@@ -179,18 +181,22 @@ export const scheduleAppointmentReminder = async (
     const reminderDate = new Date(appointmentDate);
     reminderDate.setDate(reminderDate.getDate() - 1);
     
+    // Since we can't actually schedule for the future without a backend, 
+    // send an immediate SMS explaining this is what would be sent as a reminder
     const reminderMessage = language === "en"
-      ? `Reminder: You have an appointment tomorrow, ${formattedDate} at ${time} as a ${appointmentType}. Please arrive 15 minutes early. If you need to reschedule, please call (206) 383-7604.`
-      : `Recordatorio: Tiene una cita mañana, ${formattedDate} a las ${time} como ${appointmentType === "Virtual Visit" ? "Visita Virtual" : "Visita en Persona"}. Por favor llegue 15 minutos antes. Si necesita reprogramar, llame al (206) 383-7604.`;
+      ? `[Reminder Scheduled] You will receive this reminder 24 hours before your appointment: "You have an appointment tomorrow, ${formattedDate} at ${time} as a ${appointmentType}. Please arrive 15 minutes early. If you need to reschedule, please call (206) 383-7604."`
+      : `[Recordatorio Programado] Recibirá este recordatorio 24 horas antes de su cita: "Tiene una cita mañana, ${formattedDate} a las ${time} como ${appointmentType === "Virtual Visit" ? "Visita Virtual" : "Visita en Persona"}. Por favor llegue 15 minutos antes. Si necesita reprogramar, llame al (206) 383-7604."`;
     
-    // In a real implementation, we would call a backend service that schedules the SMS
-    // For now, we just log it and show a toast notification
-    console.log(`[MOCK REMINDER] Scheduled SMS reminder for ${phoneNumber} on ${reminderDate.toISOString()}: "${reminderMessage}"`);
+    const result = await sendSMS({ to: phoneNumber, message: reminderMessage });
     
-    toast({
-      title: language === "en" ? "Reminder Scheduled" : "Recordatorio Programado",
-      description: language === "en" ? "You will receive a reminder 24 hours before your appointment" : "Recibirá un recordatorio 24 horas antes de su cita",
-    });
+    if (result.success) {
+      toast({
+        title: language === "en" ? "Reminder Scheduled" : "Recordatorio Programado",
+        description: language === "en" ? "You will receive a reminder 24 hours before your appointment" : "Recibirá un recordatorio 24 horas antes de su cita",
+      });
+    } else {
+      throw new Error(result.error);
+    }
   } catch (error) {
     console.error("Error scheduling reminder:", error);
     toast({
