@@ -13,12 +13,14 @@ import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AIHealthAssistantProps {
   language: "en" | "es";
   onBack: () => void;
   patientId?: string;
   model?: string;
+  aiProvider?: string;
 }
 
 type Message = {
@@ -43,13 +45,13 @@ const disclaimers = {
 // Error messages based on language
 const errorMessages = {
   en: {
-    quotaExceeded: "OpenAI API quota exceeded. Please try using a different API key or try a more economical model like GPT-3.5 Turbo in the API settings.",
+    quotaExceeded: "API quota exceeded. Please try using a different provider or API key.",
     invalidKey: "Invalid API key. Please check your API key and try again.",
     networkError: "Network error. Please check your internet connection and try again.",
     default: "An error occurred. Please try again."
   },
   es: {
-    quotaExceeded: "Cuota de API de OpenAI excedida. Intente usar una clave API diferente o pruebe un modelo más económico como GPT-3.5 Turbo en la configuración de API.",
+    quotaExceeded: "Cuota de API excedida. Intente usar un proveedor o clave API diferente.",
     invalidKey: "Clave API inválida. Por favor, verifique su clave API e inténtelo de nuevo.",
     networkError: "Error de red. Compruebe su conexión a Internet e inténtelo de nuevo.",
     default: "Se produjo un error. Inténtelo de nuevo."
@@ -59,34 +61,41 @@ const errorMessages = {
 // Fallback responses for when no API is available
 const fallbackResponses = {
   en: {
-    greeting: "Hello! I'm your basic Health Assistant. Since there's no OpenAI API connection, I can only provide very limited responses to common health questions.",
+    greeting: "Hello! I'm your basic Health Assistant. Since there's no API connection, I can only provide very limited responses to common health questions.",
     hypertension: "Hypertension, or high blood pressure, is a common condition where the long-term force of blood against your artery walls is high enough that it may eventually cause health problems. Blood pressure is determined by the amount of blood your heart pumps and the resistance to blood flow in your arteries. The more blood your heart pumps and the narrower your arteries, the higher your blood pressure. You can have hypertension for years without symptoms. Uncontrolled high blood pressure increases your risk of serious health problems, including heart attack and stroke. It's important to have regular blood pressure readings and follow your healthcare provider's advice.",
     diabetes: "Diabetes is a chronic health condition that affects how your body turns food into energy. Most of the food you eat is broken down into sugar (glucose) and released into your bloodstream. When your blood sugar goes up, it signals your pancreas to release insulin, which acts like a key to let the blood sugar into your body's cells for use as energy. With diabetes, your body either doesn't make enough insulin or can't use the insulin it makes as well as it should. When there isn't enough insulin or cells stop responding to insulin, too much blood sugar stays in your bloodstream, which over time can cause serious health problems such as heart disease, vision loss, and kidney disease.",
     covid: "COVID-19 is a respiratory illness caused by the SARS-CoV-2 virus. Common symptoms include fever, cough, shortness of breath, fatigue, muscle or body aches, headache, loss of taste or smell, sore throat, congestion, nausea, and diarrhea. The virus primarily spreads through respiratory droplets when an infected person coughs, sneezes, talks, or breathes. Protection measures include vaccination, wearing masks, maintaining physical distance, and frequent handwashing. If you suspect you have COVID-19, it's important to get tested and follow your healthcare provider's advice.",
     anxiety: "Anxiety is a normal emotion that causes increased alertness, fear, and physical signs, such as a rapid heart rate. However, when anxiety reactions become an on-going issue that interferes with daily life, it could indicate an anxiety disorder. Anxiety disorders can involve repeated episodes of sudden feelings of intense anxiety and fear that reach a peak within minutes (panic attacks). These feelings can interfere with daily activities and are difficult to control. Common anxiety disorders include generalized anxiety disorder, social anxiety disorder, and panic disorder. Treatment often involves psychotherapy, medication, or both.",
     depression: "Depression is a mood disorder that causes a persistent feeling of sadness and loss of interest. It affects how you feel, think, and behave and can lead to a variety of emotional and physical problems. Depression is more than just feeling sad or going through a rough patch; it's a serious mental health condition that requires understanding and treatment. Depression symptoms can vary from mild to severe and can include feeling sad or having a depressed mood, loss of interest in activities once enjoyed, changes in appetite, trouble sleeping or sleeping too much, loss of energy, feelings of worthlessness, difficulty thinking or making decisions, and thoughts of death or suicide. Many people with depression also have anxiety.",
-    notSure: "I'm not sure how to respond to that question with my limited capabilities. Please try a more common health topic like hypertension, diabetes, COVID-19, anxiety, or depression. For more specific or detailed information, please use the OpenAI API feature or consult with your healthcare provider."
+    notSure: "I'm not sure how to respond to that question with my limited capabilities. Please try a more common health topic like hypertension, diabetes, COVID-19, anxiety, or depression. For more specific or detailed information, please use the API feature or consult with your healthcare provider."
   },
   es: {
-    greeting: "¡Hola! Soy tu Asistente de Salud básico. Como no hay conexión con la API de OpenAI, solo puedo proporcionar respuestas muy limitadas a preguntas comunes sobre salud.",
+    greeting: "¡Hola! Soy tu Asistente de Salud básico. Como no hay conexión con la API, solo puedo proporcionar respuestas muy limitadas a preguntas comunes sobre salud.",
     hypertension: "La hipertensión, o presión arterial alta, es una condición común donde la fuerza a largo plazo de la sangre contra las paredes de las arterias es lo suficientemente alta como para causar problemas de salud. La presión arterial está determinada por la cantidad de sangre que bombea el corazón y la resistencia al flujo sanguíneo en las arterias. Cuanta más sangre bombea el corazón y más estrechas son las arterias, mayor es la presión arterial. Puede tener hipertensión durante años sin síntomas. La presión arterial alta no controlada aumenta el riesgo de problemas de salud graves, incluidos ataques cardíacos y accidentes cerebrovasculares. Es importante tener lecturas regulares de la presión arterial y seguir los consejos de su proveedor de atención médica.",
     diabetes: "La diabetes es una afección de salud crónica que afecta la forma en que su cuerpo convierte los alimentos en energía. La mayoría de los alimentos que come se descomponen en azúcar (glucosa) y se liberan en el torrente sanguíneo. Cuando su nivel de azúcar en la sangre sube, le indica al páncreas que libere insulina, que actúa como una llave para permitir que el azúcar en la sangre entre en las células del cuerpo para usarla como energía. Con la diabetes, su cuerpo no produce suficiente insulina o no puede usar la insulina que produce tan bien como debería. Cuando no hay suficiente insulina o las células dejan de responder a la insulina, demasiada azúcar en la sangre permanece en el torrente sanguíneo, lo que con el tiempo puede causar problemas de salud graves como enfermedades cardíacas, pérdida de la visión y enfermedades renales.",
     covid: "COVID-19 es una enfermedad respiratoria causada por el virus SARS-CoV-2. Los síntomas comunes incluyen fiebre, tos, dificultad para respirar, fatiga, dolores musculares o corporales, dolor de cabeza, pérdida del gusto o del olfato, dolor de garganta, congestión, náuseas y diarrea. El virus se propaga principalmente a través de gotitas respiratorias cuando una persona infectada tose, estornuda, habla o respira. Las medidas de protección incluyen vacunación, uso de mascarillas, mantener la distancia física y lavarse las manos con frecuencia. Si sospecha que tiene COVID-19, es importante hacerse la prueba y seguir los consejos de su proveedor de atención médica.",
     anxiety: "La ansiedad es una emoción normal que causa mayor estado de alerta, miedo y signos físicos, como un ritmo cardíaco acelerado. Sin embargo, cuando las reacciones de ansiedad se convierten en un problema continuo que interfiere con la vida diaria, podría indicar un trastorno de ansiedad. Los trastornos de ansiedad pueden involucrar episodios repetidos de sentimientos repentinos de ansiedad intensa y miedo que alcanzan su punto máximo en minutos (ataques de pánico). Estos sentimientos pueden interferir con las actividades diarias y son difíciles de controlar. Los trastornos de ansiedad comunes incluyen el trastorno de ansiedad generalizada, el trastorno de ansiedad social y el trastorno de pánico. El tratamiento a menudo implica psicoterapia, medicación o ambos.",
     depression: "La depresión es un trastorno del estado de ánimo que causa un sentimiento persistente de tristeza y pérdida de interés. Afecta cómo se siente, piensa y se comporta, y puede conducir a una variedad de problemas emocionales y físicos. La depresión es más que simplemente sentirse triste o pasar por un momento difícil; es una condición de salud mental seria que requiere comprensión y tratamiento. Los síntomas de la depresión pueden variar de leves a graves y pueden incluir sentirse triste o tener un estado de ánimo deprimido, pérdida de interés en actividades que antes disfrutaba, cambios en el apetito, problemas para dormir o dormir demasiado, pérdida de energía, sentimientos de inutilidad, dificultad para pensar o tomar decisiones y pensamientos de muerte o suicidio. Muchas personas con depresión también tienen ansiedad.",
-    notSure: "No estoy seguro de cómo responder a esa pregunta con mis capacidades limitadas. Por favor, intente un tema de salud más común como hipertensión, diabetes, COVID-19, ansiedad o depresión. Para información más específica o detallada, utilice la función de API de OpenAI o consulte con su proveedor de atención médica."
+    notSure: "No estoy seguro de cómo responder a esa pregunta con mis capacidades limitadas. Por favor, intente un tema de salud más común como hipertensión, diabetes, COVID-19, ansiedad o depresión. Para información más específica o detallada, utilice la función de API o consulte con su proveedor de atención médica."
   }
 };
 
-export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o-mini" }: AIHealthAssistantProps) {
+export function AIHealthAssistant({ 
+  language, 
+  onBack, 
+  patientId, 
+  model = "gpt-4o-mini",
+  aiProvider = "openai" 
+}: AIHealthAssistantProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [useVoiceInput, setUseVoiceInput] = useState(false);
-  const [openAIKey, setOpenAIKey] = useState<string>("");
+  const [apiKey, setApiKey] = useState<string>("");
   const [showAPIKeyInput, setShowAPIKeyInput] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [currentModel, setCurrentModel] = useState(model);
+  const [currentProvider, setCurrentProvider] = useState(aiProvider);
   const [useFallbackMode, setUseFallbackMode] = useState<boolean>(() => {
     return localStorage.getItem("use_fallback_mode") === "true";
   });
@@ -104,20 +113,22 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
     };
     setMessages([initialMessage]);
     
-    // Check if OpenAI API key is stored in localStorage
-    const storedKey = localStorage.getItem("openai_api_key");
+    // Check if API key is stored in localStorage for the current provider
+    const storedKey = localStorage.getItem(`${currentProvider}_api_key`);
     if (storedKey && !useFallbackMode) {
-      setOpenAIKey(storedKey);
+      setApiKey(storedKey);
       
-      // Also get the model if available
-      const storedModel = localStorage.getItem("openai_model");
-      if (storedModel) {
-        setCurrentModel(storedModel);
+      // Also get the model if it's OpenAI
+      if (currentProvider === "openai") {
+        const storedModel = localStorage.getItem("openai_model");
+        if (storedModel) {
+          setCurrentModel(storedModel);
+        }
       }
     } else if (!useFallbackMode) {
       setShowAPIKeyInput(true);
     }
-  }, [language, useFallbackMode]);
+  }, [language, useFallbackMode, currentProvider]);
 
   // Scroll to bottom of messages when new ones are added
   useEffect(() => {
@@ -155,16 +166,22 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
   }, [patientId, auth.currentUser, useFallbackMode]);
 
   const saveAPIKey = () => {
-    if (openAIKey.trim()) {
-      localStorage.setItem("openai_api_key", openAIKey);
-      localStorage.setItem("openai_model", currentModel);
+    if (apiKey.trim()) {
+      localStorage.setItem(`${currentProvider}_api_key`, apiKey);
+      localStorage.setItem("ai_provider", currentProvider);
+      
+      // Save model if it's OpenAI
+      if (currentProvider === "openai") {
+        localStorage.setItem("openai_model", currentModel);
+      }
+      
       setShowAPIKeyInput(false);
       setApiError(null);
       toast({
         title: language === "en" ? "Settings Saved" : "Configuración Guardada",
         description: language === "en" 
-          ? "Your OpenAI API settings have been saved."
-          : "Tu configuración de OpenAI API ha sido guardada.",
+          ? "Your API settings have been saved."
+          : "Tu configuración de API ha sido guardada.",
         variant: "default",
       });
     }
@@ -184,7 +201,7 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
     setMessages([initialMessage]);
     
     // Show API key input if switching from fallback to API mode
-    if (!value && !openAIKey) {
+    if (!value && !apiKey) {
       setShowAPIKeyInput(true);
     } else {
       setShowAPIKeyInput(false);
@@ -198,7 +215,7 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${openAIKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: currentModel,
@@ -264,6 +281,221 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
     }
   };
 
+  const callGemini = async (userMessage: string, previousMessages: Message[]) => {
+    try {
+      console.log("Calling Google Gemini API...");
+      
+      // Convert message history to Gemini format
+      const formattedMessages = [
+        {
+          role: "user",
+          parts: [{ text: language === "en" 
+            ? "You are a friendly, helpful health assistant. Provide general health information and advice while making it clear you are not a substitute for professional medical advice. Always be considerate to patient concerns, avoid medical jargon, and include reminders to seek professional care for serious symptoms or urgent conditions."
+            : "Eres un asistente de salud amigable y útil. Proporciona información general de salud y consejos, dejando claro que no eres un sustituto del consejo médico profesional. Sé siempre considerado con las preocupaciones del paciente, evita la jerga médica e incluye recordatorios para buscar atención profesional para síntomas graves o condiciones urgentes."
+          }]
+        },
+        {
+          role: "model",
+          parts: [{ text: "I understand, I'll act as a helpful health assistant that provides general information while being clear that I'm not a substitute for professional medical advice. I'll be considerate, avoid jargon, and include appropriate reminders about seeking professional care." }]
+        }
+      ];
+      
+      // Add conversation history
+      for (const msg of previousMessages) {
+        formattedMessages.push({
+          role: msg.sender === "user" ? "user" : "model",
+          parts: [{ text: msg.content }]
+        });
+      }
+      
+      // Add current user message
+      formattedMessages.push({
+        role: "user",
+        parts: [{ text: userMessage }]
+      });
+      
+      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: formattedMessages,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 500,
+            topP: 0.95,
+            topK: 40
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Gemini API error:", response.status, response.statusText);
+        
+        // Parse the error response if possible
+        const errorData = await response.json().catch(() => null);
+        console.log("Error data:", errorData);
+        
+        if (response.status === 429) {
+          setApiError("quotaExceeded");
+          throw new Error("API quota exceeded");
+        } else if (response.status === 400 || response.status === 401) {
+          setApiError("invalidKey");
+          throw new Error("Invalid API key");
+        } else {
+          setApiError("default");
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+      }
+
+      // Clear any previous errors
+      setApiError(null);
+      
+      const data = await response.json();
+      console.log("Gemini API response:", data);
+      
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        return data.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error("Unexpected response format from Gemini API");
+      }
+    } catch (error) {
+      console.error("Error calling Gemini:", error);
+      
+      // Set appropriate error message if not already set
+      if (!apiError) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
+          setApiError("networkError");
+        } else {
+          setApiError("default");
+        }
+      }
+      
+      throw error;
+    }
+  };
+
+  const callClaude = async (userMessage: string, previousMessages: Message[]) => {
+    try {
+      console.log("Calling Claude API...");
+      
+      // Build the messages array for Claude
+      const messages = [
+        {
+          role: "system",
+          content: language === "en" 
+            ? "You are a friendly, helpful health assistant. Provide general health information and advice while making it clear you are not a substitute for professional medical advice. Always be considerate to patient concerns, avoid medical jargon, and include reminders to seek professional care for serious symptoms or urgent conditions."
+            : "Eres un asistente de salud amigable y útil. Proporciona información general de salud y consejos, dejando claro que no eres un sustituto del consejo médico profesional. Sé siempre considerado con las preocupaciones del paciente, evita la jerga médica e incluye recordatorios para buscar atención profesional para síntomas graves o condiciones urgentes."
+        }
+      ];
+      
+      // Add conversation history
+      for (const msg of previousMessages) {
+        messages.push({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.content
+        });
+      }
+      
+      // Add current user message
+      messages.push({
+        role: "user",
+        content: userMessage
+      });
+      
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model: "claude-3-haiku-20240307",
+          messages: messages,
+          max_tokens: 500,
+          temperature: 0.7
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Claude API error:", response.status, response.statusText);
+        
+        // Parse the error response if possible
+        const errorData = await response.json().catch(() => null);
+        console.log("Error data:", errorData);
+        
+        if (response.status === 429) {
+          setApiError("quotaExceeded");
+          throw new Error("API quota exceeded");
+        } else if (response.status === 401) {
+          setApiError("invalidKey");
+          throw new Error("Invalid API key");
+        } else {
+          setApiError("default");
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+      }
+
+      // Clear any previous errors
+      setApiError(null);
+      
+      const data = await response.json();
+      console.log("Claude API response:", data);
+      
+      if (data.content && data.content.length > 0) {
+        return data.content[0].text;
+      } else {
+        throw new Error("Unexpected response format from Claude API");
+      }
+    } catch (error) {
+      console.error("Error calling Claude:", error);
+      
+      // Set appropriate error message if not already set
+      if (!apiError) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
+          setApiError("networkError");
+        } else {
+          setApiError("default");
+        }
+      }
+      
+      throw error;
+    }
+  };
+
+  const callAI = async (userMessage: string, previousMessages: Message[]) => {
+    switch (currentProvider) {
+      case "openai":
+        return callOpenAI(userMessage, previousMessages);
+      case "gemini":
+        return callGemini(userMessage, previousMessages);
+      case "claude":
+        return callClaude(userMessage, previousMessages);
+      default:
+        return callOpenAI(userMessage, previousMessages);
+    }
+  };
+
   const getFallbackResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
     
@@ -296,13 +528,13 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
     if (!input.trim()) return;
     
     // Check if API key is available when not in fallback mode
-    if (!openAIKey && !useFallbackMode) {
+    if (!apiKey && !useFallbackMode) {
       setShowAPIKeyInput(true);
       toast({
         title: language === "en" ? "API Key Required" : "Se Requiere Clave API",
         description: language === "en" 
-          ? "Please enter your OpenAI API key to continue." 
-          : "Por favor, ingrese su clave API de OpenAI para continuar.",
+          ? "Please enter your API key to continue." 
+          : "Por favor, ingrese su clave API para continuar.",
         variant: "destructive",
       });
       return;
@@ -338,8 +570,8 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
         // Use the fallback response system
         aiResponseText = getFallbackResponse(input) + " " + disclaimers[language];
       } else {
-        // Call OpenAI API
-        const aiResponse = await callOpenAI(input, messages);
+        // Call selected AI provider
+        const aiResponse = await callAI(input, messages);
         aiResponseText = aiResponse + " " + disclaimers[language];
       }
       
@@ -401,6 +633,19 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
     window.location.reload();
   };
 
+  const getProviderName = (provider: string) => {
+    switch (provider) {
+      case "openai":
+        return "OpenAI";
+      case "gemini":
+        return "Google Gemini";
+      case "claude":
+        return "Anthropic Claude";
+      default:
+        return provider;
+    }
+  };
+
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="px-4 py-3 border-b flex flex-row items-center justify-between">
@@ -416,8 +661,17 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
           <CardTitle className="text-lg flex items-center">
             <Bot className="mr-2 h-5 w-5 text-primary" />
             {language === "en" ? "Health Assistant" : "Asistente de Salud"}
-            {!useFallbackMode && <span className="ml-2 text-xs text-muted-foreground">({currentModel})</span>}
-            {useFallbackMode && <span className="ml-2 text-xs text-muted-foreground">(offline mode)</span>}
+            {!useFallbackMode && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                ({getProviderName(currentProvider)}
+                {currentProvider === "openai" && ` - ${currentModel}`})
+              </span>
+            )}
+            {useFallbackMode && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                ({language === "en" ? "offline mode" : "modo offline"})
+              </span>
+            )}
           </CardTitle>
         </div>
         <Button
@@ -435,12 +689,12 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
         <CardContent className="flex-1 p-6 flex flex-col items-center justify-center gap-4">
           <div className="text-center max-w-md mx-auto space-y-2">
             <h3 className="text-lg font-semibold">
-              {language === "en" ? "OpenAI API Settings" : "Configuración API de OpenAI"}
+              {language === "en" ? "AI API Settings" : "Configuración API de IA"}
             </h3>
             <p className="text-sm text-muted-foreground">
               {language === "en" 
-                ? "Please enter your OpenAI API key and select a model to use for the Health Assistant." 
-                : "Por favor, ingrese su clave API de OpenAI y seleccione un modelo para usar en el Asistente de Salud."}
+                ? "Please select an AI provider and enter your API key." 
+                : "Por favor, seleccione un proveedor de IA e ingrese su clave API."}
             </p>
           </div>
           
@@ -472,48 +726,93 @@ export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o
             {!useFallbackMode && (
               <>
                 <div className="space-y-2">
+                  <label htmlFor="aiProvider" className="text-sm font-medium">
+                    {language === "en" ? "AI Provider" : "Proveedor de IA"}
+                  </label>
+                  <Select value={currentProvider} onValueChange={setCurrentProvider}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={language === "en" ? "Select provider" : "Seleccionar proveedor"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="openai">OpenAI</SelectItem>
+                      <SelectItem value="gemini">Google Gemini</SelectItem>
+                      <SelectItem value="claude">Anthropic Claude</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
                   <label htmlFor="apiKey" className="text-sm font-medium">
                     {language === "en" ? "API Key" : "Clave API"}
                   </label>
                   <Input
                     id="apiKey"
                     type="password"
-                    value={openAIKey}
-                    onChange={(e) => setOpenAIKey(e.target.value)}
-                    placeholder={language === "en" ? "sk-..." : "sk-..."}
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder={
+                      currentProvider === "openai" ? "sk-..." : 
+                      currentProvider === "gemini" ? "AIza..." : 
+                      "sk-ant-..."
+                    }
                     className="w-full"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <label htmlFor="model" className="text-sm font-medium">
-                    {language === "en" ? "Model" : "Modelo"}
-                  </label>
-                  <select
-                    id="model"
-                    value={currentModel}
-                    onChange={(e) => setCurrentModel(e.target.value)}
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, less quota)</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini (Balanced)</option>
-                    <option value="gpt-4o">GPT-4o (Advanced, more quota)</option>
-                  </select>
-                </div>
+                {currentProvider === "openai" && (
+                  <div className="space-y-2">
+                    <label htmlFor="model" className="text-sm font-medium">
+                      {language === "en" ? "Model" : "Modelo"}
+                    </label>
+                    <Select value={currentModel} onValueChange={setCurrentModel}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, less quota)</SelectItem>
+                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Balanced)</SelectItem>
+                        <SelectItem value="gpt-4o">GPT-4o (Advanced, more quota)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 
                 <Button 
                   onClick={saveAPIKey} 
                   className="w-full"
-                  disabled={!openAIKey.trim()}
+                  disabled={!apiKey.trim()}
                 >
                   {language === "en" ? "Save Settings" : "Guardar Configuración"}
                 </Button>
                 
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   {language === "en" 
-                    ? "Try using the GPT-3.5 Turbo model if you're encountering quota issues. This key will only be stored in your browser and is never sent to our servers." 
-                    : "Intente usar el modelo GPT-3.5 Turbo si está teniendo problemas de cuota. Esta clave solo se almacenará en su navegador y nunca se enviará a nuestros servidores."}
+                    ? "You can get API keys from the respective provider websites. These keys are stored locally in your browser and never sent to our servers." 
+                    : "Puede obtener claves API en los sitios web de los respectivos proveedores. Estas claves se almacenan localmente en su navegador y nunca se envían a nuestros servidores."}
                 </p>
+                
+                <div className="space-y-2 mt-4">
+                  <h4 className="text-sm font-medium">
+                    {language === "en" ? "How to get API keys:" : "Cómo obtener claves API:"}
+                  </h4>
+                  <ul className="text-xs space-y-1 text-muted-foreground list-disc pl-4">
+                    <li>
+                      {language === "en" 
+                        ? "OpenAI API key: Create an account at platform.openai.com" 
+                        : "Clave API de OpenAI: Cree una cuenta en platform.openai.com"}
+                    </li>
+                    <li>
+                      {language === "en" 
+                        ? "Google Gemini API key: Sign up at aistudio.google.com" 
+                        : "Clave API de Google Gemini: Regístrese en aistudio.google.com"}
+                    </li>
+                    <li>
+                      {language === "en" 
+                        ? "Claude API key: Get access at console.anthropic.com" 
+                        : "Clave API de Claude: Obtenga acceso en console.anthropic.com"}
+                    </li>
+                  </ul>
+                </div>
               </>
             )}
             
