@@ -34,9 +34,14 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
     // Set up real-time listener for intake form submissions
     const q = query(collection(db, "pediatricIntake"), orderBy("timestamp", "desc"));
     
+    console.log("Setting up Firestore listener for pediatricIntake collection");
+    
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      console.log(`Received ${querySnapshot.size} documents from Firestore`);
+      
       const submissionsData: IntakeFormSubmission[] = [];
       querySnapshot.forEach((doc) => {
+        console.log(`Processing document: ${doc.id}`);
         const data = doc.data() as DocumentData;
         submissionsData.push({
           id: doc.id,
@@ -47,6 +52,8 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
       
       setSubmissions(submissionsData);
       setLoading(false);
+      
+      console.log(`Processed ${submissionsData.length} intake submissions`);
     }, (error) => {
       console.error("Error fetching intake submissions:", error);
       setLoading(false);
@@ -81,7 +88,12 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
             <Skeleton className="h-12 w-full" />
           </div>
         ) : submissions.length === 0 ? (
-          <p className="text-center py-8 text-muted-foreground">{content.noSubmissions}</p>
+          <div>
+            <p className="text-center py-8 text-muted-foreground">{content.noSubmissions}</p>
+            <p className="text-center text-sm text-muted-foreground">
+              Looking for collection: pediatricIntake
+            </p>
+          </div>
         ) : (
           <ScrollArea className="h-[400px]">
             <div className="space-y-4">

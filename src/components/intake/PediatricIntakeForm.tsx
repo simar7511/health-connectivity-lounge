@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
 import { BasicInfoSection } from "./form-sections/BasicInfoSection";
 import { MedicalInfoSection } from "./form-sections/MedicalInfoSection";
@@ -49,7 +48,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     return () => unsubscribe();
   }, []);
 
-  // ✅ Ensure `hasInsurance` and `hasRecentHospitalVisits` are `null` initially (not pre-selected)
   const [formData, setFormData] = useState(() => ({
     childName: "",
     dob: "",
@@ -60,12 +58,12 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     symptoms: "",
     medicalHistory: "",
     medicationsAndAllergies: "",
-    hasRecentHospitalVisits: null, // ✅ Prevents auto-selection
+    hasRecentHospitalVisits: null,
     hospitalVisitLocation: "",
-    hasInsurance: null, // ✅ Prevents auto-selection
+    hasInsurance: null,
     otherConcerns: "",
     consentToTreatment: false,
-    notificationType: "sms", // Add notification type
+    notificationType: "sms",
   }));
 
   useEffect(() => {
@@ -79,7 +77,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   }, []);
 
   useEffect(() => {
-    // Update formData when notification type changes
     setFormData(prev => ({
       ...prev,
       notificationType
@@ -108,7 +105,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     }));
   };
 
-  // ✅ Ensure onVoiceInput exists for `MedicalInfoSection` and `SocialInfoSection`
   const handleVoiceInput = (field: string, input: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -143,12 +139,16 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
 
     setIsSubmitting(true);
     try {
+      console.log("Submitting intake form to Firestore - pediatricIntake collection");
+      
       const docRef = await addDoc(collection(db, "pediatricIntake"), {
         ...formData,
         userId: currentUser.uid,
-        timestamp: new Date(),
+        timestamp: serverTimestamp(),
         language,
       });
+
+      console.log(`Form submitted successfully with ID: ${docRef.id}`);
 
       toast({
         title: language === "en" ? "Form Successfully Submitted!" : "¡Formulario enviado con éxito!",
@@ -160,10 +160,8 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
 
       localStorage.setItem("intakeId", docRef.id);
       
-      // Save submission time for provider dashboard notifications
       localStorage.setItem("lastIntakeSubmissionTime", new Date().toISOString());
 
-      // Send confirmation if a phone number was provided
       if (formData.phoneNumber) {
         if (notificationType === "sms") {
           await sendIntakeFormConfirmation(formData.phoneNumber, language);
@@ -172,14 +170,12 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         }
       }
       
-      // Notify providers about the new submission
       const urgency = estimateUrgency(
         formData.symptoms, 
         formData.medicalHistory, 
         formData.hasRecentHospitalVisits
       );
       
-      // Check if provider notification is configured
       const providerPhones = localStorage.getItem("providerNotificationPhones");
       if (providerPhones) {
         await notifyProviders({
@@ -191,7 +187,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         });
       }
 
-      // ✅ Clears form fields after submission
       setFormData({
         childName: "",
         dob: "",
@@ -213,6 +208,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       navigate("/confirmation");
 
     } catch (error: any) {
+      console.error("Error submitting form:", error);
       toast({
         title: language === "en" ? "Submission Failed" : "Error en el envío",
         description: `Error: ${error.message}`,
@@ -277,10 +273,9 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
               onVoiceInput={handleVoiceInput} 
             />
 
-            {/* Notification Method Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">
-                {translations[language].notificationMethod}
+                {language === "en" ? "Notification Method" : "Método de Notificación"}
               </h3>
               <Tabs 
                 defaultValue="sms" 
@@ -289,8 +284,12 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
                 className="w-full"
               >
                 <TabsList className="w-full">
-                  <TabsTrigger value="sms" className="flex-1">{translations[language].smsOption}</TabsTrigger>
-                  <TabsTrigger value="whatsapp" className="flex-1">{translations[language].whatsappOption}</TabsTrigger>
+                  <TabsTrigger value="sms" className="flex-1">
+                    {language === "en" ? "SMS" : "SMS"}
+                  </TabsTrigger>
+                  <TabsTrigger value="whatsapp" className="flex-1">
+                    {language === "en" ? "WhatsApp" : "WhatsApp"}
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -306,7 +305,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         </Card>
       </form>
 
-      {/* Message Lists */}
       <div className="space-y-4">
         <SmsMessageList />
         <WhatsAppMessageList />
