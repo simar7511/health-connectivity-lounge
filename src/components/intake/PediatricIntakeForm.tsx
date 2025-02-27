@@ -13,8 +13,10 @@ import { ConsentSection } from "./form-sections/ConsentSection";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
 import { SubmitButton } from "./components/SubmitButton";
-import { sendIntakeFormConfirmation } from "@/utils/twilioService";
+import { sendIntakeFormConfirmation, sendIntakeFormWhatsAppConfirmation } from "@/utils/twilioService";
 import { SmsMessageList } from "@/components/SmsMessageList";
+import { WhatsAppMessageList } from "@/components/WhatsAppMessageList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PediatricIntakeFormProps {
   language: "en" | "es";
@@ -27,6 +29,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [language, setLanguage] = useState(propLanguage);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [notificationType, setNotificationType] = useState<"sms" | "whatsapp">("sms");
   const auth = getAuth();
 
   useEffect(() => {
@@ -61,6 +64,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     hasInsurance: null, // ✅ Prevents auto-selection
     otherConcerns: "",
     consentToTreatment: false,
+    notificationType: "sms", // Add notification type
   }));
 
   useEffect(() => {
@@ -72,6 +76,14 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       isMounted.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    // Update formData when notification type changes
+    setFormData(prev => ({
+      ...prev,
+      notificationType
+    }));
+  }, [notificationType]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -147,9 +159,13 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
 
       localStorage.setItem("intakeId", docRef.id);
 
-      // Send SMS confirmation if a phone number was provided
+      // Send confirmation if a phone number was provided
       if (formData.phoneNumber) {
-        await sendIntakeFormConfirmation(formData.phoneNumber, language);
+        if (notificationType === "sms") {
+          await sendIntakeFormConfirmation(formData.phoneNumber, language);
+        } else {
+          await sendIntakeFormWhatsAppConfirmation(formData.phoneNumber, language);
+        }
       }
 
       // ✅ Clears form fields after submission
@@ -168,6 +184,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         hasInsurance: null, 
         otherConcerns: "",
         consentToTreatment: false,
+        notificationType: "sms",
       });
 
       navigate("/confirmation");
@@ -180,6 +197,19 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const translations = {
+    en: {
+      notificationMethod: "Notification Method",
+      smsOption: "SMS",
+      whatsappOption: "WhatsApp"
+    },
+    es: {
+      notificationMethod: "Método de Notificación",
+      smsOption: "SMS",
+      whatsappOption: "WhatsApp"
     }
   };
 
@@ -224,6 +254,24 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
               onVoiceInput={handleVoiceInput} 
             />
 
+            {/* Notification Method Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">
+                {translations[language].notificationMethod}
+              </h3>
+              <Tabs 
+                defaultValue="sms" 
+                value={notificationType}
+                onValueChange={(value) => setNotificationType(value as "sms" | "whatsapp")}
+                className="w-full"
+              >
+                <TabsList className="w-full">
+                  <TabsTrigger value="sms" className="flex-1">{translations[language].smsOption}</TabsTrigger>
+                  <TabsTrigger value="whatsapp" className="flex-1">{translations[language].whatsappOption}</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
             <ConsentSection 
               language={language} 
               checked={formData.consentToTreatment} 
@@ -235,8 +283,11 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         </Card>
       </form>
 
-      {/* Add SMS Message List for free SMS implementation */}
-      <SmsMessageList />
+      {/* Message Lists */}
+      <div className="space-y-4">
+        <SmsMessageList />
+        <WhatsAppMessageList />
+      </div>
     </div>
   );
 };

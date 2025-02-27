@@ -5,8 +5,11 @@ import { format, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, MessageCircle, Phone, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { sendAppointmentConfirmation, scheduleAppointmentReminder } from "@/utils/twilioService";
+import { sendAppointmentConfirmation, sendAppointmentWhatsAppConfirmation, scheduleAppointmentReminder, scheduleAppointmentWhatsAppReminder } from "@/utils/twilioService";
 import { toast } from "@/hooks/use-toast";
+import { SmsMessageList } from "@/components/SmsMessageList";
+import { WhatsAppMessageList } from "@/components/WhatsAppMessageList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AppointmentConfirmationProps {
   language: "en" | "es";
@@ -19,8 +22,10 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
   const [copied, setCopied] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [smsSent, setSmsSent] = useState(false);
+  const [whatsAppSent, setWhatsAppSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notificationType, setNotificationType] = useState<"sms" | "whatsapp">("sms");
 
   useEffect(() => {
     // If we don't have appointment details, redirect back to appointment page
@@ -33,8 +38,8 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
     setPhoneNumber(storedPhone);
 
     // Send confirmation SMS if we have a phone number
-    const sendSMSConfirmation = async () => {
-      if (storedPhone && appointmentDetails.date && appointmentDetails.time && !smsSent) {
+    const sendConfirmation = async () => {
+      if (storedPhone && appointmentDetails.date && appointmentDetails.time && !smsSent && notificationType === "sms") {
         setIsSending(true);
         setError(null);
         try {
@@ -61,8 +66,41 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       }
     };
     
-    sendSMSConfirmation();
-  }, [appointmentDetails, navigate, language, smsSent]);
+    // Send confirmation WhatsApp if we have a phone number
+    const sendWhatsAppConfirmation = async () => {
+      if (storedPhone && appointmentDetails.date && appointmentDetails.time && !whatsAppSent && notificationType === "whatsapp") {
+        setIsSending(true);
+        setError(null);
+        try {
+          await sendAppointmentWhatsAppConfirmation(storedPhone, appointmentDetails, language);
+          
+          // Schedule a reminder 24 hours before appointment
+          await scheduleAppointmentWhatsAppReminder(storedPhone, appointmentDetails, language);
+          
+          setWhatsAppSent(true);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          console.error("Error sending WhatsApp:", errorMessage);
+          setError(errorMessage);
+          toast({
+            title: language === "en" ? "WhatsApp Error" : "Error de WhatsApp",
+            description: language === "en" 
+              ? "There was an error sending the WhatsApp message. Please try again." 
+              : "Hubo un error al enviar el mensaje de WhatsApp. Por favor, inténtelo de nuevo.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsSending(false);
+        }
+      }
+    };
+    
+    if (notificationType === "sms") {
+      sendConfirmation();
+    } else {
+      sendWhatsAppConfirmation();
+    }
+  }, [appointmentDetails, navigate, language, smsSent, whatsAppSent, notificationType]);
 
   const handleCopyCode = () => {
     if (appointmentDetails.meetingCode) {
@@ -73,7 +111,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
   };
 
   // If user enters a phone number manually
-  const handleManualSendSMS = async () => {
+  const handleManualSend = async () => {
     if (!phoneNumber) {
       toast({
         title: language === "en" ? "Phone Number Required" : "Número de Teléfono Requerido",
@@ -89,26 +127,40 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       setIsSending(true);
       setError(null);
       try {
-        await sendAppointmentConfirmation(phoneNumber, appointmentDetails, language);
-        await scheduleAppointmentReminder(phoneNumber, appointmentDetails, language);
-        sessionStorage.setItem("patientPhone", phoneNumber);
-        setSmsSent(true);
+        if (notificationType === "sms") {
+          await sendAppointmentConfirmation(phoneNumber, appointmentDetails, language);
+          await scheduleAppointmentReminder(phoneNumber, appointmentDetails, language);
+          setSmsSent(true);
+          
+          toast({
+            title: language === "en" ? "SMS Sent" : "SMS Enviado",
+            description: language === "en" 
+              ? "SMS confirmation has been sent successfully" 
+              : "La confirmación por SMS se ha enviado con éxito",
+          });
+        } else {
+          await sendAppointmentWhatsAppConfirmation(phoneNumber, appointmentDetails, language);
+          await scheduleAppointmentWhatsAppReminder(phoneNumber, appointmentDetails, language);
+          setWhatsAppSent(true);
+          
+          toast({
+            title: language === "en" ? "WhatsApp Sent" : "WhatsApp Enviado",
+            description: language === "en" 
+              ? "WhatsApp confirmation has been sent successfully" 
+              : "La confirmación por WhatsApp se ha enviado con éxito",
+          });
+        }
         
-        toast({
-          title: language === "en" ? "SMS Sent" : "SMS Enviado",
-          description: language === "en" 
-            ? "SMS confirmation has been sent successfully" 
-            : "La confirmación por SMS se ha enviado con éxito",
-        });
+        sessionStorage.setItem("patientPhone", phoneNumber);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error("Error sending manual SMS:", errorMessage);
+        console.error(`Error sending ${notificationType === "sms" ? "SMS" : "WhatsApp"}:`, errorMessage);
         setError(errorMessage);
         toast({
-          title: language === "en" ? "SMS Error" : "Error de SMS",
+          title: language === "en" ? `${notificationType.toUpperCase()} Error` : `Error de ${notificationType.toUpperCase()}`,
           description: language === "en" 
-            ? "There was an error sending the SMS. Please try again." 
-            : "Hubo un error al enviar el SMS. Por favor, inténtelo de nuevo.",
+            ? `There was an error sending the ${notificationType === "sms" ? "SMS" : "WhatsApp"}. Please try again.` 
+            : `Hubo un error al enviar el ${notificationType === "sms" ? "SMS" : "WhatsApp"}. Por favor, inténtelo de nuevo.`,
           variant: "destructive"
         });
       } finally {
@@ -140,14 +192,17 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       returnHome: "Return to Home",
       reschedule: "Reschedule or Cancel Appointment",
       smsSent: "An SMS confirmation has been sent to your registered phone number.",
-      smsNotSent: "Provide your phone number to receive an SMS confirmation:",
+      whatsAppSent: "A WhatsApp confirmation has been sent to your registered phone number.",
+      smsNotSent: "Provide your phone number to receive a confirmation:",
       sendSMS: "Send SMS Confirmation",
+      sendWhatsApp: "Send WhatsApp Confirmation",
       phoneLabel: "Phone Number",
       transportation: "Transportation Arranged",
       pickupTime: "Pickup Time",
       pickupLocation: "Pickup Location",
       sending: "Sending...",
       error: "Error details:",
+      notificationMethod: "Notification Method"
     },
     es: {
       title: "¡Cita Confirmada!",
@@ -163,14 +218,17 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       returnHome: "Regresar a Inicio",
       reschedule: "Reprogramar o Cancelar Cita",
       smsSent: "Se ha enviado una confirmación por SMS a su número de teléfono registrado.",
-      smsNotSent: "Proporcione su número de teléfono para recibir una confirmación por SMS:",
+      whatsAppSent: "Se ha enviado una confirmación por WhatsApp a su número de teléfono registrado.",
+      smsNotSent: "Proporcione su número de teléfono para recibir una confirmación:",
       sendSMS: "Enviar confirmación por SMS",
+      sendWhatsApp: "Enviar confirmación por WhatsApp",
       phoneLabel: "Número de teléfono",
       transportation: "Transporte Arreglado",
       pickupTime: "Hora de Recogida",
       pickupLocation: "Lugar de Recogida",
       sending: "Enviando...",
       error: "Detalles del error:",
+      notificationMethod: "Método de Notificación"
     },
   };
 
@@ -227,31 +285,73 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
             </div>
           )}
 
-          {smsSent ? (
-            <div className="mt-4 bg-green-50 p-4 rounded-md flex items-center gap-2 text-green-700 border border-green-300">
-              <MessageCircle className="h-6 w-6 text-green-600" />
-              <p>{content.smsSent}</p>
-            </div>
-          ) : (
-            <div className="mt-4 bg-gray-100 p-4 rounded-md border">
-              <p className="mb-2">{content.smsNotSent}</p>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                  <input 
-                    type="tel" 
-                    placeholder={content.phoneLabel}
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="border rounded-md pl-10 pr-3 py-2 w-full"
-                  />
-                </div>
-                <Button onClick={handleManualSendSMS} disabled={!phoneNumber || isSending}>
-                  {isSending ? content.sending : content.sendSMS}
-                </Button>
+          <div className="mt-4 bg-gray-100 p-4 rounded-md border">
+            <Tabs defaultValue="sms" onValueChange={(value) => setNotificationType(value as "sms" | "whatsapp")}>
+              <div className="mb-4">
+                <p className="mb-2">{content.notificationMethod}:</p>
+                <TabsList className="w-full">
+                  <TabsTrigger value="sms" className="flex-1">SMS</TabsTrigger>
+                  <TabsTrigger value="whatsapp" className="flex-1">WhatsApp</TabsTrigger>
+                </TabsList>
               </div>
-            </div>
-          )}
+              
+              <TabsContent value="sms">
+                {smsSent ? (
+                  <div className="bg-green-50 p-4 rounded-md flex items-center gap-2 text-green-700 border border-green-300">
+                    <MessageCircle className="h-6 w-6 text-green-600" />
+                    <p>{content.smsSent}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="mb-2">{content.smsNotSent}</p>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                        <input 
+                          type="tel" 
+                          placeholder={content.phoneLabel}
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          className="border rounded-md pl-10 pr-3 py-2 w-full"
+                        />
+                      </div>
+                      <Button onClick={handleManualSend} disabled={!phoneNumber || isSending}>
+                        {isSending ? content.sending : content.sendSMS}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="whatsapp">
+                {whatsAppSent ? (
+                  <div className="bg-green-50 p-4 rounded-md flex items-center gap-2 text-green-700 border border-green-300">
+                    <MessageCircle className="h-6 w-6 text-green-600" />
+                    <p>{content.whatsAppSent}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="mb-2">{content.smsNotSent}</p>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                        <input 
+                          type="tel" 
+                          placeholder={content.phoneLabel}
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          className="border rounded-md pl-10 pr-3 py-2 w-full"
+                        />
+                      </div>
+                      <Button onClick={handleManualSend} disabled={!phoneNumber || isSending} className="bg-green-600 hover:bg-green-700">
+                        {isSending ? content.sending : content.sendWhatsApp}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-4">
@@ -263,6 +363,12 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
           </Button>
         </CardFooter>
       </Card>
+      
+      {/* Message Lists */}
+      <div className="mt-4 space-y-4">
+        <SmsMessageList />
+        <WhatsAppMessageList />
+      </div>
     </div>
   );
 };
