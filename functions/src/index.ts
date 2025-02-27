@@ -1,20 +1,23 @@
 
 import * as functions from "firebase-functions";
-import { sendSMS } from "./twilioFunctions";
+import * as express from "express";
+import { sendSMSDirect } from "./twilioFunctions";
 import { aiHealthAssistant } from "./aiHealthAssistant";
 
-// Export the Twilio SMS function - using the correct signature for callable functions
-export const sendSMSMessage = functions.https.onCall(async (data, context) => {
-  // Adapt the data and context to what sendSMS expects
-  // or modify the sendSMS function to accept CallableRequest directly
+// Export the Twilio SMS function using the correct signature for callable functions
+export const sendSMSMessage = functions.https.onCall(async (data, _context) => {
   try {
-    const { to, message } = data;
-    // Call a version of sendSMS that works with callable function data
-    return {
-      success: true,
-      message: `SMS to ${to} would be sent with message: ${message}`,
-      data: data
-    };
+    // Explicitly type the data to include to and message properties
+    const to = data.to as string;
+    const message = data.message as string;
+    
+    if (!to || !message) {
+      throw new Error("Missing required parameters: to or message");
+    }
+    
+    // Use the direct function that doesn't rely on Express request/response
+    const result = await sendSMSDirect(to, message);
+    return result;
   } catch (error) {
     console.error("Error in sendSMSMessage callable function:", error);
     return {

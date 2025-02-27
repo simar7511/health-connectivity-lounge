@@ -1,5 +1,6 @@
 
 import * as functions from "firebase-functions";
+import * as express from "express";
 import * as admin from "firebase-admin";
 
 // Initialize admin SDK
@@ -8,7 +9,7 @@ if (!admin.apps.length) {
 }
 
 // For HTTP requests (Express)
-export const sendSMS = async (req: functions.https.Request, res: functions.Response) => {
+export const sendSMS = async (req: express.Request, res: express.Response) => {
   try {
     const { to, message } = req.body;
     
@@ -56,7 +57,7 @@ export const sendSMSDirect = async (to: string, message: string) => {
 };
 
 // Schedule SMS messages
-export const scheduleSMS = async (req: functions.https.Request, res: functions.Response) => {
+export const scheduleSMS = async (req: express.Request, res: express.Response) => {
   try {
     const { to, message, scheduledTime } = req.body;
     
