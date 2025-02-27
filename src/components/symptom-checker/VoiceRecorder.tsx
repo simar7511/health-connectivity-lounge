@@ -1,8 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, StopCircle } from "lucide-react";
+import { Mic, StopCircle, Volume2 } from "lucide-react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface VoiceRecorderProps {
@@ -37,6 +37,18 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
     }
   });
 
+  // Sync our local recording state with the speech recognition state
+  useEffect(() => {
+    setIsRecording(isListening);
+  }, [isListening]);
+
+  // Display debugging information when in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Voice Recorder - isListening: ${isListening}, transcript: ${transcript}`);
+    }
+  }, [isListening, transcript]);
+
   if (!browserSupportsSpeechRecognition) {
     return (
       <p className="text-red-500">
@@ -46,17 +58,18 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
   }
 
   const handleStartListening = () => {
+    console.log("Starting voice recording...");
     resetTranscript();
-    setIsRecording(true);
     startListening();
   };
 
   const handleStopListening = () => {
+    console.log("Stopping voice recording...");
     stopListening();
-    setIsRecording(false);
 
     // ✅ Ensure transcript is not empty
-    if (transcript.trim()) {
+    if (transcript && transcript.trim()) {
+      console.log(`Recorded transcript: ${transcript}`);
       onVoiceInput(fieldName, transcript);
       toast({
         title: language === "en" ? "Voice Input Recorded" : "Entrada de Voz Registrada",
@@ -64,6 +77,7 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
         variant: "default",
       });
     } else {
+      console.log("No transcript detected");
       toast({
         title: language === "en" ? "No Input Detected" : "No se detectó entrada",
         description: language === "en"
@@ -76,9 +90,22 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
 
   return (
     <div className="flex flex-col items-center space-y-2">
+      <div className="w-full p-3 bg-muted/50 rounded-md">
+        {transcript ? (
+          <p className="text-sm">{transcript}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center">
+            {language === "en" 
+              ? "Speak after clicking the button below" 
+              : "Hable después de hacer clic en el botón de abajo"}
+          </p>
+        )}
+      </div>
+      
       <Button
-        className={`w-full py-4 ${isRecording ? "bg-red-600 text-white" : "bg-blue-600 text-white"}`}
+        className={`w-full py-4 ${isRecording ? "bg-red-600 hover:bg-red-700" : ""}`}
         onClick={isRecording ? handleStopListening : handleStartListening}
+        variant={isRecording ? "destructive" : "default"}
       >
         {isRecording ? (
           <>
@@ -92,6 +119,15 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
           </>
         )}
       </Button>
+      
+      {isRecording && (
+        <div className="flex items-center justify-center w-full mt-2">
+          <Volume2 className="h-4 w-4 text-red-500 animate-pulse mr-2" />
+          <span className="text-xs text-red-500">
+            {language === "en" ? "Recording..." : "Grabando..."}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
