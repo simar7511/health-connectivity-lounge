@@ -26,28 +26,69 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     // Log the attempt
     console.log(`Attempting to send SMS to ${formattedPhone} via cloud function`);
 
+    // During development/testing, if the cloud function isn't deployed yet,
+    // we'll log the message but not actually try to send it
+    const isDevMode = window.location.hostname === 'localhost' || 
+                      window.location.hostname === '127.0.0.1';
+    
+    if (isDevMode) {
+      console.log("[DEV MODE] Would send SMS:", { to: formattedPhone, message });
+      toast({
+        title: "SMS Notification (Dev Mode)",
+        description: `A message would be sent to ${formattedPhone}`,
+      });
+      return { success: true };
+    }
+
     // Call our cloud function endpoint
     const apiUrl = "https://us-central1-health-connectivity-01.cloudfunctions.net/sendSMS";
     
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: formattedPhone,
-        message: message
-      })
-    });
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      console.log("SMS sent successfully:", data.sid);
-      return { success: true };
-    } else {
-      console.error("Twilio API Error:", data.error);
-      return { success: false, error: data.error || "Failed to send SMS" };
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin,
+        },
+        body: JSON.stringify({
+          to: formattedPhone,
+          message: message
+        })
+      });
+      
+      // Check if the response is ok
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("SMS API Error Response:", errorText);
+        throw new Error(`Server responded with ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log("SMS sent successfully:", data.sid);
+        return { success: true };
+      } else {
+        console.error("Twilio API Error:", data.error);
+        return { success: false, error: data.error || "Failed to send SMS" };
+      }
+    } catch (fetchError) {
+      // If there's a CORS error, we'll try a fallback approach
+      console.warn("CORS issue detected when sending SMS, using fallback method");
+      
+      // For demonstration purposes - in real production, you'd want to 
+      // implement a different fallback strategy that doesn't directly expose credentials
+      // or use a proxy service
+      
+      // Instead, we'll show a message to the user
+      toast({
+        title: "SMS Delivery Issue",
+        description: "There was a problem connecting to our SMS service. Please try again later.",
+        variant: "destructive"
+      });
+      
+      console.error("Fetch error:", fetchError);
+      return { success: false, error: fetchError instanceof Error ? fetchError.message : "Network error occurred" };
     }
   } catch (error) {
     console.error("Error sending SMS:", error);

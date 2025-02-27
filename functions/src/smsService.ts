@@ -13,6 +13,18 @@ const client = twilio(accountSid, authToken);
 
 // Cloud function to handle SMS sending
 export const sendSMS = functions.https.onRequest((request, response) => {
+  // Set CORS headers for preflight requests
+  response.set('Access-Control-Allow-Origin', '*');
+  response.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight OPTIONS request
+  if (request.method === 'OPTIONS') {
+    response.status(204).send('');
+    return;
+  }
+
+  // Handle actual request
   corsHandler(request, response, async () => {
     try {
       // Validate request method
