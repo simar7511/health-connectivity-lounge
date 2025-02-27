@@ -20,7 +20,6 @@ interface AIHealthAssistantProps {
   onBack: () => void;
   patientId?: string;
   model?: string;
-  aiProvider?: string;
 }
 
 type Message = {
@@ -45,13 +44,13 @@ const disclaimers = {
 // Error messages based on language
 const errorMessages = {
   en: {
-    quotaExceeded: "API quota exceeded. Please try using a different provider or API key.",
+    quotaExceeded: "API quota exceeded. Please wait for your quota to reset or use a different API key.",
     invalidKey: "Invalid API key. Please check your API key and try again.",
     networkError: "Network error. Please check your internet connection and try again.",
     default: "An error occurred. Please try again."
   },
   es: {
-    quotaExceeded: "Cuota de API excedida. Intente usar un proveedor o clave API diferente.",
+    quotaExceeded: "Cuota de API excedida. Espere a que su cuota se restablezca o use una clave API diferente.",
     invalidKey: "Clave API inválida. Por favor, verifique su clave API e inténtelo de nuevo.",
     networkError: "Error de red. Compruebe su conexión a Internet e inténtelo de nuevo.",
     default: "Se produjo un error. Inténtelo de nuevo."
@@ -84,18 +83,16 @@ export function AIHealthAssistant({
   language, 
   onBack, 
   patientId, 
-  model = "gpt-4o-mini",
-  aiProvider = "openai" 
+  model = "gpt-3.5-turbo"
 }: AIHealthAssistantProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [useVoiceInput, setUseVoiceInput] = useState(false);
-  const [apiKey, setApiKey] = useState<string>("");
+  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem("openai_api_key") || "");
   const [showAPIKeyInput, setShowAPIKeyInput] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [currentModel, setCurrentModel] = useState(model);
-  const [currentProvider, setCurrentProvider] = useState(aiProvider);
   const [useFallbackMode, setUseFallbackMode] = useState<boolean>(() => {
     return localStorage.getItem("use_fallback_mode") === "true";
   });
@@ -113,22 +110,25 @@ export function AIHealthAssistant({
     };
     setMessages([initialMessage]);
     
-    // Check if API key is stored in localStorage for the current provider
-    const storedKey = localStorage.getItem(`${currentProvider}_api_key`);
+    // Check if API key is stored in localStorage
+    const storedKey = localStorage.getItem("openai_api_key");
     if (storedKey && !useFallbackMode) {
       setApiKey(storedKey);
       
-      // Also get the model if it's OpenAI
-      if (currentProvider === "openai") {
-        const storedModel = localStorage.getItem("openai_model");
-        if (storedModel) {
-          setCurrentModel(storedModel);
-        }
+      // Also get the model
+      const storedModel = localStorage.getItem("openai_model");
+      if (storedModel) {
+        setCurrentModel(storedModel);
       }
-    } else if (!useFallbackMode) {
+    } else if (!useFallbackMode && !storedKey) {
       setShowAPIKeyInput(true);
     }
-  }, [language, useFallbackMode, currentProvider]);
+  }, [language, useFallbackMode]);
+
+  // Effect to update the model when it changes from props
+  useEffect(() => {
+    setCurrentModel(model);
+  }, [model]);
 
   // Scroll to bottom of messages when new ones are added
   useEffect(() => {
@@ -167,13 +167,8 @@ export function AIHealthAssistant({
 
   const saveAPIKey = () => {
     if (apiKey.trim()) {
-      localStorage.setItem(`${currentProvider}_api_key`, apiKey);
-      localStorage.setItem("ai_provider", currentProvider);
-      
-      // Save model if it's OpenAI
-      if (currentProvider === "openai") {
-        localStorage.setItem("openai_model", currentModel);
-      }
+      localStorage.setItem("openai_api_key", apiKey);
+      localStorage.setItem("openai_model", currentModel);
       
       setShowAPIKeyInput(false);
       setApiError(null);
@@ -281,221 +276,6 @@ export function AIHealthAssistant({
     }
   };
 
-  const callGemini = async (userMessage: string, previousMessages: Message[]) => {
-    try {
-      console.log("Calling Google Gemini API...");
-      
-      // Convert message history to Gemini format
-      const formattedMessages = [
-        {
-          role: "user",
-          parts: [{ text: language === "en" 
-            ? "You are a friendly, helpful health assistant. Provide general health information and advice while making it clear you are not a substitute for professional medical advice. Always be considerate to patient concerns, avoid medical jargon, and include reminders to seek professional care for serious symptoms or urgent conditions."
-            : "Eres un asistente de salud amigable y útil. Proporciona información general de salud y consejos, dejando claro que no eres un sustituto del consejo médico profesional. Sé siempre considerado con las preocupaciones del paciente, evita la jerga médica e incluye recordatorios para buscar atención profesional para síntomas graves o condiciones urgentes."
-          }]
-        },
-        {
-          role: "model",
-          parts: [{ text: "I understand, I'll act as a helpful health assistant that provides general information while being clear that I'm not a substitute for professional medical advice. I'll be considerate, avoid jargon, and include appropriate reminders about seeking professional care." }]
-        }
-      ];
-      
-      // Add conversation history
-      for (const msg of previousMessages) {
-        formattedMessages.push({
-          role: msg.sender === "user" ? "user" : "model",
-          parts: [{ text: msg.content }]
-        });
-      }
-      
-      // Add current user message
-      formattedMessages.push({
-        role: "user",
-        parts: [{ text: userMessage }]
-      });
-      
-      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: formattedMessages,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 500,
-            topP: 0.95,
-            topK: 40
-          },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            }
-          ]
-        }),
-      });
-
-      if (!response.ok) {
-        console.error("Gemini API error:", response.status, response.statusText);
-        
-        // Parse the error response if possible
-        const errorData = await response.json().catch(() => null);
-        console.log("Error data:", errorData);
-        
-        if (response.status === 429) {
-          setApiError("quotaExceeded");
-          throw new Error("API quota exceeded");
-        } else if (response.status === 400 || response.status === 401) {
-          setApiError("invalidKey");
-          throw new Error("Invalid API key");
-        } else {
-          setApiError("default");
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-      }
-
-      // Clear any previous errors
-      setApiError(null);
-      
-      const data = await response.json();
-      console.log("Gemini API response:", data);
-      
-      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-        return data.candidates[0].content.parts[0].text;
-      } else {
-        throw new Error("Unexpected response format from Gemini API");
-      }
-    } catch (error) {
-      console.error("Error calling Gemini:", error);
-      
-      // Set appropriate error message if not already set
-      if (!apiError) {
-        if (error instanceof TypeError && error.message.includes("fetch")) {
-          setApiError("networkError");
-        } else {
-          setApiError("default");
-        }
-      }
-      
-      throw error;
-    }
-  };
-
-  const callClaude = async (userMessage: string, previousMessages: Message[]) => {
-    try {
-      console.log("Calling Claude API...");
-      
-      // Build the messages array for Claude
-      const messages = [
-        {
-          role: "system",
-          content: language === "en" 
-            ? "You are a friendly, helpful health assistant. Provide general health information and advice while making it clear you are not a substitute for professional medical advice. Always be considerate to patient concerns, avoid medical jargon, and include reminders to seek professional care for serious symptoms or urgent conditions."
-            : "Eres un asistente de salud amigable y útil. Proporciona información general de salud y consejos, dejando claro que no eres un sustituto del consejo médico profesional. Sé siempre considerado con las preocupaciones del paciente, evita la jerga médica e incluye recordatorios para buscar atención profesional para síntomas graves o condiciones urgentes."
-        }
-      ];
-      
-      // Add conversation history
-      for (const msg of previousMessages) {
-        messages.push({
-          role: msg.sender === "user" ? "user" : "assistant",
-          content: msg.content
-        });
-      }
-      
-      // Add current user message
-      messages.push({
-        role: "user",
-        content: userMessage
-      });
-      
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01"
-        },
-        body: JSON.stringify({
-          model: "claude-3-haiku-20240307",
-          messages: messages,
-          max_tokens: 500,
-          temperature: 0.7
-        }),
-      });
-
-      if (!response.ok) {
-        console.error("Claude API error:", response.status, response.statusText);
-        
-        // Parse the error response if possible
-        const errorData = await response.json().catch(() => null);
-        console.log("Error data:", errorData);
-        
-        if (response.status === 429) {
-          setApiError("quotaExceeded");
-          throw new Error("API quota exceeded");
-        } else if (response.status === 401) {
-          setApiError("invalidKey");
-          throw new Error("Invalid API key");
-        } else {
-          setApiError("default");
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-      }
-
-      // Clear any previous errors
-      setApiError(null);
-      
-      const data = await response.json();
-      console.log("Claude API response:", data);
-      
-      if (data.content && data.content.length > 0) {
-        return data.content[0].text;
-      } else {
-        throw new Error("Unexpected response format from Claude API");
-      }
-    } catch (error) {
-      console.error("Error calling Claude:", error);
-      
-      // Set appropriate error message if not already set
-      if (!apiError) {
-        if (error instanceof TypeError && error.message.includes("fetch")) {
-          setApiError("networkError");
-        } else {
-          setApiError("default");
-        }
-      }
-      
-      throw error;
-    }
-  };
-
-  const callAI = async (userMessage: string, previousMessages: Message[]) => {
-    switch (currentProvider) {
-      case "openai":
-        return callOpenAI(userMessage, previousMessages);
-      case "gemini":
-        return callGemini(userMessage, previousMessages);
-      case "claude":
-        return callClaude(userMessage, previousMessages);
-      default:
-        return callOpenAI(userMessage, previousMessages);
-    }
-  };
-
   const getFallbackResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
     
@@ -570,8 +350,8 @@ export function AIHealthAssistant({
         // Use the fallback response system
         aiResponseText = getFallbackResponse(input) + " " + disclaimers[language];
       } else {
-        // Call selected AI provider
-        const aiResponse = await callAI(input, messages);
+        // Call OpenAI API
+        const aiResponse = await callOpenAI(input, messages);
         aiResponseText = aiResponse + " " + disclaimers[language];
       }
       
@@ -633,19 +413,6 @@ export function AIHealthAssistant({
     window.location.reload();
   };
 
-  const getProviderName = (provider: string) => {
-    switch (provider) {
-      case "openai":
-        return "OpenAI";
-      case "gemini":
-        return "Google Gemini";
-      case "claude":
-        return "Anthropic Claude";
-      default:
-        return provider;
-    }
-  };
-
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="px-4 py-3 border-b flex flex-row items-center justify-between">
@@ -663,8 +430,7 @@ export function AIHealthAssistant({
             {language === "en" ? "Health Assistant" : "Asistente de Salud"}
             {!useFallbackMode && (
               <span className="ml-2 text-xs text-muted-foreground">
-                ({getProviderName(currentProvider)}
-                {currentProvider === "openai" && ` - ${currentModel}`})
+                (OpenAI - {currentModel})
               </span>
             )}
             {useFallbackMode && (
@@ -689,12 +455,12 @@ export function AIHealthAssistant({
         <CardContent className="flex-1 p-6 flex flex-col items-center justify-center gap-4">
           <div className="text-center max-w-md mx-auto space-y-2">
             <h3 className="text-lg font-semibold">
-              {language === "en" ? "AI API Settings" : "Configuración API de IA"}
+              {language === "en" ? "OpenAI API Settings" : "Configuración API de OpenAI"}
             </h3>
             <p className="text-sm text-muted-foreground">
               {language === "en" 
-                ? "Please select an AI provider and enter your API key." 
-                : "Por favor, seleccione un proveedor de IA e ingrese su clave API."}
+                ? "Please enter your OpenAI API key to use the Health Assistant." 
+                : "Por favor, ingrese su clave API de OpenAI para usar el Asistente de Salud."}
             </p>
           </div>
           
@@ -726,56 +492,34 @@ export function AIHealthAssistant({
             {!useFallbackMode && (
               <>
                 <div className="space-y-2">
-                  <label htmlFor="aiProvider" className="text-sm font-medium">
-                    {language === "en" ? "AI Provider" : "Proveedor de IA"}
-                  </label>
-                  <Select value={currentProvider} onValueChange={setCurrentProvider}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={language === "en" ? "Select provider" : "Seleccionar proveedor"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="openai">OpenAI</SelectItem>
-                      <SelectItem value="gemini">Google Gemini</SelectItem>
-                      <SelectItem value="claude">Anthropic Claude</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
                   <label htmlFor="apiKey" className="text-sm font-medium">
-                    {language === "en" ? "API Key" : "Clave API"}
+                    {language === "en" ? "OpenAI API Key" : "Clave API de OpenAI"}
                   </label>
                   <Input
                     id="apiKey"
                     type="password"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder={
-                      currentProvider === "openai" ? "sk-..." : 
-                      currentProvider === "gemini" ? "AIza..." : 
-                      "sk-ant-..."
-                    }
+                    placeholder="sk-..."
                     className="w-full"
                   />
                 </div>
                 
-                {currentProvider === "openai" && (
-                  <div className="space-y-2">
-                    <label htmlFor="model" className="text-sm font-medium">
-                      {language === "en" ? "Model" : "Modelo"}
-                    </label>
-                    <Select value={currentModel} onValueChange={setCurrentModel}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, less quota)</SelectItem>
-                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Balanced)</SelectItem>
-                        <SelectItem value="gpt-4o">GPT-4o (Advanced, more quota)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <label htmlFor="model" className="text-sm font-medium">
+                    {language === "en" ? "Model" : "Modelo"}
+                  </label>
+                  <Select value={currentModel} onValueChange={setCurrentModel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, less quota)</SelectItem>
+                      <SelectItem value="gpt-4o-mini">GPT-4o Mini (Balanced)</SelectItem>
+                      <SelectItem value="gpt-4o">GPT-4o (Advanced, more quota)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 <Button 
                   onClick={saveAPIKey} 
@@ -787,32 +531,9 @@ export function AIHealthAssistant({
                 
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   {language === "en" 
-                    ? "You can get API keys from the respective provider websites. These keys are stored locally in your browser and never sent to our servers." 
-                    : "Puede obtener claves API en los sitios web de los respectivos proveedores. Estas claves se almacenan localmente en su navegador y nunca se envían a nuestros servidores."}
+                    ? "You can get an API key from platform.openai.com. The key is stored locally in your browser and never sent to our servers." 
+                    : "Puede obtener una clave API en platform.openai.com. La clave se almacena localmente en su navegador y nunca se envía a nuestros servidores."}
                 </p>
-                
-                <div className="space-y-2 mt-4">
-                  <h4 className="text-sm font-medium">
-                    {language === "en" ? "How to get API keys:" : "Cómo obtener claves API:"}
-                  </h4>
-                  <ul className="text-xs space-y-1 text-muted-foreground list-disc pl-4">
-                    <li>
-                      {language === "en" 
-                        ? "OpenAI API key: Create an account at platform.openai.com" 
-                        : "Clave API de OpenAI: Cree una cuenta en platform.openai.com"}
-                    </li>
-                    <li>
-                      {language === "en" 
-                        ? "Google Gemini API key: Sign up at aistudio.google.com" 
-                        : "Clave API de Google Gemini: Regístrese en aistudio.google.com"}
-                    </li>
-                    <li>
-                      {language === "en" 
-                        ? "Claude API key: Get access at console.anthropic.com" 
-                        : "Clave API de Claude: Obtenga acceso en console.anthropic.com"}
-                    </li>
-                  </ul>
-                </div>
               </>
             )}
             
