@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ClipboardCheck } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { SmsMessageList } from '@/components/SmsMessageList';
-import { WhatsAppMessageList } from '@/components/WhatsAppMessageList';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 
@@ -80,12 +78,6 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
               {content.providerAlert}
             </AlertDescription>
           </Alert>
-          
-          {/* Message Lists */}
-          <div className="space-y-4">
-            <SmsMessageList />
-            <WhatsAppMessageList />
-          </div>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-4">

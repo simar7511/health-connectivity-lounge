@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -12,11 +13,7 @@ import { ConsentSection } from "./form-sections/ConsentSection";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
 import { SubmitButton } from "./components/SubmitButton";
-import { sendIntakeFormConfirmation, sendIntakeFormWhatsAppConfirmation } from "@/utils/twilioService";
 import { notifyProviders, estimateUrgency } from "@/utils/providerNotifications";
-import { SmsMessageList } from "@/components/SmsMessageList";
-import { WhatsAppMessageList } from "@/components/WhatsAppMessageList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PediatricIntakeFormProps {
   language: "en" | "es";
@@ -29,7 +26,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [language, setLanguage] = useState(propLanguage);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [notificationType, setNotificationType] = useState<"sms" | "whatsapp">("sms");
   const auth = getAuth();
 
   useEffect(() => {
@@ -48,6 +44,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     return () => unsubscribe();
   }, []);
 
+  // ✅ Ensure `hasInsurance` and `hasRecentHospitalVisits` are `null` initially (not pre-selected)
   const [formData, setFormData] = useState(() => ({
     childName: "",
     dob: "",
@@ -58,12 +55,11 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     symptoms: "",
     medicalHistory: "",
     medicationsAndAllergies: "",
-    hasRecentHospitalVisits: null,
+    hasRecentHospitalVisits: null, // ✅ Prevents auto-selection
     hospitalVisitLocation: "",
-    hasInsurance: null,
+    hasInsurance: null, // ✅ Prevents auto-selection
     otherConcerns: "",
     consentToTreatment: false,
-    notificationType: "sms",
   }));
 
   useEffect(() => {
@@ -75,13 +71,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       isMounted.current = false;
     };
   }, []);
-
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      notificationType
-    }));
-  }, [notificationType]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -105,6 +94,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     }));
   };
 
+  // ✅ Ensure onVoiceInput exists for `MedicalInfoSection` and `SocialInfoSection`
   const handleVoiceInput = (field: string, input: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -141,6 +131,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     try {
       console.log("Submitting intake form to Firestore - pediatricIntake collection");
       
+      // Use serverTimestamp to ensure consistent timestamps across devices
       const docRef = await addDoc(collection(db, "pediatricIntake"), {
         ...formData,
         userId: currentUser.uid,
@@ -160,22 +151,22 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
 
       localStorage.setItem("intakeId", docRef.id);
       
+      // Save submission time for provider dashboard notifications
       localStorage.setItem("lastIntakeSubmissionTime", new Date().toISOString());
 
+      // Store the phone number in local storage for later use
       if (formData.phoneNumber) {
-        if (notificationType === "sms") {
-          await sendIntakeFormConfirmation(formData.phoneNumber, language);
-        } else {
-          await sendIntakeFormWhatsAppConfirmation(formData.phoneNumber, language);
-        }
+        localStorage.setItem("patientPhone", formData.phoneNumber);
       }
       
+      // Notify providers about the new submission
       const urgency = estimateUrgency(
         formData.symptoms, 
         formData.medicalHistory, 
         formData.hasRecentHospitalVisits
       );
       
+      // Check if provider notification is configured
       const providerPhones = localStorage.getItem("providerNotificationPhones");
       if (providerPhones) {
         await notifyProviders({
@@ -187,6 +178,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         });
       }
 
+      // ✅ Clears form fields after submission
       setFormData({
         childName: "",
         dob: "",
@@ -202,7 +194,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         hasInsurance: null, 
         otherConcerns: "",
         consentToTreatment: false,
-        notificationType: "sms",
       });
 
       navigate("/confirmation");
@@ -218,20 +209,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       setIsSubmitting(false);
     }
   };
-
-  const translations = {
-    en: {
-      notificationMethod: "Notification Method",
-      smsOption: "SMS",
-      whatsappOption: "WhatsApp"
-    },
-    es: {
-      notificationMethod: "Método de Notificación",
-      smsOption: "SMS",
-      whatsappOption: "WhatsApp"
-    }
-  };
-
+  
   return (
     <div className="container mx-auto max-w-3xl p-6 space-y-6">
       <ConfidentialityNotice language={language} />
@@ -273,27 +251,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
               onVoiceInput={handleVoiceInput} 
             />
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
-                {language === "en" ? "Notification Method" : "Método de Notificación"}
-              </h3>
-              <Tabs 
-                defaultValue="sms" 
-                value={notificationType}
-                onValueChange={(value) => setNotificationType(value as "sms" | "whatsapp")}
-                className="w-full"
-              >
-                <TabsList className="w-full">
-                  <TabsTrigger value="sms" className="flex-1">
-                    {language === "en" ? "SMS" : "SMS"}
-                  </TabsTrigger>
-                  <TabsTrigger value="whatsapp" className="flex-1">
-                    {language === "en" ? "WhatsApp" : "WhatsApp"}
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
             <ConsentSection 
               language={language} 
               checked={formData.consentToTreatment} 
@@ -304,11 +261,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
           </div>
         </Card>
       </form>
-
-      <div className="space-y-4">
-        <SmsMessageList />
-        <WhatsAppMessageList />
-      </div>
     </div>
   );
 };
