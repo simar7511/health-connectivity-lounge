@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 // Import Pages & Components
@@ -68,13 +69,6 @@ const App: React.FC = () => {
         {/* 🚨 404 Error Page */}
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
       </Routes>
-
-      {/* 🔗 Quick Navigation Links */}
-      <div className="p-4">
-        <Link to="/pediatric-intake" className="text-blue-500 underline">
-          {language === "en" ? "Go to Pediatric Intake Form" : "Ir al formulario pediátrico"}
-        </Link>
-      </div>
     </BrowserRouter>
   );
 };
