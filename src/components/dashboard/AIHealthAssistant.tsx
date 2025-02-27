@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, Send, Bot, User, ArrowLeft, Loader2, AlertCircle, RefreshCw, Sparkles } from "lucide-react";
-import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { db } from "@/lib/firebase";
 import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
@@ -29,6 +29,9 @@ type Message = {
   sender: "user" | "ai";
   timestamp: Date;
 };
+
+// Hugging Face Spaces API URL - replace with your deployed Space URL when you have it
+const HUGGINGFACE_SPACE_URL = "https://huggingface.co/spaces/health-connectivity/llama-health-assistant/api/predict";
 
 // Greeting messages based on language
 const greetings = {
@@ -63,6 +66,8 @@ const errorMessages = {
     llamaError: "Error connecting to Llama 2 API. Please try again later or switch to test mode.",
     llamaModelLoading: "The Llama 2 model is currently loading. This may take a minute for the first request. Please try again.",
     llamaAuthError: "Authentication error with Hugging Face API. Please enter a valid Hugging Face API token in settings.",
+    rateLimit: "You've reached the rate limit for API requests. Please wait a moment before trying again or switch to test mode.",
+    serverError: "The AI server is experiencing issues. Please try again later or switch to test mode.",
     default: "An error occurred. Please try again or switch to test mode."
   },
   es: {
@@ -72,6 +77,8 @@ const errorMessages = {
     llamaError: "Error al conectar con la API de Llama 2. Por favor, inténtelo de nuevo más tarde o cambie al modo de prueba.",
     llamaModelLoading: "El modelo Llama 2 está cargando actualmente. Esto puede tardar un minuto para la primera solicitud. Por favor, inténtelo de nuevo.",
     llamaAuthError: "Error de autenticación con la API de Hugging Face. Por favor, ingrese un token válido de API de Hugging Face en la configuración.",
+    rateLimit: "Ha alcanzado el límite de frecuencia para las solicitudes de API. Espere un momento antes de intentarlo de nuevo o cambie al modo de prueba.",
+    serverError: "El servidor de IA está experimentando problemas. Inténtelo de nuevo más tarde o cambie al modo de prueba.",
     default: "Se produjo un error. Inténtelo de nuevo o cambie al modo de prueba."
   }
 };
@@ -145,6 +152,7 @@ export function AIHealthAssistant({
   const [useTestMode, setUseTestMode] = useState<boolean>(() => {
     return localStorage.getItem("use_test_mode") === "true";
   });
+  const [consecutiveErrors, setConsecutiveErrors] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const auth = getAuth();
   const { toast } = useToast();
@@ -212,6 +220,20 @@ export function AIHealthAssistant({
 
     return () => unsubscribe();
   }, [patientId, auth.currentUser, useFallbackMode]);
+
+  // Auto-switch to test mode after multiple consecutive errors
+  useEffect(() => {
+    if (consecutiveErrors >= 3 && !useTestMode && !useFallbackMode) {
+      toast({
+        title: language === "en" ? "Switching to Test Mode" : "Cambiando a Modo de Prueba",
+        description: language === "en" 
+          ? "After multiple connection errors, we're switching to test mode automatically." 
+          : "Después de múltiples errores de conexión, estamos cambiando al modo de prueba automáticamente.",
+      });
+      toggleTestMode(true);
+      setConsecutiveErrors(0);
+    }
+  }, [consecutiveErrors, useTestMode, useFallbackMode, language, toast]);
 
   const saveAPIKey = () => {
     if (currentProvider === "openai" && !apiKey.trim()) {
@@ -286,6 +308,9 @@ export function AIHealthAssistant({
     } else {
       setShowAPIKeyInput(false);
     }
+    
+    // Reset consecutive errors
+    setConsecutiveErrors(0);
   };
 
   const toggleTestMode = (value: boolean) => {
@@ -308,6 +333,9 @@ export function AIHealthAssistant({
     setMessages([initialMessage]);
     
     setShowAPIKeyInput(false);
+    
+    // Reset consecutive errors
+    setConsecutiveErrors(0);
   };
 
   const callOpenAI = async (userMessage: string, previousMessages: Message[]) => {
@@ -361,12 +389,16 @@ export function AIHealthAssistant({
 
       // Clear any previous errors
       setApiError(null);
+      setConsecutiveErrors(0);
       
       const data = await response.json();
       console.log("OpenAI API response:", data);
       return data.choices[0].message.content;
     } catch (error) {
       console.error("Error calling OpenAI:", error);
+      
+      // Increment consecutive errors
+      setConsecutiveErrors(prev => prev + 1);
       
       // Set appropriate error message if not already set
       if (!apiError) {
@@ -381,69 +413,60 @@ export function AIHealthAssistant({
     }
   };
 
-  const callLlama = async (userMessage: string, previousMessages: Message[]) => {
+  const callHuggingFaceSpaces = async (userMessage: string, previousMessages: Message[], modelName: string) => {
     try {
-      console.log(`Calling Llama 2 API using model: ${currentModel}...`);
+      console.log(`Calling Hugging Face Spaces API using model: ${modelName}...`);
 
-      // Construct conversation history
-      let prompt = "";
+      // Construct conversation history for the API
+      let prompt = systemPrompts.llama[language] + "\n\n";
       
-      // For chat specific models
-      if (currentModel.includes("chat")) {
-        prompt = systemPrompts.llama[language] + "\n\n";
-        
-        for (const msg of previousMessages) {
-          if (msg.sender === "user") {
-            prompt += "Human: " + msg.content + "\n";
-          } else {
-            prompt += "Assistant: " + msg.content + "\n";
-          }
+      for (const msg of previousMessages) {
+        if (msg.sender === "user") {
+          prompt += "Human: " + msg.content + "\n";
+        } else {
+          prompt += "Assistant: " + msg.content + "\n";
         }
-        
-        prompt += "Human: " + userMessage + "\nAssistant:";
-      } else {
-        // For base models, use a simpler prompt format
-        prompt = "You are a helpful AI health assistant.\n\n";
-        prompt += "Question: " + userMessage + "\n\n";
-        prompt += "Answer:";
       }
+      
+      prompt += "Human: " + userMessage + "\nAssistant:";
+      
+      console.log("Sending prompt to Hugging Face Spaces:", prompt);
 
-      console.log("Sending prompt to Llama 2 API:", prompt);
-
-      // Use Hugging Face API token for authentication
+      // Headers for the API request
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
       
-      // Add authentication header if token is available
+      // Add authentication if token is available
       if (huggingFaceToken) {
         headers["Authorization"] = `Bearer ${huggingFaceToken}`;
       }
 
-      // Call the Hugging Face inference API
-      const response = await fetch(`https://api-inference.huggingface.co/models/meta-llama/${currentModel}`, {
+      // Call the Hugging Face Spaces API endpoint
+      const response = await fetch(HUGGINGFACE_SPACE_URL, {
         method: "POST",
-        headers: headers,
+        headers,
         body: JSON.stringify({
           inputs: prompt,
           parameters: {
+            model: modelName,
             max_new_tokens: 500,
             temperature: 0.7,
             top_p: 0.95,
             do_sample: true,
-            return_full_text: false
           }
         }),
+        // 30 second timeout for model generation
+        signal: AbortSignal.timeout(30000),
       });
 
       // Log response status for debugging
-      console.log("Llama API response status:", response.status);
-      console.log("Llama API response headers:", Object.fromEntries(response.headers.entries()));
+      console.log("Hugging Face Spaces API response status:", response.status);
 
       if (!response.ok) {
-        console.error("Llama API error:", response.status, response.statusText);
+        console.error("Hugging Face Spaces API error:", response.status, response.statusText);
         
-        // Parse the error response if possible
+        // Parse the error response
         let errorMessage = "";
         try {
           const errorData = await response.json();
@@ -455,67 +478,46 @@ export function AIHealthAssistant({
           console.log("Error text:", errorMessage);
         }
         
-        // Check for authentication error
-        if (response.status === 401 || errorMessage.includes("Invalid username or password")) {
+        // Handle different error types
+        if (response.status === 429) {
+          setApiError("rateLimit");
+          throw new Error("Rate limit exceeded");
+        } else if (response.status === 401 || response.status === 403) {
           setApiError("llamaAuthError");
           throw new Error("Authentication error with Hugging Face API");
-        }
-        // Check for model loading error (common with Hugging Face inference API)
-        else if (errorMessage.includes("loading") || errorMessage.includes("still loading") || response.status === 503) {
-          setApiError("llamaModelLoading");
-          throw new Error("Llama model is still loading");
+        } else if (response.status >= 500) {
+          setApiError("serverError");
+          throw new Error("Server error");
         } else {
           setApiError("llamaError");
-          throw new Error(`Llama API request failed with status ${response.status}: ${errorMessage}`);
+          throw new Error(`API request failed: ${errorMessage}`);
         }
       }
 
-      // Clear any previous errors
+      // Clear previous errors on success
       setApiError(null);
+      setConsecutiveErrors(0);
       
-      // Try to parse the response
-      let data;
-      try {
-        data = await response.json();
-        console.log("Llama API response data:", data);
-      } catch (e) {
-        console.error("Failed to parse Llama API response as JSON:", e);
-        const textResponse = await response.text();
-        console.log("Llama API text response:", textResponse);
-        throw new Error("Failed to parse Llama API response");
+      // Parse the response
+      const data = await response.json();
+      console.log("Hugging Face Spaces API response:", data);
+      
+      if (!data.generated_text) {
+        throw new Error("No generated text in response");
       }
       
-      // Handle different response formats
-      let resultText = "";
-      if (Array.isArray(data) && data.length > 0) {
-        if (typeof data[0] === "string") {
-          resultText = data[0];
-        } else if (data[0].generated_text) {
-          resultText = data[0].generated_text;
-        }
-      } else if (data.generated_text) {
-        resultText = data.generated_text;
-      } else {
-        console.error("Unexpected Llama API response format:", data);
-        throw new Error("Unexpected response format from Llama API");
-      }
-      
-      // Clean up the response
-      resultText = resultText.trim();
-      
-      // For non-chat models, the result might still start with "Answer:" 
-      if (resultText.startsWith("Answer:")) {
-        resultText = resultText.substring(7).trim();
-      }
-      
-      console.log("Final processed Llama response:", resultText);
-      return resultText;
+      return data.generated_text.trim();
     } catch (error) {
-      console.error("Error calling Llama:", error);
+      console.error("Error calling Hugging Face Spaces:", error);
+      
+      // Increment consecutive errors
+      setConsecutiveErrors(prev => prev + 1);
       
       // Set appropriate error message if not already set
       if (!apiError) {
-        if (error instanceof TypeError && error.message.includes("fetch")) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          setApiError("serverError");
+        } else if (error instanceof TypeError && error.message.includes("fetch")) {
           setApiError("networkError");
         } else {
           setApiError("llamaError");
@@ -582,6 +584,22 @@ export function AIHealthAssistant({
     }
   };
 
+  const saveMessageToFirestore = async (message: Message) => {
+    if (!auth.currentUser) return;
+    
+    try {
+      await addDoc(collection(db, "aiChatHistory"), {
+        content: message.content,
+        sender: message.sender,
+        timestamp: serverTimestamp(),
+        userId: patientId || auth.currentUser.uid,
+      });
+    } catch (error) {
+      console.error("Error saving message to Firestore:", error);
+      // Continue even if Firestore save fails
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim()) return;
     
@@ -621,20 +639,8 @@ export function AIHealthAssistant({
     try {
       let aiResponseText = "";
       
-      // Add to Firestore if authenticated
-      if (auth.currentUser) {
-        try {
-          await addDoc(collection(db, "aiChatHistory"), {
-            content: userMessage.content,
-            sender: userMessage.sender,
-            timestamp: serverTimestamp(),
-            userId: patientId || auth.currentUser.uid,
-          });
-        } catch (error) {
-          console.error("Error saving message to Firestore:", error);
-          // Continue even if Firestore save fails
-        }
-      }
+      // Save user message to Firestore
+      await saveMessageToFirestore(userMessage);
       
       if (useFallbackMode) {
         // Use the fallback response system
@@ -649,8 +655,8 @@ export function AIHealthAssistant({
         const aiResponse = await callOpenAI(input, messages);
         aiResponseText = aiResponse + " " + disclaimers[language];
       } else if (currentProvider === "llama") {
-        // Call Llama API
-        const aiResponse = await callLlama(input, messages);
+        // Call Hugging Face Spaces API with Llama model
+        const aiResponse = await callHuggingFaceSpaces(input, messages, currentModel);
         aiResponseText = aiResponse + " " + disclaimers[language];
       }
       
@@ -664,20 +670,9 @@ export function AIHealthAssistant({
       
       setMessages(prev => [...prev, aiMessage]);
       
-      // Add AI response to Firestore if authenticated
-      if (auth.currentUser) {
-        try {
-          await addDoc(collection(db, "aiChatHistory"), {
-            content: aiMessage.content,
-            sender: aiMessage.sender,
-            timestamp: serverTimestamp(),
-            userId: patientId || auth.currentUser.uid,
-          });
-        } catch (error) {
-          console.error("Error saving AI response to Firestore:", error);
-          // Continue even if Firestore save fails
-        }
-      }
+      // Save AI response to Firestore
+      await saveMessageToFirestore(aiMessage);
+      
     } catch (error) {
       console.error("Error sending message:", error);
       
@@ -894,10 +889,10 @@ export function AIHealthAssistant({
                         <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="llama-2-7b">Llama 2 (7B)</SelectItem>
-                        <SelectItem value="llama-2-13b">Llama 2 (13B)</SelectItem>
-                        <SelectItem value="llama-2-7b-chat">Llama 2 Chat (7B)</SelectItem>
-                        <SelectItem value="llama-2-13b-chat">Llama 2 Chat (13B)</SelectItem>
+                        <SelectItem value="llama-2-7b">Llama 2 (7B parameters)</SelectItem>
+                        <SelectItem value="llama-2-13b">Llama 2 (13B parameters)</SelectItem>
+                        <SelectItem value="llama-2-7b-chat">Llama 2 Chat (7B parameters)</SelectItem>
+                        <SelectItem value="llama-2-13b-chat">Llama 2 Chat (13B parameters)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1021,8 +1016,8 @@ export function AIHealthAssistant({
                 </AlertTitle>
                 <AlertDescription>
                   {language === "en" 
-                    ? "You're using Llama 2 with the Hugging Face API. Response times may vary based on model size. If you experience slow responses, try using a smaller model or switch to test mode." 
-                    : "Está utilizando Llama 2 con la API de Hugging Face. Los tiempos de respuesta pueden variar según el tamaño del modelo. Si experimenta respuestas lentas, intente usar un modelo más pequeño o cambie al modo de prueba."}
+                    ? "You're using Llama 2 via Hugging Face Spaces API. Response times may vary based on model size. If you experience slow responses, try using a smaller model or switch to test mode." 
+                    : "Está utilizando Llama 2 a través de la API de Hugging Face Spaces. Los tiempos de respuesta pueden variar según el tamaño del modelo. Si experimenta respuestas lentas, intente usar un modelo más pequeño o cambie al modo de prueba."}
                 </AlertDescription>
               </Alert>
             )}
