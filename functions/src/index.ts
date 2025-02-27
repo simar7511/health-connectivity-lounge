@@ -3,7 +3,7 @@ import * as functions from "firebase-functions";
 import { sendSMS, scheduleSMS } from "./twilioFunctions";
 
 // Expose the sendSMS function
-exports.sendSMS = functions.https.onRequest(async (req, res) => {
+export const sendSMSFunction = functions.https.onRequest(async (req, res) => {
   // Set CORS headers for preflight requests
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -15,12 +15,18 @@ exports.sendSMS = functions.https.onRequest(async (req, res) => {
     return;
   }
   
-  // Call the function directly, not returning its result
-  await sendSMS(req, res);
+  try {
+    await sendSMS(req, res);
+  } catch (error) {
+    console.error("Error in sendSMS function:", error);
+    if (!res.headersSent) {
+      res.status(500).send("Internal server error");
+    }
+  }
 });
 
 // Expose the scheduleSMS function
-exports.scheduleSMS = functions.https.onRequest(async (req, res) => {
+export const scheduleSMSFunction = functions.https.onRequest(async (req, res) => {
   // Set CORS headers for preflight requests
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -32,6 +38,12 @@ exports.scheduleSMS = functions.https.onRequest(async (req, res) => {
     return;
   }
   
-  // Call the function directly, not returning its result
-  await scheduleSMS(req, res);
+  try {
+    await scheduleSMS(req, res);
+  } catch (error) {
+    console.error("Error in scheduleSMS function:", error);
+    if (!res.headersSent) {
+      res.status(500).send("Internal server error");
+    }
+  }
 });

@@ -54,7 +54,7 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     }
 
     // Call our cloud function endpoint - this code will run once the cloud function is deployed
-    const apiUrl = "https://us-central1-health-connectivity-01.cloudfunctions.net/sendSMS";
+    const apiUrl = "https://us-central1-health-connectivity-01.cloudfunctions.net/sendSMSFunction";
     
     try {
       const response = await fetch(apiUrl, {

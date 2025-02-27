@@ -1,12 +1,14 @@
 
 import { Request, Response } from "express";
-import twilio from "twilio"; // Changed to default import
-import cors from "cors"; // Changed to default import
+import twilio from "twilio";
+import cors from "cors";
 
 // Initialize Twilio client
 const initTwilioClient = () => {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const accountSid = process.env.TWILIO_ACCOUNT_SID || 
+                     process.env.FUNCTIONS_CONFIG_TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN || 
+                    process.env.FUNCTIONS_CONFIG_TWILIO_AUTH_TOKEN;
   
   if (!accountSid || !authToken) {
     throw new Error("Missing Twilio credentials. Please check environment variables.");
@@ -20,10 +22,10 @@ export const sendSMS = async (req: Request, res: Response): Promise<void> => {
   try {
     // Handle CORS
     const corsHandler = cors({ origin: true });
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       corsHandler(req, res, (err) => {
         if (err) reject(err);
-        else resolve(undefined);
+        else resolve();
       });
     });
 
@@ -52,7 +54,8 @@ export const sendSMS = async (req: Request, res: Response): Promise<void> => {
     }
     
     // Get Twilio phone number
-    const from = process.env.TWILIO_PHONE_NUMBER;
+    const from = process.env.TWILIO_PHONE_NUMBER || 
+                 process.env.FUNCTIONS_CONFIG_TWILIO_PHONE_NUMBER;
     
     if (!from) {
       res.status(500).json({ 
@@ -76,15 +79,17 @@ export const sendSMS = async (req: Request, res: Response): Promise<void> => {
     
     res.status(200).json({ 
       success: true, 
-      messageId: twilioResponse.sid,
+      sid: twilioResponse.sid,
       status: twilioResponse.status 
     });
   } catch (error) {
     console.error("Error sending SMS:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: error instanceof Error ? error.message : "Unknown error occurred" 
-    });
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        success: false, 
+        message: error instanceof Error ? error.message : "Unknown error occurred" 
+      });
+    }
   }
 };
 
@@ -93,10 +98,10 @@ export const scheduleSMS = async (req: Request, res: Response): Promise<void> =>
   try {
     // Handle CORS
     const corsHandler = cors({ origin: true });
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       corsHandler(req, res, (err) => {
         if (err) reject(err);
-        else resolve(undefined);
+        else resolve();
       });
     });
 
@@ -132,9 +137,11 @@ export const scheduleSMS = async (req: Request, res: Response): Promise<void> =>
     });
   } catch (error) {
     console.error("Error scheduling SMS:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: error instanceof Error ? error.message : "Unknown error occurred" 
-    });
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        success: false, 
+        message: error instanceof Error ? error.message : "Unknown error occurred" 
+      });
+    }
   }
 };
