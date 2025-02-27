@@ -7,9 +7,16 @@ import { aiHealthAssistant } from "./aiHealthAssistant";
 // Export the Twilio SMS function using the correct signature for callable functions
 export const sendSMSMessage = functions.https.onCall(async (data, _context) => {
   try {
-    // Explicitly type the data to include to and message properties
-    const to = data.to as string;
-    const message = data.message as string;
+    // In Firebase Functions v2, data is directly the payload object
+    // Cast the entire data object to an any type to access properties
+    const payload = data as any;
+    
+    if (!payload || typeof payload !== 'object') {
+      throw new Error("Invalid request data");
+    }
+    
+    const to = payload.to;
+    const message = payload.message;
     
     if (!to || !message) {
       throw new Error("Missing required parameters: to or message");
