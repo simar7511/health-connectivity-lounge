@@ -31,7 +31,8 @@ type Message = {
 };
 
 // Hugging Face Spaces API URL - replace with your deployed Space URL when you have it
-const HUGGINGFACE_SPACE_URL = "https://huggingface.co/spaces/health-connectivity/llama-health-assistant/api/predict";
+// For direct Hugging Face Inference API (bypass Spaces)
+const HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/meta-llama";
 
 // Greeting messages based on language
 const greetings = {
@@ -68,6 +69,7 @@ const errorMessages = {
     llamaAuthError: "Authentication error with Hugging Face API. Please enter a valid Hugging Face API token in settings.",
     rateLimit: "You've reached the rate limit for API requests. Please wait a moment before trying again or switch to test mode.",
     serverError: "The AI server is experiencing issues. Please try again later or switch to test mode.",
+    corsError: "CORS error when trying to access the API. Try using the direct Hugging Face Inference API instead.",
     default: "An error occurred. Please try again or switch to test mode."
   },
   es: {
@@ -79,6 +81,7 @@ const errorMessages = {
     llamaAuthError: "Error de autenticación con la API de Hugging Face. Por favor, ingrese un token válido de API de Hugging Face en la configuración.",
     rateLimit: "Ha alcanzado el límite de frecuencia para las solicitudes de API. Espere un momento antes de intentarlo de nuevo o cambie al modo de prueba.",
     serverError: "El servidor de IA está experimentando problemas. Inténtelo de nuevo más tarde o cambie al modo de prueba.",
+    corsError: "Error CORS al intentar acceder a la API. Intente usar la API de inferencia directa de Hugging Face.",
     default: "Se produjo un error. Inténtelo de nuevo o cambie al modo de prueba."
   }
 };
@@ -151,6 +154,9 @@ export function AIHealthAssistant({
   });
   const [useTestMode, setUseTestMode] = useState<boolean>(() => {
     return localStorage.getItem("use_test_mode") === "true";
+  });
+  const [useDirectAPI, setUseDirectAPI] = useState<boolean>(() => {
+    return localStorage.getItem("use_direct_api") === "true";
   });
   const [consecutiveErrors, setConsecutiveErrors] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -268,6 +274,7 @@ export function AIHealthAssistant({
     // Save model preferences
     localStorage.setItem(`${currentProvider}_model`, currentModel);
     localStorage.setItem("ai_provider", currentProvider);
+    localStorage.setItem("use_direct_api", useDirectAPI.toString());
     
     setShowAPIKeyInput(false);
     setApiError(null);
@@ -336,6 +343,14 @@ export function AIHealthAssistant({
     
     // Reset consecutive errors
     setConsecutiveErrors(0);
+  };
+
+  const toggleDirectAPI = (value: boolean) => {
+    setUseDirectAPI(value);
+    localStorage.setItem("use_direct_api", value.toString());
+    
+    // If we change API mode, clear any existing errors
+    setApiError(null);
   };
 
   const callOpenAI = async (userMessage: string, previousMessages: Message[]) => {
@@ -413,9 +428,9 @@ export function AIHealthAssistant({
     }
   };
 
-  const callHuggingFaceSpaces = async (userMessage: string, previousMessages: Message[], modelName: string) => {
+  const callHuggingFaceInferenceAPI = async (userMessage: string, previousMessages: Message[], modelName: string) => {
     try {
-      console.log(`Calling Hugging Face Spaces API using model: ${modelName}...`);
+      console.log(`Calling Hugging Face Inference API using model: ${modelName}...`);
 
       // Construct conversation history for the API
       let prompt = systemPrompts.llama[language] + "\n\n";
@@ -430,41 +445,35 @@ export function AIHealthAssistant({
       
       prompt += "Human: " + userMessage + "\nAssistant:";
       
-      console.log("Sending prompt to Hugging Face Spaces:", prompt);
+      console.log("Sending prompt to Hugging Face Inference API");
 
-      // Headers for the API request
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
+      // Make sure we have the right model path
+      const modelPath = `/${modelName}`;
       
-      // Add authentication if token is available
-      if (huggingFaceToken) {
-        headers["Authorization"] = `Bearer ${huggingFaceToken}`;
-      }
-
-      // Call the Hugging Face Spaces API endpoint
-      const response = await fetch(HUGGINGFACE_SPACE_URL, {
+      // Call the Hugging Face Inference API directly
+      const response = await fetch(`${HUGGINGFACE_API_URL}${modelPath}`, {
         method: "POST",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${huggingFaceToken}`
+        },
         body: JSON.stringify({
           inputs: prompt,
           parameters: {
-            model: modelName,
             max_new_tokens: 500,
             temperature: 0.7,
             top_p: 0.95,
             do_sample: true,
+            return_full_text: false
           }
         }),
-        // 30 second timeout for model generation
-        signal: AbortSignal.timeout(30000),
       });
 
       // Log response status for debugging
-      console.log("Hugging Face Spaces API response status:", response.status);
+      console.log("Hugging Face API response status:", response.status);
 
       if (!response.ok) {
-        console.error("Hugging Face Spaces API error:", response.status, response.statusText);
+        console.error("Hugging Face API error:", response.status, response.statusText);
         
         // Parse the error response
         let errorMessage = "";
@@ -500,24 +509,31 @@ export function AIHealthAssistant({
       
       // Parse the response
       const data = await response.json();
-      console.log("Hugging Face Spaces API response:", data);
+      console.log("Hugging Face API response:", data);
       
-      if (!data.generated_text) {
-        throw new Error("No generated text in response");
+      if (Array.isArray(data) && data.length > 0) {
+        if (typeof data[0] === "string") {
+          return data[0].trim();
+        } else if (data[0].generated_text) {
+          return data[0].generated_text.trim();
+        }
+      } else if (data.generated_text) {
+        return data.generated_text.trim();
       }
       
-      return data.generated_text.trim();
+      // If we couldn't find a response in the expected format
+      console.error("Unexpected Hugging Face API response format:", data);
+      throw new Error("Unexpected response format from Hugging Face API");
+      
     } catch (error) {
-      console.error("Error calling Hugging Face Spaces:", error);
+      console.error("Error calling Hugging Face Inference API:", error);
       
       // Increment consecutive errors
       setConsecutiveErrors(prev => prev + 1);
       
-      // Set appropriate error message if not already set
+      // Set appropriate error message
       if (!apiError) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          setApiError("serverError");
-        } else if (error instanceof TypeError && error.message.includes("fetch")) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
           setApiError("networkError");
         } else {
           setApiError("llamaError");
@@ -655,8 +671,8 @@ export function AIHealthAssistant({
         const aiResponse = await callOpenAI(input, messages);
         aiResponseText = aiResponse + " " + disclaimers[language];
       } else if (currentProvider === "llama") {
-        // Call Hugging Face Spaces API with Llama model
-        const aiResponse = await callHuggingFaceSpaces(input, messages, currentModel);
+        // Use direct Hugging Face Inference API (better for avoiding CORS issues)
+        const aiResponse = await callHuggingFaceInferenceAPI(input, messages, currentModel);
         aiResponseText = aiResponse + " " + disclaimers[language];
       }
       
@@ -675,6 +691,15 @@ export function AIHealthAssistant({
       
     } catch (error) {
       console.error("Error sending message:", error);
+      
+      // Check for CORS errors
+      if (
+        error instanceof TypeError && 
+        error.message.includes("fetch") && 
+        (error.message.includes("CORS") || error.message.includes("cors"))
+      ) {
+        setApiError("corsError");
+      }
       
       // Display error message to user
       const errorKey = apiError || "default";
@@ -1016,8 +1041,8 @@ export function AIHealthAssistant({
                 </AlertTitle>
                 <AlertDescription>
                   {language === "en" 
-                    ? "You're using Llama 2 via Hugging Face Spaces API. Response times may vary based on model size. If you experience slow responses, try using a smaller model or switch to test mode." 
-                    : "Está utilizando Llama 2 a través de la API de Hugging Face Spaces. Los tiempos de respuesta pueden variar según el tamaño del modelo. Si experimenta respuestas lentas, intente usar un modelo más pequeño o cambie al modo de prueba."}
+                    ? "You're using Llama 2 via Hugging Face API. Response times may vary based on model size. If you experience slow responses, try using a smaller model or switch to test mode." 
+                    : "Está utilizando Llama 2 a través de la API de Hugging Face. Los tiempos de respuesta pueden variar según el tamaño del modelo. Si experimenta respuestas lentas, intente usar un modelo más pequeño o cambie al modo de prueba."}
                 </AlertDescription>
               </Alert>
             )}

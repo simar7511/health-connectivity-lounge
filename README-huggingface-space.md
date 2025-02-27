@@ -32,9 +32,23 @@ import os
 import gradio as gr
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Environment variables can be set in the Space settings
 SELECTED_MODEL = os.environ.get("SELECTED_MODEL", "meta-llama/llama-2-7b-chat-hf")
+
+# Get FastAPI app from Gradio
+app = gr.routes.App.get_app()
+
+# Add CORS middleware to the FastAPI app
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Define which models are available
 AVAILABLE_MODELS = {
@@ -233,6 +247,7 @@ gradio>=3.50.2
 transformers>=4.36.0
 torch>=2.0.0
 accelerate>=0.25.0
+fastapi>=0.100.0
 ```
 
 ## Step 4: Deploy and Configure the Space
@@ -246,17 +261,81 @@ accelerate>=0.25.0
 1. In your frontend application, update the `HUGGINGFACE_SPACE_URL` constant in the `AIHealthAssistant.tsx` file to point to your new Space API endpoint.
 2. Ensure users are prompted to enter their Hugging Face API token in the settings.
 
+## Troubleshooting CORS Issues
+
+If you encounter CORS (Cross-Origin Resource Sharing) errors when calling the API from your frontend application, there are two possible solutions:
+
+### Option 1: Use a Proxy Server
+
+The simplest solution is to set up a small proxy server that forwards requests to the Hugging Face Space API. This can be done using a service like Cloudflare Workers, Netlify Functions, or a simple Express server.
+
+Example using a simple Express server:
+
+```javascript
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+const app = express();
+
+app.use(cors()); // Enable CORS for all routes
+app.use(express.json());
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const response = await axios.post(
+      'https://huggingface.co/spaces/your-username/health-connectivity-llama-assistant/api/predict',
+      req.body,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization,
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.listen(3000, () => {
+  console.log('Proxy server running on port 3000');
+});
+```
+
+### Option 2: Update Your Frontend Code
+
+If you can't set up a proxy server, you can modify the frontend code to use the mode: 'no-cors' option, but this will limit the response data you can access:
+
+```javascript
+// In AIHealthAssistant.tsx
+const response = await fetch(HUGGINGFACE_SPACE_URL, {
+  method: "POST",
+  mode: 'no-cors', // Add this line
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${huggingFaceToken}`
+  },
+  body: JSON.stringify({
+    inputs: prompt,
+    parameters: {
+      model: modelName,
+      max_new_tokens: 500,
+      temperature: 0.7,
+      top_p: 0.95,
+      do_sample: true
+    }
+  })
+});
+```
+
+However, with mode: 'no-cors', you won't be able to access the response data directly, so this is not ideal for an API that needs to return data.
+
 ## Usage Considerations
 
 - The free Hugging Face Spaces tier provides adequate resources for inference with Llama 2 models
 - Response times may vary depending on the model size and current load
 - For more demanding usage, consider upgrading to a paid Spaces plan or deploying to other serverless platforms
-
-## Troubleshooting
-
-- If you encounter "model loading" errors, it's likely because the Space is still loading the model for the first time
-- If you see 401 Unauthorized errors, ensure you're passing the correct Hugging Face API token
-- If responses are slow, consider using a smaller model (7B parameters instead of 13B)
 
 ## Support
 
