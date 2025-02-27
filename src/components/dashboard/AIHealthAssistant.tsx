@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, Send, Bot, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Mic, Send, Bot, User, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AIHealthAssistantProps {
   language: "en" | "es";
@@ -36,6 +37,22 @@ const disclaimers = {
   es: "Tenga en cuenta que proporciono información general de salud, no asesoramiento médico personalizado. Para asuntos urgentes, contacte directamente a su proveedor de atención médica."
 };
 
+// Error messages based on language
+const errorMessages = {
+  en: {
+    quotaExceeded: "OpenAI API quota exceeded. Please try again later or use a different API key.",
+    invalidKey: "Invalid API key. Please check your API key and try again.",
+    networkError: "Network error. Please check your internet connection and try again.",
+    default: "An error occurred. Please try again."
+  },
+  es: {
+    quotaExceeded: "Cuota de API de OpenAI excedida. Intente de nuevo más tarde o use una clave API diferente.",
+    invalidKey: "Clave API inválida. Por favor, verifique su clave API e inténtelo de nuevo.",
+    networkError: "Error de red. Compruebe su conexión a Internet e inténtelo de nuevo.",
+    default: "Se produjo un error. Inténtelo de nuevo."
+  }
+};
+
 export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssistantProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,6 +60,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
   const [useVoiceInput, setUseVoiceInput] = useState(false);
   const [openAIKey, setOpenAIKey] = useState<string>("");
   const [showAPIKeyInput, setShowAPIKeyInput] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const auth = getAuth();
   const { toast } = useToast();
@@ -105,6 +123,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
     if (openAIKey.trim()) {
       localStorage.setItem("openai_api_key", openAIKey);
       setShowAPIKeyInput(false);
+      setApiError(null);
       toast({
         title: language === "en" ? "API Key Saved" : "Clave API Guardada",
         description: language === "en" 
@@ -117,6 +136,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
 
   const callOpenAI = async (userMessage: string, previousMessages: Message[]) => {
     try {
+      console.log("Calling OpenAI API...");
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -143,14 +163,46 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
         }),
       });
 
+      // Check for specific error status codes
       if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+        console.error("OpenAI API error:", response.status, response.statusText);
+        
+        // Parse the error response if possible
+        const errorData = await response.json().catch(() => null);
+        console.log("Error data:", errorData);
+        
+        if (response.status === 429) {
+          // Rate limit or quota exceeded
+          setApiError("quotaExceeded");
+          throw new Error("API request rate limit or quota exceeded");
+        } else if (response.status === 401) {
+          // Invalid API key
+          setApiError("invalidKey");
+          throw new Error("Invalid API key");
+        } else {
+          setApiError("default");
+          throw new Error(`API request failed with status ${response.status}`);
+        }
       }
 
+      // Clear any previous errors
+      setApiError(null);
+      
       const data = await response.json();
+      console.log("OpenAI API response:", data);
       return data.choices[0].message.content;
     } catch (error) {
       console.error("Error calling OpenAI:", error);
+      
+      // Set appropriate error message if not already set
+      if (!apiError) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
+          setApiError("networkError");
+        } else {
+          setApiError("default");
+        }
+      }
+      
       throw error;
     }
   };
@@ -182,6 +234,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsProcessing(true);
+    setApiError(null); // Clear previous errors
     
     try {
       // Add to Firestore
@@ -219,16 +272,21 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      
+      // Display error message to user
+      const errorKey = apiError || "default";
       toast({
         title: language === "en" ? "Error" : "Error",
-        description: language === "en" 
-          ? "Failed to send message. Please check your API key and try again." 
-          : "No se pudo enviar el mensaje. Por favor, verifique su clave API e inténtelo de nuevo.",
+        description: errorMessages[language][errorKey as keyof typeof errorMessages.en],
         variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleChangeAPIKey = () => {
+    setShowAPIKeyInput(true);
   };
 
   const handleVoiceInput = (fieldName: string, voiceText: string) => {
@@ -267,6 +325,19 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
                 : "Por favor, ingrese su clave API de OpenAI para usar el Asistente de Salud. Su clave se almacenará localmente en su navegador."}
             </p>
           </div>
+          
+          {apiError && (
+            <Alert variant="destructive" className="my-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>
+                {language === "en" ? "API Error" : "Error de API"}
+              </AlertTitle>
+              <AlertDescription>
+                {errorMessages[language][apiError as keyof typeof errorMessages.en]}
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <div className="w-full max-w-md space-y-2">
             <Input
               type="password"
@@ -292,6 +363,26 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
       ) : (
         <>
           <CardContent className="flex-1 p-4 overflow-hidden">
+            {apiError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>
+                  {language === "en" ? "API Error" : "Error de API"}
+                </AlertTitle>
+                <AlertDescription className="flex flex-col gap-2">
+                  <span>{errorMessages[language][apiError as keyof typeof errorMessages.en]}</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleChangeAPIKey}
+                    className="mt-1 self-start"
+                  >
+                    {language === "en" ? "Change API Key" : "Cambiar Clave API"}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <ScrollArea className="h-[calc(100%-1rem)]">
               <div className="space-y-4 pb-4">
                 {messages.map((message) => (
