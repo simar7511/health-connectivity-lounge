@@ -1,11 +1,12 @@
 
 import * as functions from "firebase-functions";
-import { sendSMS, sendWhatsAppMessage } from "./twilioFunctions";
+import { sendSMS } from "./twilioFunctions";
 import { aiHealthAssistant } from "./aiHealthAssistant";
 
-// Export the original Twilio functions
-export const sendSMSMessage = functions.https.onCall(sendSMS);
-export const sendWhatsAppMsg = functions.https.onCall(sendWhatsAppMessage);
+// Export the Twilio SMS function - using the correct signature
+export const sendSMSMessage = functions.https.onCall((data, context) => {
+  return sendSMS(data, context);
+});
 
 // Export the AI Health Assistant function
 export { aiHealthAssistant };

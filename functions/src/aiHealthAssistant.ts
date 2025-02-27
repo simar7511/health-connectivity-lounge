@@ -1,9 +1,9 @@
 
 import * as functions from "firebase-functions";
-import fetch from "node-fetch";
+import { https } from "firebase-functions";
 
 // System prompts based on language
-const systemPrompts = {
+const systemPrompts: Record<string, string> = {
   en: `You are an AI Health Assistant for a free healthcare clinic. 
 Your role is to provide helpful, accurate general health information while being compassionate and culturally sensitive.
 
@@ -37,6 +37,19 @@ Pautas clave:
 Recuerda: Tu objetivo es proporcionar información general útil sobre la salud mientras fomentas un comportamiento adecuado de búsqueda de atención.`
 };
 
+interface Message {
+  role: string;
+  content: string;
+}
+
+interface OpenAIResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
+
 export const aiHealthAssistant = functions.https.onRequest(async (request, response) => {
   response.set("Access-Control-Allow-Origin", "*");
   
@@ -62,45 +75,63 @@ export const aiHealthAssistant = functions.https.onRequest(async (request, respo
     }
 
     // Get API key from environment
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = functions.config().openai?.api_key;
     if (!apiKey) {
       response.status(500).send({ error: "OpenAI API key not configured" });
       return;
     }
 
     // Format messages for OpenAI API
-    const messages = [
-      { role: "system", content: systemPrompts[language] },
+    const messages: Message[] = [
+      { role: "system", content: systemPrompts[language] || systemPrompts.en },
       ...previousMessages.slice(-5), // Include last 5 messages for context
       { role: "user", content: message }
     ];
 
-    // Call OpenAI API
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: messages,
-        temperature: 0.3,
-        max_tokens: 500
-      })
+    // Call OpenAI API using built-in https module
+    const https = require('https');
+    
+    const openaiRequestData = JSON.stringify({
+      model: "gpt-4",
+      messages: messages,
+      temperature: 0.3,
+      max_tokens: 500
     });
-
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.json();
-      console.error("OpenAI API error:", errorData);
-      response.status(openaiResponse.status).send({ 
-        error: "Error from OpenAI API", 
-        details: errorData
+    
+    const openaiResponse = await new Promise<string>((resolve, reject) => {
+      const req = https.request({
+        hostname: 'api.openai.com',
+        port: 443,
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Length': Buffer.byteLength(openaiRequestData)
+        }
+      }, (res: any) => {
+        let data = '';
+        res.on('data', (chunk: string) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(data);
+          } else {
+            reject(new Error(`Request failed with status code ${res.statusCode}: ${data}`));
+          }
+        });
       });
-      return;
-    }
-
-    const data = await openaiResponse.json();
+      
+      req.on('error', (error: Error) => {
+        reject(error);
+      });
+      
+      req.write(openaiRequestData);
+      req.end();
+    });
+    
+    const data = JSON.parse(openaiResponse) as OpenAIResponse;
     const aiResponse = data.choices[0].message.content;
 
     response.status(200).send({ response: aiResponse });
