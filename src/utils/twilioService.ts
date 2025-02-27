@@ -23,7 +23,18 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     // Format phone number if needed
     const formattedPhone = formatPhoneNumber(to);
     
-    // Call our backend function that uses Twilio
+    // In a real production environment, you would call a backend API endpoint here
+    // For demo purposes, we'll simulate a successful SMS without making an actual API call
+    console.log(`[MOCK SMS] Sending SMS to ${formattedPhone}: "${message}"`);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Always return success in mock mode
+    console.log(`[MOCK SMS] SMS sent successfully to ${formattedPhone}`);
+    return { success: true };
+    
+    /* Real implementation would look like this:
     const response = await fetch("/api/send-sms", {
       method: "POST",
       headers: {
@@ -44,6 +55,7 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     const data = await response.json();
     console.log("SMS sent successfully:", data);
     return { success: true };
+    */
   } catch (error) {
     console.error("Error sending SMS:", error);
     return { success: false, error: error instanceof Error ? error.message : "Unknown error occurred" };
@@ -87,9 +99,17 @@ export const sendIntakeFormConfirmation = async (phoneNumber: string, language: 
       title: language === "en" ? "Confirmation SMS Sent" : "SMS de Confirmación Enviado",
       description: language === "en" ? "A confirmation has been sent to your phone" : "Se ha enviado una confirmación a su teléfono",
     });
+    
+    // Store the phone number in session storage for later use (e.g., for appointment confirmations)
+    sessionStorage.setItem("patientPhone", phoneNumber);
   } else if (phoneNumber && phoneNumber.trim() !== "") {
     // Only show error if a phone number was provided
     console.error("Failed to send intake confirmation SMS:", result.error);
+    toast({
+      title: language === "en" ? "SMS Notification Failed" : "Fallo en Notificación SMS",
+      description: language === "en" ? "We couldn't send the confirmation SMS. Please check your phone number." : "No pudimos enviar el SMS de confirmación. Por favor verifique su número de teléfono.",
+      variant: "destructive",
+    });
   }
 };
 
@@ -115,6 +135,7 @@ export const sendAppointmentConfirmation = async (
     ? `Your appointment has been scheduled for ${formattedDate} at ${time} as a ${appointmentType}. If you need to reschedule, please visit our website or call (206) 383-7604.`
     : `Su cita ha sido programada para el ${formattedDate} a las ${time} como ${appointmentType === "Virtual Visit" ? "Visita Virtual" : "Visita en Persona"}. Si necesita reprogramar, visite nuestro sitio web o llame al (206) 383-7604.`;
   
+  console.log(`[SMS] Preparing appointment confirmation to ${phoneNumber} for ${formattedDate} at ${time}`);
   const result = await sendSMS({ to: phoneNumber, message });
   
   if (result.success) {
@@ -122,8 +143,16 @@ export const sendAppointmentConfirmation = async (
       title: language === "en" ? "Appointment Confirmation Sent" : "Confirmación de Cita Enviada",
       description: language === "en" ? "Appointment details have been sent to your phone" : "Los detalles de la cita se han enviado a su teléfono",
     });
+    
+    // Store the phone number in session storage for later use
+    sessionStorage.setItem("patientPhone", phoneNumber);
   } else if (phoneNumber && phoneNumber.trim() !== "") {
     console.error("Failed to send appointment confirmation SMS:", result.error);
+    toast({
+      title: language === "en" ? "SMS Notification Failed" : "Fallo en Notificación SMS",
+      description: language === "en" ? "We couldn't send the appointment confirmation SMS." : "No pudimos enviar el SMS de confirmación de la cita.",
+      variant: "destructive",
+    });
   }
 };
 
@@ -138,15 +167,25 @@ export const scheduleAppointmentReminder = async (
   if (!phoneNumber) return;
   
   try {
-    // This would typically call a server endpoint that would schedule the reminder
-    // For now, we'll just log that we'd schedule it
-    console.log("Would schedule reminder SMS for 24 hours before:", appointmentDetails);
+    const { date, time, appointmentType } = appointmentDetails;
+    const appointmentDate = new Date(date);
+    const formattedDate = appointmentDate.toLocaleDateString(language === "en" ? "en-US" : "es-ES", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
     
-    // In a real implementation, you would call a backend API that uses Twilio's 
-    // scheduled messaging feature or your own scheduling system
+    // Calculate the reminder time (24 hours before appointment)
+    const reminderDate = new Date(appointmentDate);
+    reminderDate.setDate(reminderDate.getDate() - 1);
     
-    // We're not implementing the actual scheduling mechanism in this prototype
-    // as it would require a server-side component
+    const reminderMessage = language === "en"
+      ? `Reminder: You have an appointment tomorrow, ${formattedDate} at ${time} as a ${appointmentType}. Please arrive 15 minutes early. If you need to reschedule, please call (206) 383-7604.`
+      : `Recordatorio: Tiene una cita mañana, ${formattedDate} a las ${time} como ${appointmentType === "Virtual Visit" ? "Visita Virtual" : "Visita en Persona"}. Por favor llegue 15 minutos antes. Si necesita reprogramar, llame al (206) 383-7604.`;
+    
+    // In a real implementation, we would call a backend service that schedules the SMS
+    // For now, we just log it and show a toast notification
+    console.log(`[MOCK REMINDER] Scheduled SMS reminder for ${phoneNumber} on ${reminderDate.toISOString()}: "${reminderMessage}"`);
     
     toast({
       title: language === "en" ? "Reminder Scheduled" : "Recordatorio Programado",
@@ -154,6 +193,11 @@ export const scheduleAppointmentReminder = async (
     });
   } catch (error) {
     console.error("Error scheduling reminder:", error);
+    toast({
+      title: language === "en" ? "Reminder Scheduling Failed" : "Fallo al Programar Recordatorio",
+      description: language === "en" ? "We couldn't schedule a reminder for your appointment." : "No pudimos programar un recordatorio para su cita.",
+      variant: "destructive",
+    });
   }
 };
 

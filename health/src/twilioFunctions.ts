@@ -1,128 +1,116 @@
-import * as functions from "firebase-functions";
-import { Twilio } from "twilio";
-import * as dotenv from "dotenv";
 
-// ✅ Load environment variables
-dotenv.config();
+import { Request, Response } from "express";
+import twilio from "twilio";
 
-// ✅ Twilio credentials
-const accountSid = process.env.TWILIO_ACCOUNT_SID!;
-const authToken = process.env.TWILIO_AUTH_TOKEN!;
-const twilioPhone = process.env.TWILIO_PHONE_NUMBER!;
+// Initialize Twilio client
+const initTwilioClient = () => {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  
+  if (!accountSid || !authToken) {
+    throw new Error("Missing Twilio credentials. Please check environment variables.");
+  }
+  
+  return twilio(accountSid, authToken);
+};
 
-if (!accountSid || !authToken || !twilioPhone) {
-  throw new Error("❌ Missing Twilio environment variables!");
-}
-
-// ✅ Initialize Twilio client
-const client = new Twilio(accountSid, authToken);
-
-// ✅ LibreTranslate API URL
-const TRANSLATION_API_URL = process.env.TRANSLATION_API_URL || "https://libretranslate.com/translate";
-
-/**
- * ✅ Function to send SMS via Twilio
- */
-export const sendSms = functions.https.onCall(async (request, context) => {
+// Send SMS message
+export const sendSMS = async (req: Request, res: Response) => {
   try {
-    const phoneNumber: string | undefined = request.data?.phoneNumber;
-    const message: string | undefined = request.data?.message;
-
-    if (!phoneNumber || !message) {
-      throw new functions.https.HttpsError("invalid-argument", "Missing phoneNumber or message.");
+    // Extract parameters from request
+    const { to, message } = req.body;
+    
+    if (!to || !message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required parameters: 'to' and 'message' are required" 
+      });
     }
-
-    const response = await client.messages.create({
+    
+    // Get Twilio client
+    let client;
+    try {
+      client = initTwilioClient();
+    } catch (error) {
+      console.error("Twilio initialization error:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Failed to initialize Twilio client" 
+      });
+    }
+    
+    // Get Twilio phone number
+    const from = process.env.TWILIO_PHONE_NUMBER;
+    
+    if (!from) {
+      return res.status(500).json({ 
+        success: false, 
+        message: "Missing Twilio phone number. Please check environment variables." 
+      });
+    }
+    
+    // Log the SMS we're about to send
+    console.log(`Sending SMS to ${to} from ${from}: "${message}"`);
+    
+    // Send SMS
+    const twilioResponse = await client.messages.create({
       body: message,
-      from: twilioPhone,
-      to: phoneNumber,
+      from,
+      to,
     });
-
-    console.log(`✅ SMS sent to ${phoneNumber}: ${response.sid}`);
-    return { success: true, message: "SMS sent successfully." };
+    
+    console.log("Twilio message sent:", twilioResponse.sid);
+    
+    return res.status(200).json({ 
+      success: true, 
+      messageId: twilioResponse.sid,
+      status: twilioResponse.status 
+    });
   } catch (error) {
-    console.error("❌ Error sending SMS:", error);
-    throw new functions.https.HttpsError("internal", "Failed to send SMS.");
+    console.error("Error sending SMS:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: error instanceof Error ? error.message : "Unknown error occurred" 
+    });
   }
-});
+};
 
-/**
- * ✅ Function to send WhatsApp Message via Twilio
- */
-export const sendWhatsApp = functions.https.onCall(async (request, context) => {
+// Schedule SMS message to be sent at a specific time (for future implementation)
+export const scheduleSMS = async (req: Request, res: Response) => {
   try {
-    const phoneNumber: string | undefined = request.data?.phoneNumber;
-    const message: string | undefined = request.data?.message;
-
-    if (!phoneNumber || !message) {
-      throw new functions.https.HttpsError("invalid-argument", "Missing phoneNumber or message.");
+    // Extract parameters from request
+    const { to, message, sendAt } = req.body;
+    
+    if (!to || !message || !sendAt) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required parameters: 'to', 'message', and 'sendAt' are required" 
+      });
     }
-
-    const response = await client.messages.create({
-      body: message,
-      from: `whatsapp:${twilioPhone}`,
-      to: `whatsapp:${phoneNumber}`,
+    
+    // Validate sendAt date
+    const sendAtDate = new Date(sendAt);
+    if (isNaN(sendAtDate.getTime())) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid 'sendAt' date format" 
+      });
+    }
+    
+    // In a real implementation, you would store this in a database and have a scheduler
+    // For now, we'll just log it
+    console.log(`[SCHEDULED SMS] To: ${to}, At: ${sendAtDate.toISOString()}, Message: "${message}"`);
+    
+    return res.status(200).json({ 
+      success: true, 
+      scheduled: true,
+      scheduledFor: sendAtDate.toISOString()
     });
-
-    console.log(`✅ WhatsApp message sent to ${phoneNumber}: ${response.sid}`);
-    return { success: true, message: "WhatsApp message sent successfully." };
   } catch (error) {
-    console.error("❌ Error sending WhatsApp message:", error);
-    throw new functions.https.HttpsError("internal", "Failed to send WhatsApp message.");
-  }
-});
-
-/**
- * ✅ Function to translate text using LibreTranslate API
- */
-export const translateText = functions.https.onCall(async (request, context) => {
-  try {
-    const text: string | undefined = request.data?.text;
-    const fromLanguage: string | undefined = request.data?.fromLanguage;
-    const toLanguage: string | undefined = request.data?.toLanguage;
-
-    if (!text || !fromLanguage || !toLanguage) {
-      throw new functions.https.HttpsError("invalid-argument", "Missing text, fromLanguage, or toLanguage.");
-    }
-
-    console.log(`🔄 Sending translation request: ${text} (${fromLanguage} → ${toLanguage})`);
-
-    // ✅ Use dynamic import for `node-fetch`
-    const fetch = (await import("node-fetch")).default;
-
-    // 📌 Send translation request to LibreTranslate API
-    const response = await fetch(TRANSLATION_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        q: text,
-        source: fromLanguage,
-        target: toLanguage,
-        format: "text"
-      })
+    console.error("Error scheduling SMS:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: error instanceof Error ? error.message : "Unknown error occurred" 
     });
-
-    const data = await response.json();
-
-    // 📌 Debugging: Log response
-    console.log("🔍 Translation API response:", JSON.stringify(data, null, 2));
-
-    // ✅ Ensure response has expected structure
-    if (!data || typeof data !== "object" || !("translatedText" in data)) {
-      console.error("❌ Translation API response error:", data);
-      throw new functions.https.HttpsError("internal", "Unexpected response from translation API.");
-    }
-
-    console.log(`✅ Translated text: ${data.translatedText}`);
-
-    return {
-      success: true,
-      translatedText: data.translatedText
-    };
-  } catch (error) {
-    console.error("❌ Error translating text:", error);
-    throw new functions.https.HttpsError("internal", "Failed to translate text.");
   }
-});
+};
