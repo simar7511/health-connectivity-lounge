@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Circle } from "lucide-react";
+import { MessageSquare, Circle, Bot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 interface MessagingInboxProps {
   language: "en" | "es";
@@ -13,11 +14,13 @@ const content = {
   en: {
     title: "Secure Messages",
     chat: "Secure Chat",
+    aiChat: "AI Health Assistant",
     unread: "unread messages",
   },
   es: {
     title: "Mensajes Seguros",
     chat: "Chat Seguro",
+    aiChat: "Asistente de Salud IA",
     unread: "mensajes sin leer",
   },
 };
@@ -40,14 +43,25 @@ export const MessagingInbox = ({ language }: MessagingInboxProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <Button
-            variant="outline"
-            className="w-full flex items-center gap-2"
-            onClick={() => navigate("/chat")}
-          >
-            <MessageSquare className="h-4 w-4" />
-            {content[language].chat}
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => navigate("/chat")}
+            >
+              <MessageSquare className="h-4 w-4" />
+              {content[language].chat}
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => navigate("/ai-chat")}
+            >
+              <Bot className="h-4 w-4" />
+              {content[language].aiChat}
+            </Button>
+          </div>
           
           <div className="space-y-2">
             {mockMessages.map((message) => (

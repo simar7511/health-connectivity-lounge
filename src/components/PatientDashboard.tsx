@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,7 +15,7 @@ import {
   Car, 
   Bell, 
   MessageSquare, 
-  PhoneCall 
+  Bot
 } from "lucide-react";
 
 const PatientDashboard = ({ language }: { language: "en" | "es" }) => {
@@ -32,7 +33,9 @@ const PatientDashboard = ({ language }: { language: "en" | "es" }) => {
       reminders: "View Reminders",
       communityResources: "Community Resources",
       findClinics: "Find Free Clinics",
-      sendWhatsApp: "Send WhatsApp Reminder"
+      sendWhatsApp: "Send WhatsApp Reminder",
+      aiAssistant: "AI Health Assistant",
+      secureChat: "Secure Chat"
     },
     es: {
       upcomingAppointment: "Próxima Cita",
@@ -43,7 +46,9 @@ const PatientDashboard = ({ language }: { language: "en" | "es" }) => {
       reminders: "Ver Recordatorios",
       communityResources: "Recursos Comunitarios",
       findClinics: "Encontrar Clínicas Gratuitas",
-      sendWhatsApp: "Enviar Recordatorio por WhatsApp"
+      sendWhatsApp: "Enviar Recordatorio por WhatsApp",
+      aiAssistant: "Asistente de Salud IA",
+      secureChat: "Chat Seguro"
     }
   };
 
@@ -76,6 +81,30 @@ const PatientDashboard = ({ language }: { language: "en" | "es" }) => {
           >
             <Hospital className="w-5 h-5" />
             {content[currentLanguage].findClinics}
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="p-4 space-y-4">
+        <h2 className="text-xl font-semibold text-primary">
+          Communication
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3"
+            onClick={() => navigate("/chat")}
+          >
+            <MessageSquare className="w-5 h-5" />
+            {content[currentLanguage].secureChat}
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-start gap-3"
+            onClick={() => navigate("/ai-chat")}
+          >
+            <Bot className="w-5 h-5" />
+            {content[currentLanguage].aiAssistant}
           </Button>
         </div>
       </Card>

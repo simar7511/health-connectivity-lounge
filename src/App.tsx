@@ -17,6 +17,7 @@ import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import PatientOverviewPage from "./pages/PatientOverviewPage";
 import { ChatPage } from "./pages/ChatPage";
 import ConfirmationPage from "./pages/ConfirmationPage";
+import AIHealthChatPage from "./pages/AIHealthChatPage";
 
 const App: React.FC = () => {
   // ✅ Manage Language Selection
@@ -65,6 +66,8 @@ const App: React.FC = () => {
         <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/chat/:patientName" element={<ChatPage />} />
+        <Route path="/ai-chat" element={<AIHealthChatPage />} />
+        <Route path="/ai-chat/:patientId" element={<AIHealthChatPage />} />
 
         {/* 🚨 404 Error Page */}
         <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
