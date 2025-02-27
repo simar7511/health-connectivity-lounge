@@ -62,6 +62,7 @@ const errorMessages = {
     networkError: "Network error. Please check your internet connection and try again.",
     llamaError: "Error connecting to Llama 2 API. Please try again later or switch to test mode.",
     llamaModelLoading: "The Llama 2 model is currently loading. This may take a minute for the first request. Please try again.",
+    llamaAuthError: "Authentication error with Hugging Face API. Please enter a valid Hugging Face API token in settings.",
     default: "An error occurred. Please try again or switch to test mode."
   },
   es: {
@@ -70,6 +71,7 @@ const errorMessages = {
     networkError: "Error de red. Compruebe su conexión a Internet e inténtelo de nuevo.",
     llamaError: "Error al conectar con la API de Llama 2. Por favor, inténtelo de nuevo más tarde o cambie al modo de prueba.",
     llamaModelLoading: "El modelo Llama 2 está cargando actualmente. Esto puede tardar un minuto para la primera solicitud. Por favor, inténtelo de nuevo.",
+    llamaAuthError: "Error de autenticación con la API de Hugging Face. Por favor, ingrese un token válido de API de Hugging Face en la configuración.",
     default: "Se produjo un error. Inténtelo de nuevo o cambie al modo de prueba."
   }
 };
@@ -130,6 +132,9 @@ export function AIHealthAssistant({
   const [apiKey, setApiKey] = useState<string>(() => {
     return localStorage.getItem(`${provider}_api_key`) || "";
   });
+  const [huggingFaceToken, setHuggingFaceToken] = useState<string>(() => {
+    return localStorage.getItem("huggingface_token") || "";
+  });
   const [showAPIKeyInput, setShowAPIKeyInput] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [currentModel, setCurrentModel] = useState(model);
@@ -164,12 +169,14 @@ export function AIHealthAssistant({
     };
     setMessages([initialMessage]);
     
-    // Check if API key is needed and available (not needed for Llama 2)
-    const needsKey = currentProvider === "openai";
-    if (needsKey && !apiKey && !useFallbackMode && !useTestMode) {
+    // Check if API key is needed and available
+    const needsOpenAIKey = currentProvider === "openai" && !apiKey;
+    const needsHuggingFaceToken = currentProvider === "llama" && !huggingFaceToken;
+    
+    if ((needsOpenAIKey || needsHuggingFaceToken) && !useFallbackMode && !useTestMode) {
       setShowAPIKeyInput(true);
     }
-  }, [language, useFallbackMode, useTestMode, currentProvider, apiKey]);
+  }, [language, useFallbackMode, useTestMode, currentProvider, apiKey, huggingFaceToken]);
 
   // Scroll to bottom of messages when new ones are added
   useEffect(() => {
@@ -218,9 +225,22 @@ export function AIHealthAssistant({
       return;
     }
     
-    // Save API key (only for OpenAI, not needed for Llama)
+    if (currentProvider === "llama" && !huggingFaceToken.trim()) {
+      toast({
+        title: language === "en" ? "Error" : "Error",
+        description: language === "en" 
+          ? "Hugging Face token cannot be empty for Llama models."
+          : "El token de Hugging Face no puede estar vacío para los modelos Llama.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Save API keys
     if (currentProvider === "openai") {
       localStorage.setItem("openai_api_key", apiKey);
+    } else if (currentProvider === "llama") {
+      localStorage.setItem("huggingface_token", huggingFaceToken);
     }
     
     // Save model preferences
@@ -258,8 +278,10 @@ export function AIHealthAssistant({
     setMessages([initialMessage]);
     
     // Show API key input if switching from fallback to API mode
-    const needsKey = currentProvider === "openai";
-    if (!value && needsKey && !apiKey && !useTestMode) {
+    const needsOpenAIKey = currentProvider === "openai" && !apiKey;
+    const needsHuggingFaceToken = currentProvider === "llama" && !huggingFaceToken;
+    
+    if (!value && (needsOpenAIKey || needsHuggingFaceToken) && !useTestMode) {
       setShowAPIKeyInput(true);
     } else {
       setShowAPIKeyInput(false);
@@ -388,13 +410,20 @@ export function AIHealthAssistant({
 
       console.log("Sending prompt to Llama 2 API:", prompt);
 
-      // Call the Hugging Face free inference API
-      // Note: This API doesn't require an API key for Llama 2 inference
+      // Use Hugging Face API token for authentication
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      
+      // Add authentication header if token is available
+      if (huggingFaceToken) {
+        headers["Authorization"] = `Bearer ${huggingFaceToken}`;
+      }
+
+      // Call the Hugging Face inference API
       const response = await fetch(`https://api-inference.huggingface.co/models/meta-llama/${currentModel}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: headers,
         body: JSON.stringify({
           inputs: prompt,
           parameters: {
@@ -426,8 +455,13 @@ export function AIHealthAssistant({
           console.log("Error text:", errorMessage);
         }
         
+        // Check for authentication error
+        if (response.status === 401 || errorMessage.includes("Invalid username or password")) {
+          setApiError("llamaAuthError");
+          throw new Error("Authentication error with Hugging Face API");
+        }
         // Check for model loading error (common with Hugging Face inference API)
-        if (errorMessage.includes("loading") || errorMessage.includes("still loading") || response.status === 503) {
+        else if (errorMessage.includes("loading") || errorMessage.includes("still loading") || response.status === 503) {
           setApiError("llamaModelLoading");
           throw new Error("Llama model is still loading");
         } else {
@@ -552,14 +586,20 @@ export function AIHealthAssistant({
     if (!input.trim()) return;
     
     // Check if API key is needed and available
-    const needsKey = currentProvider === "openai";
-    if (needsKey && !apiKey && !useFallbackMode && !useTestMode) {
+    const needsOpenAIKey = currentProvider === "openai" && !apiKey;
+    const needsHuggingFaceToken = currentProvider === "llama" && !huggingFaceToken;
+    
+    if ((needsOpenAIKey || needsHuggingFaceToken) && !useFallbackMode && !useTestMode) {
       setShowAPIKeyInput(true);
       toast({
         title: language === "en" ? "API Key Required" : "Se Requiere Clave API",
-        description: language === "en" 
-          ? "Please enter your OpenAI API key to continue." 
-          : "Por favor, ingrese su clave API de OpenAI para continuar.",
+        description: currentProvider === "openai" 
+          ? (language === "en" 
+              ? "Please enter your OpenAI API key to continue." 
+              : "Por favor, ingrese su clave API de OpenAI para continuar.")
+          : (language === "en"
+              ? "Please enter your Hugging Face API token to continue."
+              : "Por favor, ingrese su token de API de Hugging Face para continuar."),
         variant: "destructive",
       });
       return;
@@ -788,7 +828,7 @@ export function AIHealthAssistant({
                       <SelectValue placeholder={language === "en" ? "Select provider" : "Seleccionar proveedor"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="llama">Llama 2 (Free)</SelectItem>
+                      <SelectItem value="llama">Llama 2 (Requires Hugging Face token)</SelectItem>
                       <SelectItem value="openai">OpenAI (Requires API Key)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -805,6 +845,22 @@ export function AIHealthAssistant({
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
                       placeholder="sk-..."
+                      className="w-full"
+                    />
+                  </div>
+                )}
+                
+                {currentProvider === "llama" && (
+                  <div className="space-y-2">
+                    <label htmlFor="huggingFaceToken" className="text-sm font-medium">
+                      {language === "en" ? "Hugging Face API Token" : "Token de API de Hugging Face"}
+                    </label>
+                    <Input
+                      id="huggingFaceToken"
+                      type="password"
+                      value={huggingFaceToken}
+                      onChange={(e) => setHuggingFaceToken(e.target.value)}
+                      placeholder="hf_..."
                       className="w-full"
                     />
                   </div>
@@ -852,8 +908,8 @@ export function AIHealthAssistant({
                     <Sparkles className="h-4 w-4 text-primary" />
                     <AlertDescription>
                       {language === "en" 
-                        ? "Llama 2 uses a free public API and does not require an API key. Response times may vary based on API availability." 
-                        : "Llama 2 utiliza una API pública gratuita y no requiere una clave API. Los tiempos de respuesta pueden variar según la disponibilidad de la API."}
+                        ? "Llama 2 models require a Hugging Face API token. You can get one for free at huggingface.co/settings/tokens." 
+                        : "Los modelos Llama 2 requieren un token de API de Hugging Face. Puede obtener uno gratis en huggingface.co/settings/tokens."}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -861,7 +917,7 @@ export function AIHealthAssistant({
                 <Button 
                   onClick={saveAPIKey} 
                   className="w-full"
-                  disabled={currentProvider === "openai" && !apiKey.trim()}
+                  disabled={(currentProvider === "openai" && !apiKey.trim()) || (currentProvider === "llama" && !huggingFaceToken.trim())}
                 >
                   {language === "en" ? "Save Settings" : "Guardar Configuración"}
                 </Button>
@@ -871,6 +927,14 @@ export function AIHealthAssistant({
                     {language === "en" 
                       ? "You can get an API key from platform.openai.com. The key is stored locally in your browser." 
                       : "Puede obtener una clave API en platform.openai.com. La clave se almacena localmente en su navegador."}
+                  </p>
+                )}
+                
+                {currentProvider === "llama" && (
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    {language === "en" 
+                      ? "Get a Hugging Face API token at huggingface.co/settings/tokens. The token is stored locally in your browser." 
+                      : "Obtenga un token de API de Hugging Face en huggingface.co/settings/tokens. El token se almacena localmente en su navegador."}
                   </p>
                 )}
               </>
@@ -957,8 +1021,8 @@ export function AIHealthAssistant({
                 </AlertTitle>
                 <AlertDescription>
                   {language === "en" 
-                    ? "You're using Llama 2, a free AI model. Response times may vary based on API availability. If you experience slow responses, try switching to test mode." 
-                    : "Está utilizando Llama 2, un modelo de IA gratuito. Los tiempos de respuesta pueden variar según la disponibilidad de la API. Si experimenta respuestas lentas, intente cambiar al modo de prueba."}
+                    ? "You're using Llama 2 with the Hugging Face API. Response times may vary based on model size. If you experience slow responses, try using a smaller model or switch to test mode." 
+                    : "Está utilizando Llama 2 con la API de Hugging Face. Los tiempos de respuesta pueden variar según el tamaño del modelo. Si experimenta respuestas lentas, intente usar un modelo más pequeño o cambie al modo de prueba."}
                 </AlertDescription>
               </Alert>
             )}

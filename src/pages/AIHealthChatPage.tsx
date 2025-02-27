@@ -18,7 +18,8 @@ export const AIHealthChatPage = () => {
     return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
   });
   const [showApiDialog, setShowApiDialog] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("ai_api_key") || "");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai_api_key") || "");
+  const [huggingFaceToken, setHuggingFaceToken] = useState(() => localStorage.getItem("huggingface_token") || "");
   const [model, setModel] = useState(() => localStorage.getItem("ai_model") || "llama-2-7b");
   const [provider, setProvider] = useState(() => localStorage.getItem("ai_provider") || "llama");
   
@@ -37,8 +38,13 @@ export const AIHealthChatPage = () => {
 
   // Update API key based on provider
   useEffect(() => {
-    const key = localStorage.getItem(`${provider}_api_key`) || "";
-    setApiKey(key);
+    if (provider === "openai") {
+      const key = localStorage.getItem("openai_api_key") || "";
+      setApiKey(key);
+    } else if (provider === "llama") {
+      const token = localStorage.getItem("huggingface_token") || "";
+      setHuggingFaceToken(token);
+    }
     
     // Set default model based on provider
     if (provider === "openai" && !localStorage.getItem("openai_model")) {
@@ -55,19 +61,7 @@ export const AIHealthChatPage = () => {
   }, [provider]);
 
   const saveApiKey = () => {
-    if ((provider === "openai" && apiKey.trim()) || provider === "llama") {
-      localStorage.setItem(`${provider}_api_key`, apiKey);
-      localStorage.setItem(`${provider}_model`, model);
-      localStorage.setItem("ai_provider", provider);
-      setShowApiDialog(false);
-      toast({
-        title: language === "en" ? "Settings Saved" : "Configuración Guardada",
-        description: language === "en" 
-          ? "Your API settings have been updated."
-          : "Tu configuración de API ha sido actualizada.",
-      });
-      window.location.reload(); // Reload to refresh the component with the new settings
-    } else if (provider === "openai" && !apiKey.trim()) {
+    if (provider === "openai" && !apiKey.trim()) {
       toast({
         title: language === "en" ? "Error" : "Error",
         description: language === "en" 
@@ -75,7 +69,36 @@ export const AIHealthChatPage = () => {
           : "La clave API no puede estar vacía para OpenAI.",
         variant: "destructive",
       });
+      return;
     }
+
+    if (provider === "llama" && !huggingFaceToken.trim()) {
+      toast({
+        title: language === "en" ? "Error" : "Error",
+        description: language === "en" 
+          ? "Hugging Face token cannot be empty for Llama 2 models."
+          : "El token de Hugging Face no puede estar vacío para los modelos Llama 2.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (provider === "openai") {
+      localStorage.setItem("openai_api_key", apiKey);
+    } else if (provider === "llama") {
+      localStorage.setItem("huggingface_token", huggingFaceToken);
+    }
+    
+    localStorage.setItem(`${provider}_model`, model);
+    localStorage.setItem("ai_provider", provider);
+    setShowApiDialog(false);
+    toast({
+      title: language === "en" ? "Settings Saved" : "Configuración Guardada",
+      description: language === "en" 
+        ? "Your API settings have been updated."
+        : "Tu configuración de API ha sido actualizada.",
+    });
+    window.location.reload(); // Reload to refresh the component with the new settings
   };
 
   return (
@@ -133,7 +156,7 @@ export const AIHealthChatPage = () => {
                   <SelectValue placeholder={language === "en" ? "Select provider" : "Seleccionar proveedor"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="llama">Llama 2 (Free)</SelectItem>
+                  <SelectItem value="llama">Llama 2 (Requires Hugging Face token)</SelectItem>
                   <SelectItem value="openai">OpenAI (Requires API Key)</SelectItem>
                 </SelectContent>
               </Select>
@@ -150,6 +173,21 @@ export const AIHealthChatPage = () => {
                   placeholder="sk-..."
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
+                />
+              </div>
+            )}
+            
+            {provider === "llama" && (
+              <div className="space-y-2">
+                <label htmlFor="huggingFaceToken" className="text-sm font-medium">
+                  {language === "en" ? "Hugging Face API Token" : "Token de API de Hugging Face"}
+                </label>
+                <Input
+                  id="huggingFaceToken"
+                  type="password"
+                  placeholder="hf_..."
+                  value={huggingFaceToken}
+                  onChange={(e) => setHuggingFaceToken(e.target.value)}
                 />
               </div>
             )}
@@ -196,8 +234,8 @@ export const AIHealthChatPage = () => {
                 <Sparkles className="h-4 w-4 text-primary" />
                 <AlertDescription>
                   {language === "en" 
-                    ? "Llama 2 models are provided via a free API. No API key is required to use them." 
-                    : "Los modelos Llama 2 se proporcionan a través de una API gratuita. No se requiere clave API para usarlos."}
+                    ? "Llama 2 models require a Hugging Face API token. You can get one for free at huggingface.co/settings/tokens." 
+                    : "Los modelos Llama 2 requieren un token de API de Hugging Face. Puede obtener uno gratis en huggingface.co/settings/tokens."}
                 </AlertDescription>
               </Alert>
             )}
