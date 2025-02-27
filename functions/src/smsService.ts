@@ -1,7 +1,7 @@
-
 import * as functions from "firebase-functions";
-import * as twilio from "twilio";
-import * as cors from "cors";
+import twilio from "twilio"; // ✅ Corrected import
+import cors from "cors"; // ✅ Corrected import
+
 const corsHandler = cors({ origin: true });
 
 // Initialize Twilio client with environment variables
@@ -9,22 +9,10 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID || "ACa7a76e6d230ef13e0631f01d
 const authToken = process.env.TWILIO_AUTH_TOKEN || "b76ce2403f8aecc261288328088510a5";
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || "+12063837604";
 
-const client = twilio(accountSid, authToken);
+const client = twilio(accountSid, authToken); // ✅ Corrected Twilio initialization
 
 // Cloud function to handle SMS sending
 export const sendSMS = functions.https.onRequest((request, response) => {
-  // Set CORS headers for preflight requests
-  response.set('Access-Control-Allow-Origin', '*');
-  response.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  // Handle preflight OPTIONS request
-  if (request.method === 'OPTIONS') {
-    response.status(204).send('');
-    return;
-  }
-
-  // Handle actual request
   corsHandler(request, response, async () => {
     try {
       // Validate request method
@@ -45,11 +33,7 @@ export const sendSMS = functions.https.onRequest((request, response) => {
       }
 
       // Format the phone number if needed
-      let formattedPhone = to;
-      if (!to.startsWith("+")) {
-        // Assume US number if no country code
-        formattedPhone = to.length === 10 ? `+1${to}` : `+${to}`;
-      }
+      let formattedPhone = to.startsWith("+") ? to : `+1${to}`;
 
       // Log the SMS attempt
       console.log(`Attempting to send SMS to ${formattedPhone}`);
