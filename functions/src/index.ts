@@ -1,13 +1,17 @@
 
 import * as functions from "firebase-functions";
-import * as twilioFunctions from "./twilioFunctions";
+import * as admin from "firebase-admin";
+import { sendSMS } from "./smsService";
 
-// Health-related functions
-export const sendSMS = twilioFunctions.sendSMS;
-export const scheduleSMS = twilioFunctions.scheduleSMS;
+// Initialize Firebase Admin
+admin.initializeApp();
 
-// Hello world function (for testing)
-export const helloWorld = functions.https.onRequest((request, response) => {
-  functions.logger.info("Hello logs!", {structuredData: true});
-  response.send("Hello from Firebase!");
+// Export the SMS function to make it available
+export { sendSMS };
+
+// Welcome message function (example)
+export const welcome = functions.https.onRequest((request, response) => {
+  response.send("Welcome to Health Connectivity API!");
 });
+
+// Add more exported functions as needed

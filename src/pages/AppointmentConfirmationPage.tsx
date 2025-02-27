@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, MessageCircle, Phone } from "lucide-react";
+import { CheckCircle, MessageCircle, Phone, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { sendAppointmentConfirmation, scheduleAppointmentReminder } from "@/utils/twilioService";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [smsSent, setSmsSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // If we don't have appointment details, redirect back to appointment page
@@ -35,6 +36,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
     const sendSMSConfirmation = async () => {
       if (storedPhone && appointmentDetails.date && appointmentDetails.time && !smsSent) {
         setIsSending(true);
+        setError(null);
         try {
           await sendAppointmentConfirmation(storedPhone, appointmentDetails, language);
           
@@ -43,7 +45,9 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
           
           setSmsSent(true);
         } catch (error) {
-          console.error("Error sending SMS:", error);
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          console.error("Error sending SMS:", errorMessage);
+          setError(errorMessage);
           toast({
             title: language === "en" ? "SMS Error" : "Error de SMS",
             description: language === "en" 
@@ -83,6 +87,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
     
     if (phoneNumber && appointmentDetails.date && appointmentDetails.time) {
       setIsSending(true);
+      setError(null);
       try {
         await sendAppointmentConfirmation(phoneNumber, appointmentDetails, language);
         await scheduleAppointmentReminder(phoneNumber, appointmentDetails, language);
@@ -96,7 +101,9 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
             : "La confirmación por SMS se ha enviado con éxito",
         });
       } catch (error) {
-        console.error("Error sending manual SMS:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("Error sending manual SMS:", errorMessage);
+        setError(errorMessage);
         toast({
           title: language === "en" ? "SMS Error" : "Error de SMS",
           description: language === "en" 
@@ -140,6 +147,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       pickupTime: "Pickup Time",
       pickupLocation: "Pickup Location",
       sending: "Sending...",
+      error: "Error details:",
     },
     es: {
       title: "¡Cita Confirmada!",
@@ -162,6 +170,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       pickupTime: "Hora de Recogida",
       pickupLocation: "Lugar de Recogida",
       sending: "Enviando...",
+      error: "Detalles del error:",
     },
   };
 
@@ -206,6 +215,16 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
             </div>
           ) : (
             <p className="text-red-500">{content.missingDetails}</p>
+          )}
+
+          {error && (
+            <div className="mt-4 bg-red-50 p-4 rounded-md flex items-start gap-2 text-red-700 border border-red-300">
+              <AlertCircle className="h-6 w-6 text-red-600 mt-0.5" />
+              <div>
+                <p className="font-semibold">{content.error}</p>
+                <p className="text-sm mt-1">{error}</p>
+              </div>
+            </div>
           )}
 
           {smsSent ? (

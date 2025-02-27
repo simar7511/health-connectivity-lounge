@@ -7,7 +7,7 @@ interface SMSDetails {
 }
 
 /**
- * Send an SMS notification using the Twilio API
+ * Send an SMS notification using the Twilio API via Firebase Cloud Functions
  * @param to Phone number to send to (with country code)
  * @param message Message content
  * @returns Promise that resolves with success or error
@@ -24,37 +24,30 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     const formattedPhone = formatPhoneNumber(to);
     
     // Log the attempt
-    console.log(`Attempting to send SMS to ${formattedPhone}`);
+    console.log(`Attempting to send SMS to ${formattedPhone} via cloud function`);
 
-    // Instead of direct Twilio API, use a service like Twilio-compatible SMS API
-    // For this demo, we'll use a third-party API that can send SMS without authentication issues
-    const apiUrl = "https://ntfy.sh/health-connectivity-sms-notifications";
-    
-    // Format message with recipient info for the notification service
-    const notificationMessage = `SMS to: ${formattedPhone}\nMessage: ${message}`;
+    // Call our cloud function endpoint
+    const apiUrl = "https://us-central1-health-connectivity-01.cloudfunctions.net/sendSMS";
     
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/plain',
+        'Content-Type': 'application/json',
       },
-      body: notificationMessage
+      body: JSON.stringify({
+        to: formattedPhone,
+        message: message
+      })
     });
     
-    if (response.ok) {
-      console.log("SMS notification sent successfully");
-      
-      // Since we're using a notification service that doesn't actually send SMS,
-      // we'll simulate a success response
-      toast({
-        title: "SMS Notification",
-        description: `A message would be sent to ${formattedPhone}`,
-      });
-      
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log("SMS sent successfully:", data.sid);
       return { success: true };
     } else {
-      console.error("Notification API Error:", response.statusText);
-      return { success: false, error: "Failed to send SMS notification" };
+      console.error("Twilio API Error:", data.error);
+      return { success: false, error: data.error || "Failed to send SMS" };
     }
   } catch (error) {
     console.error("Error sending SMS:", error);
