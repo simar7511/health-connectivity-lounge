@@ -20,6 +20,7 @@ interface AIHealthAssistantProps {
   onBack: () => void;
   patientId?: string;
   model?: string;
+  provider?: string;
 }
 
 type Message = {
@@ -41,18 +42,32 @@ const disclaimers = {
   es: "Tenga en cuenta que proporciono información general de salud, no asesoramiento médico personalizado. Para asuntos urgentes, contacte directamente a su proveedor de atención médica."
 };
 
+// System prompts by provider and language
+const systemPrompts = {
+  openai: {
+    en: "You are a friendly, helpful health assistant. Provide general health information and advice while making it clear you are not a substitute for professional medical advice. Always be considerate to patient concerns, avoid medical jargon, and include reminders to seek professional care for serious symptoms or urgent conditions.",
+    es: "Eres un asistente de salud amigable y útil. Proporciona información general de salud y consejos, dejando claro que no eres un sustituto del consejo médico profesional. Sé siempre considerado con las preocupaciones del paciente, evita la jerga médica e incluye recordatorios para buscar atención profesional para síntomas graves o condiciones urgentes."
+  },
+  llama: {
+    en: "You are a friendly, helpful health assistant powered by Llama 2. Provide general health information and advice while making it clear you are not a substitute for professional medical advice. Always be considerate to patient concerns, avoid medical jargon, and include reminders to seek professional care for serious symptoms or urgent conditions. Keep your responses focused on factual health information, and if you're unsure about something, acknowledge that limitation.",
+    es: "Eres un asistente de salud amigable y útil impulsado por Llama 2. Proporciona información general de salud y consejos, dejando claro que no eres un sustituto del consejo médico profesional. Sé siempre considerado con las preocupaciones del paciente, evita la jerga médica e incluye recordatorios para buscar atención profesional para síntomas graves o condiciones urgentes. Mantén tus respuestas centradas en información de salud factual, y si no estás seguro de algo, reconoce esa limitación."
+  }
+};
+
 // Error messages based on language
 const errorMessages = {
   en: {
-    quotaExceeded: "API quota exceeded. Please wait for your quota to reset or use a different API key.",
+    quotaExceeded: "API quota exceeded. Please try again later or use a different provider.",
     invalidKey: "Invalid API key. Please check your API key and try again.",
     networkError: "Network error. Please check your internet connection and try again.",
+    llamaError: "Error connecting to Llama 2 API. Please try again later.",
     default: "An error occurred. Please try again."
   },
   es: {
-    quotaExceeded: "Cuota de API excedida. Espere a que su cuota se restablezca o use una clave API diferente.",
+    quotaExceeded: "Cuota de API excedida. Intente nuevamente más tarde o use un proveedor diferente.",
     invalidKey: "Clave API inválida. Por favor, verifique su clave API e inténtelo de nuevo.",
     networkError: "Error de red. Compruebe su conexión a Internet e inténtelo de nuevo.",
+    llamaError: "Error al conectar con la API de Llama 2. Por favor, inténtelo de nuevo más tarde.",
     default: "Se produjo un error. Inténtelo de nuevo."
   }
 };
@@ -60,7 +75,7 @@ const errorMessages = {
 // Mock responses for testing without API
 const mockResponses = {
   en: {
-    default: "I understand you're asking about {TOPIC}. This is a simulated response because the app is in test mode. In a real scenario with a working API key, you would receive a detailed response from an AI model. For now, you can use the offline mode to get basic information about common health topics.",
+    default: "I understand you're asking about {TOPIC}. This is a simulated response because the app is in test mode. In a real scenario with a working API connection, you would receive a detailed response from an AI model. For now, you can use the offline mode to get basic information about common health topics.",
     hypertension: "Hypertension, or high blood pressure, is when the pressure in your blood vessels is consistently too high. It's often called a 'silent killer' because it typically has no symptoms but can lead to serious health problems like heart disease and stroke if left untreated. Regular monitoring, a healthy diet low in sodium, regular exercise, limiting alcohol, not smoking, and sometimes medication are key to managing hypertension.",
     diabetes: "Diabetes is a condition where your body either doesn't produce enough insulin or can't effectively use the insulin it produces. This results in high blood sugar levels, which can lead to various health complications over time. There are several types, including Type 1 (autoimmune), Type 2 (related to lifestyle factors), and gestational diabetes (during pregnancy). Management includes monitoring blood sugar, medication or insulin therapy, a balanced diet, and regular physical activity.",
     covid: "COVID-19 is caused by the SARS-CoV-2 virus and primarily affects the respiratory system. Symptoms can range from mild (like fever, cough, fatigue) to severe (difficulty breathing, chest pain). Vaccination has proven effective in reducing the risk of severe illness and hospitalization. If you suspect you have COVID-19, getting tested and isolating yourself to prevent spreading it to others is important.",
@@ -68,7 +83,7 @@ const mockResponses = {
     nutrition: "A balanced diet is crucial for maintaining good health. It should include a variety of fruits, vegetables, whole grains, lean proteins, and healthy fats. Limiting processed foods, added sugars, and excessive sodium is also important. Everyone's nutritional needs vary based on factors like age, gender, activity level, and overall health status. Consulting with a dietitian can provide personalized guidance for your specific needs."
   },
   es: {
-    default: "Entiendo que estás preguntando sobre {TOPIC}. Esta es una respuesta simulada porque la aplicación está en modo de prueba. En un escenario real con una clave API funcionando, recibirías una respuesta detallada de un modelo de IA. Por ahora, puedes usar el modo offline para obtener información básica sobre temas comunes de salud.",
+    default: "Entiendo que estás preguntando sobre {TOPIC}. Esta es una respuesta simulada porque la aplicación está en modo de prueba. En un escenario real con una conexión API funcionando, recibirías una respuesta detallada de un modelo de IA. Por ahora, puedes usar el modo offline para obtener información básica sobre temas comunes de salud.",
     hypertension: "La hipertensión, o presión arterial alta, es cuando la presión en los vasos sanguíneos es consistentemente demasiado alta. A menudo se le llama un 'asesino silencioso' porque típicamente no tiene síntomas pero puede llevar a problemas de salud graves como enfermedades cardíacas y accidentes cerebrovasculares si no se trata. El monitoreo regular, una dieta saludable baja en sodio, ejercicio regular, limitar el alcohol, no fumar, y a veces medicamentos son clave para manejar la hipertensión.",
     diabetes: "La diabetes es una condición donde tu cuerpo no produce suficiente insulina o no puede usar efectivamente la insulina que produce. Esto resulta en niveles altos de azúcar en la sangre, lo que puede llevar a varias complicaciones de salud con el tiempo. Hay varios tipos, incluyendo Tipo 1 (autoinmune), Tipo 2 (relacionado con factores de estilo de vida), y diabetes gestacional (durante el embarazo). El manejo incluye monitorear el azúcar en la sangre, medicamentos o terapia de insulina, una dieta balanceada, y actividad física regular.",
     covid: "COVID-19 es causado por el virus SARS-CoV-2 y afecta principalmente al sistema respiratorio. Los síntomas pueden variar desde leves (como fiebre, tos, fatiga) hasta severos (dificultad para respirar, dolor en el pecho). La vacunación ha demostrado ser efectiva en reducir el riesgo de enfermedad grave y hospitalización. Si sospechas que tienes COVID-19, hacerte una prueba y aislarte para prevenir contagiar a otros es importante.",
@@ -103,16 +118,20 @@ export function AIHealthAssistant({
   language, 
   onBack, 
   patientId, 
-  model = "gpt-3.5-turbo"
+  model = "llama-2-7b",
+  provider = "llama"
 }: AIHealthAssistantProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [useVoiceInput, setUseVoiceInput] = useState(false);
-  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem("openai_api_key") || "");
+  const [apiKey, setApiKey] = useState<string>(() => {
+    return localStorage.getItem(`${provider}_api_key`) || "";
+  });
   const [showAPIKeyInput, setShowAPIKeyInput] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [currentModel, setCurrentModel] = useState(model);
+  const [currentProvider, setCurrentProvider] = useState(provider);
   const [useFallbackMode, setUseFallbackMode] = useState<boolean>(() => {
     return localStorage.getItem("use_fallback_mode") === "true";
   });
@@ -122,6 +141,16 @@ export function AIHealthAssistant({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const auth = getAuth();
   const { toast } = useToast();
+
+  // Update provider and model
+  useEffect(() => {
+    setCurrentProvider(provider);
+    setCurrentModel(model);
+    
+    // Update API key when provider changes
+    const key = localStorage.getItem(`${provider}_api_key`) || "";
+    setApiKey(key);
+  }, [provider, model]);
 
   // Add initial greeting message when component loads
   useEffect(() => {
@@ -133,25 +162,12 @@ export function AIHealthAssistant({
     };
     setMessages([initialMessage]);
     
-    // Check if API key is stored in localStorage
-    const storedKey = localStorage.getItem("openai_api_key");
-    if (storedKey && !useFallbackMode && !useTestMode) {
-      setApiKey(storedKey);
-      
-      // Also get the model
-      const storedModel = localStorage.getItem("openai_model");
-      if (storedModel) {
-        setCurrentModel(storedModel);
-      }
-    } else if (!useFallbackMode && !useTestMode && !storedKey) {
+    // Check if API key is needed and available (not needed for Llama 2)
+    const needsKey = currentProvider === "openai";
+    if (needsKey && !apiKey && !useFallbackMode && !useTestMode) {
       setShowAPIKeyInput(true);
     }
-  }, [language, useFallbackMode, useTestMode]);
-
-  // Effect to update the model when it changes from props
-  useEffect(() => {
-    setCurrentModel(model);
-  }, [model]);
+  }, [language, useFallbackMode, useTestMode, currentProvider, apiKey]);
 
   // Scroll to bottom of messages when new ones are added
   useEffect(() => {
@@ -189,20 +205,35 @@ export function AIHealthAssistant({
   }, [patientId, auth.currentUser, useFallbackMode]);
 
   const saveAPIKey = () => {
-    if (apiKey.trim()) {
-      localStorage.setItem("openai_api_key", apiKey);
-      localStorage.setItem("openai_model", currentModel);
-      
-      setShowAPIKeyInput(false);
-      setApiError(null);
+    if (currentProvider === "openai" && !apiKey.trim()) {
       toast({
-        title: language === "en" ? "Settings Saved" : "Configuración Guardada",
+        title: language === "en" ? "Error" : "Error",
         description: language === "en" 
-          ? "Your API settings have been saved."
-          : "Tu configuración de API ha sido guardada.",
-        variant: "default",
+          ? "API key cannot be empty for OpenAI."
+          : "La clave API no puede estar vacía para OpenAI.",
+        variant: "destructive",
       });
+      return;
     }
+    
+    // Save API key (only for OpenAI, not needed for Llama)
+    if (currentProvider === "openai") {
+      localStorage.setItem("openai_api_key", apiKey);
+    }
+    
+    // Save model preferences
+    localStorage.setItem(`${currentProvider}_model`, currentModel);
+    localStorage.setItem("ai_provider", currentProvider);
+    
+    setShowAPIKeyInput(false);
+    setApiError(null);
+    toast({
+      title: language === "en" ? "Settings Saved" : "Configuración Guardada",
+      description: language === "en" 
+        ? "Your AI settings have been saved."
+        : "Tu configuración de IA ha sido guardada.",
+      variant: "default",
+    });
   };
 
   const toggleFallbackMode = (value: boolean) => {
@@ -225,7 +256,8 @@ export function AIHealthAssistant({
     setMessages([initialMessage]);
     
     // Show API key input if switching from fallback to API mode
-    if (!value && !apiKey && !useTestMode) {
+    const needsKey = currentProvider === "openai";
+    if (!value && needsKey && !apiKey && !useTestMode) {
       setShowAPIKeyInput(true);
     } else {
       setShowAPIKeyInput(false);
@@ -268,9 +300,7 @@ export function AIHealthAssistant({
           messages: [
             {
               role: "system",
-              content: language === "en" 
-                ? "You are a friendly, helpful health assistant. Provide general health information and advice while making it clear you are not a substitute for professional medical advice. Always be considerate to patient concerns, avoid medical jargon, and include reminders to seek professional care for serious symptoms or urgent conditions."
-                : "Eres un asistente de salud amigable y útil. Proporciona información general de salud y consejos, dejando claro que no eres un sustituto del consejo médico profesional. Sé siempre considerado con las preocupaciones del paciente, evita la jerga médica e incluye recordatorios para buscar atención profesional para síntomas graves o condiciones urgentes."
+              content: systemPrompts.openai[language]
             },
             ...previousMessages.map(msg => ({
               role: msg.sender === "user" ? "user" : "assistant",
@@ -320,6 +350,105 @@ export function AIHealthAssistant({
           setApiError("networkError");
         } else {
           setApiError("default");
+        }
+      }
+      
+      throw error;
+    }
+  };
+
+  const callLlama = async (userMessage: string, previousMessages: Message[]) => {
+    try {
+      console.log(`Calling Llama 2 API using model: ${currentModel}...`);
+
+      // Construct conversation history
+      let prompt = "";
+      
+      // For chat specific models
+      if (currentModel.includes("chat")) {
+        prompt = systemPrompts.llama[language] + "\n\n";
+        
+        for (const msg of previousMessages) {
+          if (msg.sender === "user") {
+            prompt += "Human: " + msg.content + "\n";
+          } else {
+            prompt += "Assistant: " + msg.content + "\n";
+          }
+        }
+        
+        prompt += "Human: " + userMessage + "\nAssistant:";
+      } else {
+        // For base models, use a simpler prompt format
+        prompt = "You are a helpful AI health assistant.\n\n";
+        prompt += "Question: " + userMessage + "\n\n";
+        prompt += "Answer:";
+      }
+
+      // Call the huggingface free inference API
+      const response = await fetch(`https://api-inference.huggingface.co/models/meta-llama/${currentModel}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            max_new_tokens: 500,
+            temperature: 0.7,
+            top_p: 0.95,
+            do_sample: true,
+            return_full_text: false
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Llama API error:", response.status, response.statusText);
+        
+        // Parse the error response if possible
+        const errorData = await response.json().catch(() => null);
+        console.log("Error data:", errorData);
+        
+        setApiError("llamaError");
+        throw new Error(`Llama API request failed with status ${response.status}`);
+      }
+
+      // Clear any previous errors
+      setApiError(null);
+      
+      const data = await response.json();
+      console.log("Llama API response:", data);
+      
+      // Handle different response formats
+      let resultText = "";
+      if (Array.isArray(data) && data.length > 0) {
+        if (typeof data[0] === "string") {
+          resultText = data[0];
+        } else if (data[0].generated_text) {
+          resultText = data[0].generated_text;
+        }
+      } else if (data.generated_text) {
+        resultText = data.generated_text;
+      }
+      
+      // Clean up the response
+      resultText = resultText.trim();
+      
+      // For non-chat models, the result might still start with "Answer:" 
+      if (resultText.startsWith("Answer:")) {
+        resultText = resultText.substring(7).trim();
+      }
+      
+      return resultText;
+    } catch (error) {
+      console.error("Error calling Llama:", error);
+      
+      // Set appropriate error message if not already set
+      if (!apiError) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
+          setApiError("networkError");
+        } else {
+          setApiError("llamaError");
         }
       }
       
@@ -386,14 +515,15 @@ export function AIHealthAssistant({
   const handleSendMessage = async () => {
     if (!input.trim()) return;
     
-    // Check if API key is available when not in fallback or test mode
-    if (!apiKey && !useFallbackMode && !useTestMode) {
+    // Check if API key is needed and available
+    const needsKey = currentProvider === "openai";
+    if (needsKey && !apiKey && !useFallbackMode && !useTestMode) {
       setShowAPIKeyInput(true);
       toast({
         title: language === "en" ? "API Key Required" : "Se Requiere Clave API",
         description: language === "en" 
-          ? "Please enter your API key to continue." 
-          : "Por favor, ingrese su clave API para continuar.",
+          ? "Please enter your OpenAI API key to continue." 
+          : "Por favor, ingrese su clave API de OpenAI para continuar.",
         variant: "destructive",
       });
       return;
@@ -433,9 +563,13 @@ export function AIHealthAssistant({
         // Add a slight delay to simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
         aiResponseText = getMockResponse(input) + " " + disclaimers[language];
-      } else {
+      } else if (currentProvider === "openai") {
         // Call OpenAI API
         const aiResponse = await callOpenAI(input, messages);
+        aiResponseText = aiResponse + " " + disclaimers[language];
+      } else if (currentProvider === "llama") {
+        // Call Llama API
+        const aiResponse = await callLlama(input, messages);
         aiResponseText = aiResponse + " " + disclaimers[language];
       }
       
@@ -474,8 +608,8 @@ export function AIHealthAssistant({
         toast({
           title: language === "en" ? "Try Test Mode" : "Probar Modo de Prueba",
           description: language === "en" 
-            ? "You can switch to test mode to use simulated responses without requiring a working API key." 
-            : "Puede cambiar al modo de prueba para usar respuestas simuladas sin necesitar una clave API funcionando.",
+            ? "You can switch to test mode to use simulated responses without requiring a working API connection." 
+            : "Puede cambiar al modo de prueba para usar respuestas simuladas sin necesitar una conexión API funcionando.",
           variant: "default",
         });
       }
@@ -497,6 +631,12 @@ export function AIHealthAssistant({
     window.location.reload();
   };
 
+  const getProviderDisplayName = () => {
+    if (currentProvider === "openai") return "OpenAI";
+    if (currentProvider === "llama") return "Llama 2";
+    return currentProvider;
+  };
+
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="px-4 py-3 border-b flex flex-row items-center justify-between">
@@ -514,7 +654,7 @@ export function AIHealthAssistant({
             {language === "en" ? "Health Assistant" : "Asistente de Salud"}
             {!useFallbackMode && !useTestMode && (
               <span className="ml-2 text-xs text-muted-foreground">
-                (OpenAI - {currentModel})
+                ({getProviderDisplayName()} - {currentModel})
               </span>
             )}
             {useFallbackMode && (
@@ -544,12 +684,12 @@ export function AIHealthAssistant({
         <CardContent className="flex-1 p-6 flex flex-col items-center justify-center gap-4">
           <div className="text-center max-w-md mx-auto space-y-2">
             <h3 className="text-lg font-semibold">
-              {language === "en" ? "OpenAI API Settings" : "Configuración API de OpenAI"}
+              {language === "en" ? "AI Settings" : "Configuración de IA"}
             </h3>
             <p className="text-sm text-muted-foreground">
               {language === "en" 
-                ? "Please enter your OpenAI API key to use the Health Assistant." 
-                : "Por favor, ingrese su clave API de OpenAI para usar el Asistente de Salud."}
+                ? "Choose your AI provider and settings." 
+                : "Elija su proveedor de IA y configuración."}
             </p>
           </div>
           
@@ -570,7 +710,7 @@ export function AIHealthAssistant({
               <div className="flex items-center justify-between space-x-2 py-2">
                 <Label htmlFor="test-mode" className="text-base flex items-center gap-2">
                   {language === "en" ? "Use Test Mode" : "Usar Modo de Prueba"}
-                  <span className="text-xs text-muted-foreground">(simulated responses without API key)</span>
+                  <span className="text-xs text-muted-foreground">(simulated responses)</span>
                 </Label>
                 <Switch
                   id="test-mode"
@@ -581,7 +721,7 @@ export function AIHealthAssistant({
               <div className="flex items-center justify-between space-x-2 py-2">
                 <Label htmlFor="offline-mode" className="text-base flex items-center gap-2">
                   {language === "en" ? "Use Offline Mode" : "Usar Modo Offline"}
-                  <span className="text-xs text-muted-foreground">(limited predefined responses)</span>
+                  <span className="text-xs text-muted-foreground">(predefined responses)</span>
                 </Label>
                 <Switch
                   id="offline-mode"
@@ -594,48 +734,99 @@ export function AIHealthAssistant({
             {!useFallbackMode && !useTestMode && (
               <>
                 <div className="space-y-2">
-                  <label htmlFor="apiKey" className="text-sm font-medium">
-                    {language === "en" ? "OpenAI API Key" : "Clave API de OpenAI"}
+                  <label htmlFor="provider" className="text-sm font-medium">
+                    {language === "en" ? "AI Provider" : "Proveedor de IA"}
                   </label>
-                  <Input
-                    id="apiKey"
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="sk-..."
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="model" className="text-sm font-medium">
-                    {language === "en" ? "Model" : "Modelo"}
-                  </label>
-                  <Select value={currentModel} onValueChange={setCurrentModel}>
+                  <Select value={currentProvider} onValueChange={setCurrentProvider}>
                     <SelectTrigger>
-                      <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
+                      <SelectValue placeholder={language === "en" ? "Select provider" : "Seleccionar proveedor"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, less quota)</SelectItem>
-                      <SelectItem value="gpt-4o-mini">GPT-4o Mini (Balanced)</SelectItem>
-                      <SelectItem value="gpt-4o">GPT-4o (Advanced, more quota)</SelectItem>
+                      <SelectItem value="llama">Llama 2 (Free)</SelectItem>
+                      <SelectItem value="openai">OpenAI (Requires API Key)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
+                {currentProvider === "openai" && (
+                  <div className="space-y-2">
+                    <label htmlFor="apiKey" className="text-sm font-medium">
+                      {language === "en" ? "OpenAI API Key" : "Clave API de OpenAI"}
+                    </label>
+                    <Input
+                      id="apiKey"
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="w-full"
+                    />
+                  </div>
+                )}
+                
+                {currentProvider === "openai" && (
+                  <div className="space-y-2">
+                    <label htmlFor="model" className="text-sm font-medium">
+                      {language === "en" ? "Model" : "Modelo"}
+                    </label>
+                    <Select value={currentModel} onValueChange={setCurrentModel}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                        <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                        <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
+                {currentProvider === "llama" && (
+                  <div className="space-y-2">
+                    <label htmlFor="model" className="text-sm font-medium">
+                      {language === "en" ? "Llama 2 Model" : "Modelo Llama 2"}
+                    </label>
+                    <Select value={currentModel} onValueChange={setCurrentModel}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="llama-2-7b">Llama 2 (7B)</SelectItem>
+                        <SelectItem value="llama-2-13b">Llama 2 (13B)</SelectItem>
+                        <SelectItem value="llama-2-7b-chat">Llama 2 Chat (7B)</SelectItem>
+                        <SelectItem value="llama-2-13b-chat">Llama 2 Chat (13B)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
+                {currentProvider === "llama" && (
+                  <Alert className="bg-primary/10 border-primary/20">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <AlertDescription>
+                      {language === "en" 
+                        ? "Llama 2 uses a free public API and does not require an API key. Response times may vary based on API availability." 
+                        : "Llama 2 utiliza una API pública gratuita y no requiere una clave API. Los tiempos de respuesta pueden variar según la disponibilidad de la API."}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 <Button 
                   onClick={saveAPIKey} 
                   className="w-full"
-                  disabled={!apiKey.trim()}
+                  disabled={currentProvider === "openai" && !apiKey.trim()}
                 >
                   {language === "en" ? "Save Settings" : "Guardar Configuración"}
                 </Button>
                 
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  {language === "en" 
-                    ? "You can get an API key from platform.openai.com. The key is stored locally in your browser and never sent to our servers." 
-                    : "Puede obtener una clave API en platform.openai.com. La clave se almacena localmente en su navegador y nunca se envía a nuestros servidores."}
-                </p>
+                {currentProvider === "openai" && (
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    {language === "en" 
+                      ? "You can get an API key from platform.openai.com. The key is stored locally in your browser." 
+                      : "Puede obtener una clave API en platform.openai.com. La clave se almacena localmente en su navegador."}
+                  </p>
+                )}
               </>
             )}
             
@@ -653,8 +844,8 @@ export function AIHealthAssistant({
                 <Sparkles className="h-4 w-4 text-primary" />
                 <AlertDescription>
                   {language === "en" 
-                    ? "Test mode provides simulated AI responses without requiring an API key. This is perfect for testing the application when you don't have a working OpenAI API key." 
-                    : "El modo de prueba proporciona respuestas de IA simuladas sin requerir una clave API. Esto es perfecto para probar la aplicación cuando no tienes una clave API de OpenAI funcionando."}
+                    ? "Test mode provides simulated AI responses without requiring an API connection. This is perfect for testing the application." 
+                    : "El modo de prueba proporciona respuestas de IA simuladas sin requerir una conexión API. Esto es perfecto para probar la aplicación."}
                 </AlertDescription>
               </Alert>
             )}
@@ -664,8 +855,8 @@ export function AIHealthAssistant({
                 <Sparkles className="h-4 w-4 text-primary" />
                 <AlertDescription>
                   {language === "en" 
-                    ? "Offline mode uses pre-defined responses for common health topics without requiring an API key. Topics include: hypertension, diabetes, COVID-19, anxiety, and depression." 
-                    : "El modo offline utiliza respuestas predefinidas para temas comunes de salud sin requerir una clave API. Los temas incluyen: hipertensión, diabetes, COVID-19, ansiedad y depresión."}
+                    ? "Offline mode uses pre-defined responses for common health topics without requiring an API connection. Topics include: hypertension, diabetes, COVID-19, anxiety, and depression." 
+                    : "El modo offline utiliza respuestas predefinidas para temas comunes de salud sin requerir una conexión API. Los temas incluyen: hipertensión, diabetes, COVID-19, ansiedad y depresión."}
                 </AlertDescription>
               </Alert>
             )}
@@ -689,7 +880,7 @@ export function AIHealthAssistant({
                       onClick={handleChangeAPIKey}
                       className="self-start"
                     >
-                      {language === "en" ? "Change API Settings" : "Cambiar Configuración API"}
+                      {language === "en" ? "Change AI Settings" : "Cambiar Configuración de IA"}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -708,6 +899,20 @@ export function AIHealthAssistant({
                       {language === "en" ? "Switch to Offline Mode" : "Cambiar a Modo Offline"}
                     </Button>
                   </div>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {currentProvider === "llama" && !useFallbackMode && !useTestMode && (
+              <Alert className="mb-4 bg-primary/10 border-primary/20">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <AlertTitle>
+                  {language === "en" ? "Using Llama 2" : "Usando Llama 2"}
+                </AlertTitle>
+                <AlertDescription>
+                  {language === "en" 
+                    ? "You're using Llama 2, a free AI model. Response times may vary based on API availability. If you experience slow responses, try switching to test mode." 
+                    : "Está utilizando Llama 2, un modelo de IA gratuito. Los tiempos de respuesta pueden variar según la disponibilidad de la API. Si experimenta respuestas lentas, intente cambiar al modo de prueba."}
                 </AlertDescription>
               </Alert>
             )}
@@ -742,7 +947,7 @@ export function AIHealthAssistant({
                       }}
                       className="self-start"
                     >
-                      {language === "en" ? "Switch to API Mode" : "Cambiar a Modo API"}
+                      {language === "en" ? "Change AI Settings" : "Cambiar Configuración de IA"}
                     </Button>
                   </div>
                 </AlertDescription>
@@ -758,8 +963,8 @@ export function AIHealthAssistant({
                 <AlertDescription className="flex flex-col gap-2">
                   <span>
                     {language === "en" 
-                      ? "You're using test mode with simulated AI responses. No API key is required. You can ask about any health topic." 
-                      : "Está utilizando el modo de prueba con respuestas de IA simuladas. No se requiere clave API. Puede preguntar sobre cualquier tema de salud."}
+                      ? "You're using test mode with simulated AI responses. No API connection is required. You can ask about any health topic." 
+                      : "Está utilizando el modo de prueba con respuestas de IA simuladas. No se requiere conexión API. Puede preguntar sobre cualquier tema de salud."}
                   </span>
                   <div className="flex flex-wrap gap-2 mt-1">
                     <Button 
@@ -779,7 +984,7 @@ export function AIHealthAssistant({
                       }}
                       className="self-start"
                     >
-                      {language === "en" ? "Switch to API Mode" : "Cambiar a Modo API"}
+                      {language === "en" ? "Change AI Settings" : "Cambiar Configuración de IA"}
                     </Button>
                   </div>
                 </AlertDescription>
