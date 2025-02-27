@@ -57,7 +57,8 @@ interface UseSpeechRecognitionProps {
   onError?: (error: string) => void;
 }
 
-interface SpeechRecognitionResult {
+// Renamed to UseSpeechRecognitionReturn to avoid conflict with SpeechRecognitionResult
+interface UseSpeechRecognitionReturn {
   transcript: string;
   isListening: boolean;
   startListening: () => void;
@@ -70,7 +71,7 @@ export const useSpeechRecognition = ({
   language,
   onResult,
   onError
-}: UseSpeechRecognitionProps): SpeechRecognitionResult => {
+}: UseSpeechRecognitionProps): UseSpeechRecognitionReturn => {
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
