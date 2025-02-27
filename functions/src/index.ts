@@ -3,7 +3,7 @@ import * as functions from "firebase-functions";
 import { sendSMS, scheduleSMS } from "./twilioFunctions";
 
 // Expose the sendSMS function
-exports.sendSMS = functions.https.onRequest((req, res) => {
+exports.sendSMS = functions.https.onRequest(async (req, res) => {
   // Set CORS headers for preflight requests
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -15,11 +15,12 @@ exports.sendSMS = functions.https.onRequest((req, res) => {
     return;
   }
   
-  return sendSMS(req, res);
+  // Call the function directly, not returning its result
+  await sendSMS(req, res);
 });
 
 // Expose the scheduleSMS function
-exports.scheduleSMS = functions.https.onRequest((req, res) => {
+exports.scheduleSMS = functions.https.onRequest(async (req, res) => {
   // Set CORS headers for preflight requests
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -31,5 +32,6 @@ exports.scheduleSMS = functions.https.onRequest((req, res) => {
     return;
   }
   
-  return scheduleSMS(req, res);
+  // Call the function directly, not returning its result
+  await scheduleSMS(req, res);
 });

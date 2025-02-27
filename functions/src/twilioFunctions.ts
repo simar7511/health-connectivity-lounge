@@ -16,7 +16,7 @@ const initTwilioClient = () => {
 };
 
 // Send SMS message
-export const sendSMS = async (req: Request, res: Response) => {
+export const sendSMS = async (req: Request, res: Response): Promise<void> => {
   try {
     // Handle CORS
     const corsHandler = cors({ origin: true });
@@ -31,10 +31,11 @@ export const sendSMS = async (req: Request, res: Response) => {
     const { to, message } = req.body;
     
     if (!to || !message) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false, 
         message: "Missing required parameters: 'to' and 'message' are required" 
       });
+      return;
     }
     
     // Get Twilio client
@@ -43,20 +44,22 @@ export const sendSMS = async (req: Request, res: Response) => {
       twilioClient = initTwilioClient();
     } catch (error) {
       console.error("Twilio initialization error:", error);
-      return res.status(500).json({ 
+      res.status(500).json({ 
         success: false, 
         message: "Failed to initialize Twilio client" 
       });
+      return;
     }
     
     // Get Twilio phone number
     const from = process.env.TWILIO_PHONE_NUMBER;
     
     if (!from) {
-      return res.status(500).json({ 
+      res.status(500).json({ 
         success: false, 
         message: "Missing Twilio phone number. Please check environment variables." 
       });
+      return;
     }
     
     // Log the SMS we're about to send
@@ -71,14 +74,14 @@ export const sendSMS = async (req: Request, res: Response) => {
     
     console.log("Twilio message sent:", twilioResponse.sid);
     
-    return res.status(200).json({ 
+    res.status(200).json({ 
       success: true, 
       messageId: twilioResponse.sid,
       status: twilioResponse.status 
     });
   } catch (error) {
     console.error("Error sending SMS:", error);
-    return res.status(500).json({ 
+    res.status(500).json({ 
       success: false, 
       message: error instanceof Error ? error.message : "Unknown error occurred" 
     });
@@ -86,7 +89,7 @@ export const sendSMS = async (req: Request, res: Response) => {
 };
 
 // Schedule SMS message to be sent at a specific time (for future implementation)
-export const scheduleSMS = async (req: Request, res: Response) => {
+export const scheduleSMS = async (req: Request, res: Response): Promise<void> => {
   try {
     // Handle CORS
     const corsHandler = cors({ origin: true });
@@ -101,33 +104,35 @@ export const scheduleSMS = async (req: Request, res: Response) => {
     const { to, message, sendAt } = req.body;
     
     if (!to || !message || !sendAt) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false, 
         message: "Missing required parameters: 'to', 'message', and 'sendAt' are required" 
       });
+      return;
     }
     
     // Validate sendAt date
     const sendAtDate = new Date(sendAt);
     if (isNaN(sendAtDate.getTime())) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false, 
         message: "Invalid 'sendAt' date format" 
       });
+      return;
     }
     
     // In a real implementation, you would store this in a database and have a scheduler
     // For now, we'll just log it
     console.log(`[SCHEDULED SMS] To: ${to}, At: ${sendAtDate.toISOString()}, Message: "${message}"`);
     
-    return res.status(200).json({ 
+    res.status(200).json({ 
       success: true, 
       scheduled: true,
       scheduledFor: sendAtDate.toISOString()
     });
   } catch (error) {
     console.error("Error scheduling SMS:", error);
-    return res.status(500).json({ 
+    res.status(500).json({ 
       success: false, 
       message: error instanceof Error ? error.message : "Unknown error occurred" 
     });

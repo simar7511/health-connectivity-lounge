@@ -33,7 +33,7 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     
     // For demo purposes, use emulation mode until the cloud function is properly deployed
     // Set this to false once you've successfully deployed the cloud function
-    const useEmulationMode = false;
+    const useEmulationMode = true; // Keep as true until function is deployed
     
     // If in development mode or using emulation mode, simulate SMS sending
     if (isDevMode || useEmulationMode) {
