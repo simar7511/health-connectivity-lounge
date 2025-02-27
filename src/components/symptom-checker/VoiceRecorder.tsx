@@ -1,9 +1,9 @@
-import "regenerator-runtime/runtime";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { Mic, StopCircle } from "lucide-react";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface VoiceRecorderProps {
   language: "en" | "es";
@@ -14,7 +14,28 @@ interface VoiceRecorderProps {
 export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
-  const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+
+  const {
+    transcript,
+    isListening,
+    startListening,
+    stopListening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition({
+    language: language === "en" ? "en-US" : "es-ES",
+    onError: (error) => {
+      console.error('Speech recognition error:', error);
+      toast({
+        title: language === "en" ? "Error" : "Error",
+        description: language === "en" 
+          ? "There was an error with speech recognition. Please try again." 
+          : "Hubo un error con el reconocimiento de voz. Por favor, inténtelo de nuevo.",
+        variant: "destructive"
+      });
+      setIsRecording(false);
+    }
+  });
 
   if (!browserSupportsSpeechRecognition) {
     return (
@@ -27,19 +48,16 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
   const handleStartListening = () => {
     resetTranscript();
     setIsRecording(true);
-    SpeechRecognition.startListening({
-      continuous: true,
-      language: language === "en" ? "en-US" : "es-ES",
-    });
+    startListening();
   };
 
   const handleStopListening = () => {
-    SpeechRecognition.stopListening();
+    stopListening();
     setIsRecording(false);
 
     // ✅ Ensure transcript is not empty
     if (transcript.trim()) {
-      onVoiceInput(fieldName, transcript); // ✅ Insert text into corresponding field
+      onVoiceInput(fieldName, transcript);
       toast({
         title: language === "en" ? "Voice Input Recorded" : "Entrada de Voz Registrada",
         description: transcript,
