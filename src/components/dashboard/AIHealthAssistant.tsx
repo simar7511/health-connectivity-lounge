@@ -60,15 +60,17 @@ const errorMessages = {
     quotaExceeded: "API quota exceeded. Please try again later or use a different provider.",
     invalidKey: "Invalid API key. Please check your API key and try again.",
     networkError: "Network error. Please check your internet connection and try again.",
-    llamaError: "Error connecting to Llama 2 API. Please try again later.",
-    default: "An error occurred. Please try again."
+    llamaError: "Error connecting to Llama 2 API. Please try again later or switch to test mode.",
+    llamaModelLoading: "The Llama 2 model is currently loading. This may take a minute for the first request. Please try again.",
+    default: "An error occurred. Please try again or switch to test mode."
   },
   es: {
     quotaExceeded: "Cuota de API excedida. Intente nuevamente más tarde o use un proveedor diferente.",
     invalidKey: "Clave API inválida. Por favor, verifique su clave API e inténtelo de nuevo.",
     networkError: "Error de red. Compruebe su conexión a Internet e inténtelo de nuevo.",
-    llamaError: "Error al conectar con la API de Llama 2. Por favor, inténtelo de nuevo más tarde.",
-    default: "Se produjo un error. Inténtelo de nuevo."
+    llamaError: "Error al conectar con la API de Llama 2. Por favor, inténtelo de nuevo más tarde o cambie al modo de prueba.",
+    llamaModelLoading: "El modelo Llama 2 está cargando actualmente. Esto puede tardar un minuto para la primera solicitud. Por favor, inténtelo de nuevo.",
+    default: "Se produjo un error. Inténtelo de nuevo o cambie al modo de prueba."
   }
 };
 
@@ -384,7 +386,10 @@ export function AIHealthAssistant({
         prompt += "Answer:";
       }
 
-      // Call the huggingface free inference API
+      console.log("Sending prompt to Llama 2 API:", prompt);
+
+      // Call the Hugging Face free inference API
+      // Note: This API doesn't require an API key for Llama 2 inference
       const response = await fetch(`https://api-inference.huggingface.co/models/meta-llama/${currentModel}`, {
         method: "POST",
         headers: {
@@ -402,22 +407,49 @@ export function AIHealthAssistant({
         }),
       });
 
+      // Log response status for debugging
+      console.log("Llama API response status:", response.status);
+      console.log("Llama API response headers:", Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
         console.error("Llama API error:", response.status, response.statusText);
         
         // Parse the error response if possible
-        const errorData = await response.json().catch(() => null);
-        console.log("Error data:", errorData);
+        let errorMessage = "";
+        try {
+          const errorData = await response.json();
+          console.log("Error data:", errorData);
+          errorMessage = errorData.error || "";
+        } catch (e) {
+          console.log("Failed to parse error response as JSON");
+          errorMessage = await response.text();
+          console.log("Error text:", errorMessage);
+        }
         
-        setApiError("llamaError");
-        throw new Error(`Llama API request failed with status ${response.status}`);
+        // Check for model loading error (common with Hugging Face inference API)
+        if (errorMessage.includes("loading") || errorMessage.includes("still loading") || response.status === 503) {
+          setApiError("llamaModelLoading");
+          throw new Error("Llama model is still loading");
+        } else {
+          setApiError("llamaError");
+          throw new Error(`Llama API request failed with status ${response.status}: ${errorMessage}`);
+        }
       }
 
       // Clear any previous errors
       setApiError(null);
       
-      const data = await response.json();
-      console.log("Llama API response:", data);
+      // Try to parse the response
+      let data;
+      try {
+        data = await response.json();
+        console.log("Llama API response data:", data);
+      } catch (e) {
+        console.error("Failed to parse Llama API response as JSON:", e);
+        const textResponse = await response.text();
+        console.log("Llama API text response:", textResponse);
+        throw new Error("Failed to parse Llama API response");
+      }
       
       // Handle different response formats
       let resultText = "";
@@ -429,6 +461,9 @@ export function AIHealthAssistant({
         }
       } else if (data.generated_text) {
         resultText = data.generated_text;
+      } else {
+        console.error("Unexpected Llama API response format:", data);
+        throw new Error("Unexpected response format from Llama API");
       }
       
       // Clean up the response
@@ -439,6 +474,7 @@ export function AIHealthAssistant({
         resultText = resultText.substring(7).trim();
       }
       
+      console.log("Final processed Llama response:", resultText);
       return resultText;
     } catch (error) {
       console.error("Error calling Llama:", error);
@@ -547,12 +583,17 @@ export function AIHealthAssistant({
       
       // Add to Firestore if authenticated
       if (auth.currentUser) {
-        await addDoc(collection(db, "aiChatHistory"), {
-          content: userMessage.content,
-          sender: userMessage.sender,
-          timestamp: serverTimestamp(),
-          userId: patientId || auth.currentUser.uid,
-        });
+        try {
+          await addDoc(collection(db, "aiChatHistory"), {
+            content: userMessage.content,
+            sender: userMessage.sender,
+            timestamp: serverTimestamp(),
+            userId: patientId || auth.currentUser.uid,
+          });
+        } catch (error) {
+          console.error("Error saving message to Firestore:", error);
+          // Continue even if Firestore save fails
+        }
       }
       
       if (useFallbackMode) {
@@ -585,12 +626,17 @@ export function AIHealthAssistant({
       
       // Add AI response to Firestore if authenticated
       if (auth.currentUser) {
-        await addDoc(collection(db, "aiChatHistory"), {
-          content: aiMessage.content,
-          sender: aiMessage.sender,
-          timestamp: serverTimestamp(),
-          userId: patientId || auth.currentUser.uid,
-        });
+        try {
+          await addDoc(collection(db, "aiChatHistory"), {
+            content: aiMessage.content,
+            sender: aiMessage.sender,
+            timestamp: serverTimestamp(),
+            userId: patientId || auth.currentUser.uid,
+          });
+        } catch (error) {
+          console.error("Error saving AI response to Firestore:", error);
+          // Continue even if Firestore save fails
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
