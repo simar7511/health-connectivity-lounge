@@ -14,13 +14,13 @@ const content = {
   en: {
     title: "Secure Messages",
     chat: "Secure Chat",
-    aiChat: "AI Health Assistant",
+    aiChat: "AI Health Assistant (GPT-4)",
     unread: "unread messages",
   },
   es: {
     title: "Mensajes Seguros",
     chat: "Chat Seguro",
-    aiChat: "Asistente de Salud IA",
+    aiChat: "Asistente de Salud IA (GPT-4)",
     unread: "mensajes sin leer",
   },
 };

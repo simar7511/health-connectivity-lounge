@@ -25,92 +25,10 @@ type Message = {
   timestamp: Date;
 };
 
-// Medical knowledge base with common questions and answers
-const medicalKnowledgeBase = {
-  en: [
-    {
-      keywords: ["fever", "temperature", "high temperature"],
-      response: "For fever management: 1) Stay hydrated 2) Rest 3) Consider over-the-counter medications like acetaminophen or ibuprofen following package instructions 4) Seek medical attention if fever exceeds 103°F (39.4°C) in adults, is accompanied by severe headache, unusual skin rash, neck stiffness, or persists longer than 3 days."
-    },
-    {
-      keywords: ["cold", "flu", "cough", "sore throat"],
-      response: "For cold and flu symptoms: 1) Rest as much as possible 2) Stay hydrated 3) Use over-the-counter medications to relieve symptoms 4) Consider throat lozenges for sore throat 5) Use a humidifier 6) Seek medical attention if symptoms worsen or don't improve after 7-10 days."
-    },
-    {
-      keywords: ["headache", "migraine", "head pain"],
-      response: "For headache management: 1) Rest in a quiet, dark room 2) Apply a cool compress to your forehead 3) Stay hydrated 4) Consider over-the-counter pain relievers 5) For recurrent or severe headaches, please consult with your healthcare provider."
-    },
-    {
-      keywords: ["rash", "skin", "itchy", "itching"],
-      response: "For skin rashes: 1) Avoid scratching 2) Apply a cool compress 3) Use over-the-counter hydrocortisone cream for itching 4) Take an antihistamine if appropriate 5) Seek medical attention if the rash is widespread, painful, blistering, or accompanied by fever."
-    },
-    {
-      keywords: ["stomach", "nausea", "vomiting", "diarrhea"],
-      response: "For stomach issues: 1) Stay hydrated with small sips of water or electrolyte solutions 2) Avoid solid foods until feeling better 3) Gradually reintroduce bland foods 4) Seek medical attention if symptoms persist beyond 2 days, or if there's severe pain, high fever, or signs of dehydration."
-    },
-    {
-      keywords: ["medication", "medicine", "prescription", "drug"],
-      response: "For medication safety: 1) Always take medications as prescribed 2) Don't stop medication without consulting your provider 3) Store medications properly 4) Be aware of potential interactions 5) Contact your provider if you experience unexpected side effects."
-    },
-    {
-      keywords: ["emergency", "urgent", "severe", "911"],
-      response: "If you're experiencing a medical emergency such as severe chest pain, difficulty breathing, severe bleeding, or signs of stroke, please call 911 or go to the nearest emergency room immediately. This AI assistant cannot provide emergency assistance."
-    }
-  ],
-  es: [
-    {
-      keywords: ["fiebre", "temperatura", "temperatura alta"],
-      response: "Para el manejo de la fiebre: 1) Manténgase hidratado 2) Descanse 3) Considere medicamentos de venta libre como acetaminofén o ibuprofeno siguiendo las instrucciones del paquete 4) Busque atención médica si la fiebre supera los 39.4°C en adultos, está acompañada de dolor de cabeza intenso, erupción cutánea inusual, rigidez en el cuello o persiste más de 3 días."
-    },
-    {
-      keywords: ["resfriado", "gripe", "tos", "dolor de garganta"],
-      response: "Para síntomas de resfriado y gripe: 1) Descanse lo más posible 2) Manténgase hidratado 3) Use medicamentos de venta libre para aliviar los síntomas 4) Considere pastillas para la garganta 5) Use un humidificador 6) Busque atención médica si los síntomas empeoran o no mejoran después de 7-10 días."
-    },
-    {
-      keywords: ["dolor de cabeza", "migraña", "dolor en la cabeza"],
-      response: "Para el manejo del dolor de cabeza: 1) Descanse en una habitación tranquila y oscura 2) Aplique una compresa fría en la frente 3) Manténgase hidratado 4) Considere analgésicos de venta libre 5) Para dolores de cabeza recurrentes o severos, consulte con su proveedor de atención médica."
-    },
-    {
-      keywords: ["erupción", "piel", "picazón", "comezón"],
-      response: "Para erupciones cutáneas: 1) Evite rascarse 2) Aplique una compresa fría 3) Use crema de hidrocortisona de venta libre para la picazón 4) Tome un antihistamínico si es apropiado 5) Busque atención médica si la erupción es generalizada, dolorosa, con ampollas o acompañada de fiebre."
-    },
-    {
-      keywords: ["estómago", "náusea", "vómito", "diarrea"],
-      response: "Para problemas estomacales: 1) Manténgase hidratado con pequeños sorbos de agua o soluciones electrolíticas 2) Evite alimentos sólidos hasta sentirse mejor 3) Reintroduzca gradualmente alimentos blandos 4) Busque atención médica si los síntomas persisten más de 2 días, o si hay dolor intenso, fiebre alta o signos de deshidratación."
-    },
-    {
-      keywords: ["medicamento", "medicina", "receta", "fármaco"],
-      response: "Para seguridad con medicamentos: 1) Siempre tome los medicamentos según lo prescrito 2) No deje de tomar medicamentos sin consultar a su proveedor 3) Almacene los medicamentos adecuadamente 4) Esté atento a posibles interacciones 5) Contacte a su proveedor si experimenta efectos secundarios inesperados."
-    },
-    {
-      keywords: ["emergencia", "urgente", "grave", "911"],
-      response: "Si está experimentando una emergencia médica como dolor intenso en el pecho, dificultad para respirar, sangrado severo o signos de derrame cerebral, llame al 911 o vaya a la sala de emergencias más cercana inmediatamente. Este asistente de IA no puede proporcionar asistencia de emergencia."
-    }
-  ]
-};
-
-// Default responses when no match is found in the knowledge base
-const defaultResponses = {
-  en: [
-    "I'm not able to provide specific medical advice about your condition. Please consider reaching out to your healthcare provider for personalized guidance.",
-    "This question might require personalized medical insight. I recommend discussing this with your healthcare provider for the most accurate guidance.",
-    "For this particular concern, it would be best to consult with your healthcare provider who knows your medical history.",
-    "While I can provide general health information, your specific question would be better addressed by your healthcare provider.",
-    "I'd recommend discussing this with your healthcare provider who can give you personalized advice based on your medical history."
-  ],
-  es: [
-    "No puedo proporcionar consejos médicos específicos sobre su condición. Por favor, considere comunicarse con su proveedor de atención médica para obtener orientación personalizada.",
-    "Esta pregunta podría requerir conocimiento médico personalizado. Le recomiendo que hable con su proveedor de atención médica para obtener la orientación más precisa.",
-    "Para esta preocupación en particular, sería mejor consultar con su proveedor de atención médica que conoce su historial médico.",
-    "Si bien puedo proporcionar información general sobre salud, su pregunta específica sería mejor abordada por su proveedor de atención médica.",
-    "Le recomendaría hablar de esto con su proveedor de atención médica, quien puede darle consejos personalizados basados en su historial médico."
-  ]
-};
-
 // Greeting messages based on language
 const greetings = {
-  en: "Hello! I'm your Health Assistant. I can answer general health questions while you wait for your provider. How can I help you today?",
-  es: "¡Hola! Soy tu Asistente de Salud. Puedo responder preguntas generales sobre salud mientras esperas a tu proveedor. ¿Cómo puedo ayudarte hoy?"
+  en: "Hello! I'm your Health Assistant powered by GPT-4. I can answer general health questions while you wait for your provider. How can I help you today?",
+  es: "¡Hola! Soy tu Asistente de Salud potenciado por GPT-4. Puedo responder preguntas generales sobre salud mientras esperas a tu proveedor. ¿Cómo puedo ayudarte hoy?"
 };
 
 // Common disclaimer based on language
@@ -174,25 +92,6 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
     return () => unsubscribe();
   }, [patientId, auth.currentUser]);
 
-  const findResponseInKnowledgeBase = (query: string): string | null => {
-    const queryLower = query.toLowerCase();
-    const kb = medicalKnowledgeBase[language];
-    
-    for (const item of kb) {
-      if (item.keywords.some(keyword => queryLower.includes(keyword))) {
-        return item.response;
-      }
-    }
-    
-    return null;
-  };
-
-  const getDefaultResponse = (): string => {
-    const responses = defaultResponses[language];
-    const randomIndex = Math.floor(Math.random() * responses.length);
-    return responses[randomIndex];
-  };
-
   const handleSendMessage = async () => {
     if (!input.trim()) return;
     
@@ -219,38 +118,50 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
         });
       }
       
-      // Find response in knowledge base or get default response
-      let responseText = findResponseInKnowledgeBase(input);
-      
-      if (!responseText) {
-        responseText = getDefaultResponse() + " " + disclaimers[language];
+      // Call the OpenAI GPT-4 API through our edge function
+      const response = await fetch("/api/ai-health-assistant", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: input,
+          language: language,
+          previousMessages: messages.map(msg => ({
+            role: msg.sender === "user" ? "user" : "assistant",
+            content: msg.content
+          }))
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
       }
+
+      const data = await response.json();
+      const aiResponseText = data.response + " " + disclaimers[language];
       
-      // Simulate AI processing delay
-      setTimeout(async () => {
-        const aiMessage: Message = {
-          id: Date.now().toString(),
-          content: responseText as string,
-          sender: "ai",
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, aiMessage]);
-        setIsProcessing(false);
-        
-        // Add AI response to Firestore
-        if (auth.currentUser) {
-          await addDoc(collection(db, "aiChatHistory"), {
-            content: aiMessage.content,
-            sender: aiMessage.sender,
-            timestamp: serverTimestamp(),
-            userId: patientId || auth.currentUser.uid,
-          });
-        }
-      }, 1500);
+      // Add AI response
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        content: aiResponseText,
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+      
+      // Add AI response to Firestore
+      if (auth.currentUser) {
+        await addDoc(collection(db, "aiChatHistory"), {
+          content: aiMessage.content,
+          sender: aiMessage.sender,
+          timestamp: serverTimestamp(),
+          userId: patientId || auth.currentUser.uid,
+        });
+      }
     } catch (error) {
       console.error("Error sending message:", error);
-      setIsProcessing(false);
       toast({
         title: language === "en" ? "Error" : "Error",
         description: language === "en" 
@@ -258,6 +169,8 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
           : "No se pudo enviar el mensaje. Por favor, inténtelo de nuevo.",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -280,7 +193,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
           </Button>
           <CardTitle className="text-lg flex items-center">
             <Bot className="mr-2 h-5 w-5 text-primary" />
-            {language === "en" ? "Health Assistant" : "Asistente de Salud"}
+            {language === "en" ? "Health Assistant (GPT-4)" : "Asistente de Salud (GPT-4)"}
           </CardTitle>
         </div>
       </CardHeader>
