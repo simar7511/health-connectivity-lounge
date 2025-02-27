@@ -57,6 +57,26 @@ const errorMessages = {
   }
 };
 
+// Mock responses for testing without API
+const mockResponses = {
+  en: {
+    default: "I understand you're asking about {TOPIC}. This is a simulated response because the app is in test mode. In a real scenario with a working API key, you would receive a detailed response from an AI model. For now, you can use the offline mode to get basic information about common health topics.",
+    hypertension: "Hypertension, or high blood pressure, is when the pressure in your blood vessels is consistently too high. It's often called a 'silent killer' because it typically has no symptoms but can lead to serious health problems like heart disease and stroke if left untreated. Regular monitoring, a healthy diet low in sodium, regular exercise, limiting alcohol, not smoking, and sometimes medication are key to managing hypertension.",
+    diabetes: "Diabetes is a condition where your body either doesn't produce enough insulin or can't effectively use the insulin it produces. This results in high blood sugar levels, which can lead to various health complications over time. There are several types, including Type 1 (autoimmune), Type 2 (related to lifestyle factors), and gestational diabetes (during pregnancy). Management includes monitoring blood sugar, medication or insulin therapy, a balanced diet, and regular physical activity.",
+    covid: "COVID-19 is caused by the SARS-CoV-2 virus and primarily affects the respiratory system. Symptoms can range from mild (like fever, cough, fatigue) to severe (difficulty breathing, chest pain). Vaccination has proven effective in reducing the risk of severe illness and hospitalization. If you suspect you have COVID-19, getting tested and isolating yourself to prevent spreading it to others is important.",
+    stress: "Stress is your body's natural response to pressure or threats. While some stress can be motivating, chronic stress can negatively impact your physical and mental health. Managing stress often involves techniques like deep breathing, meditation, regular physical activity, adequate sleep, and maintaining social connections. If stress is significantly affecting your daily life, speaking with a healthcare professional might be beneficial.",
+    nutrition: "A balanced diet is crucial for maintaining good health. It should include a variety of fruits, vegetables, whole grains, lean proteins, and healthy fats. Limiting processed foods, added sugars, and excessive sodium is also important. Everyone's nutritional needs vary based on factors like age, gender, activity level, and overall health status. Consulting with a dietitian can provide personalized guidance for your specific needs."
+  },
+  es: {
+    default: "Entiendo que estás preguntando sobre {TOPIC}. Esta es una respuesta simulada porque la aplicación está en modo de prueba. En un escenario real con una clave API funcionando, recibirías una respuesta detallada de un modelo de IA. Por ahora, puedes usar el modo offline para obtener información básica sobre temas comunes de salud.",
+    hypertension: "La hipertensión, o presión arterial alta, es cuando la presión en los vasos sanguíneos es consistentemente demasiado alta. A menudo se le llama un 'asesino silencioso' porque típicamente no tiene síntomas pero puede llevar a problemas de salud graves como enfermedades cardíacas y accidentes cerebrovasculares si no se trata. El monitoreo regular, una dieta saludable baja en sodio, ejercicio regular, limitar el alcohol, no fumar, y a veces medicamentos son clave para manejar la hipertensión.",
+    diabetes: "La diabetes es una condición donde tu cuerpo no produce suficiente insulina o no puede usar efectivamente la insulina que produce. Esto resulta en niveles altos de azúcar en la sangre, lo que puede llevar a varias complicaciones de salud con el tiempo. Hay varios tipos, incluyendo Tipo 1 (autoinmune), Tipo 2 (relacionado con factores de estilo de vida), y diabetes gestacional (durante el embarazo). El manejo incluye monitorear el azúcar en la sangre, medicamentos o terapia de insulina, una dieta balanceada, y actividad física regular.",
+    covid: "COVID-19 es causado por el virus SARS-CoV-2 y afecta principalmente al sistema respiratorio. Los síntomas pueden variar desde leves (como fiebre, tos, fatiga) hasta severos (dificultad para respirar, dolor en el pecho). La vacunación ha demostrado ser efectiva en reducir el riesgo de enfermedad grave y hospitalización. Si sospechas que tienes COVID-19, hacerte una prueba y aislarte para prevenir contagiar a otros es importante.",
+    stress: "El estrés es la respuesta natural de tu cuerpo a la presión o amenazas. Mientras que algo de estrés puede ser motivador, el estrés crónico puede impactar negativamente tu salud física y mental. Manejar el estrés a menudo involucra técnicas como respiración profunda, meditación, actividad física regular, sueño adecuado, y mantener conexiones sociales. Si el estrés está afectando significativamente tu vida diaria, hablar con un profesional de la salud podría ser beneficioso.",
+    nutrition: "Una dieta balanceada es crucial para mantener una buena salud. Debe incluir una variedad de frutas, verduras, granos enteros, proteínas magras, y grasas saludables. Limitar alimentos procesados, azúcares añadidos, y sodio excesivo también es importante. Las necesidades nutricionales de cada persona varían basadas en factores como edad, género, nivel de actividad, y estado de salud general. Consultar con un dietista puede proporcionar orientación personalizada para tus necesidades específicas."
+  }
+};
+
 // Fallback responses for when no API is available
 const fallbackResponses = {
   en: {
@@ -96,6 +116,9 @@ export function AIHealthAssistant({
   const [useFallbackMode, setUseFallbackMode] = useState<boolean>(() => {
     return localStorage.getItem("use_fallback_mode") === "true";
   });
+  const [useTestMode, setUseTestMode] = useState<boolean>(() => {
+    return localStorage.getItem("use_test_mode") === "true";
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const auth = getAuth();
   const { toast } = useToast();
@@ -112,7 +135,7 @@ export function AIHealthAssistant({
     
     // Check if API key is stored in localStorage
     const storedKey = localStorage.getItem("openai_api_key");
-    if (storedKey && !useFallbackMode) {
+    if (storedKey && !useFallbackMode && !useTestMode) {
       setApiKey(storedKey);
       
       // Also get the model
@@ -120,10 +143,10 @@ export function AIHealthAssistant({
       if (storedModel) {
         setCurrentModel(storedModel);
       }
-    } else if (!useFallbackMode && !storedKey) {
+    } else if (!useFallbackMode && !useTestMode && !storedKey) {
       setShowAPIKeyInput(true);
     }
-  }, [language, useFallbackMode]);
+  }, [language, useFallbackMode, useTestMode]);
 
   // Effect to update the model when it changes from props
   useEffect(() => {
@@ -186,6 +209,12 @@ export function AIHealthAssistant({
     setUseFallbackMode(value);
     localStorage.setItem("use_fallback_mode", value.toString());
     
+    if (value) {
+      // If enabling fallback mode, disable test mode
+      setUseTestMode(false);
+      localStorage.setItem("use_test_mode", "false");
+    }
+    
     // Reset messages with new greeting
     const initialMessage: Message = {
       id: "greeting",
@@ -196,11 +225,33 @@ export function AIHealthAssistant({
     setMessages([initialMessage]);
     
     // Show API key input if switching from fallback to API mode
-    if (!value && !apiKey) {
+    if (!value && !apiKey && !useTestMode) {
       setShowAPIKeyInput(true);
     } else {
       setShowAPIKeyInput(false);
     }
+  };
+
+  const toggleTestMode = (value: boolean) => {
+    setUseTestMode(value);
+    localStorage.setItem("use_test_mode", value.toString());
+    
+    if (value) {
+      // If enabling test mode, disable fallback mode
+      setUseFallbackMode(false);
+      localStorage.setItem("use_fallback_mode", "false");
+    }
+    
+    // Reset messages with standard greeting
+    const initialMessage: Message = {
+      id: "greeting",
+      content: greetings[language],
+      sender: "ai",
+      timestamp: new Date(),
+    };
+    setMessages([initialMessage]);
+    
+    setShowAPIKeyInput(false);
   };
 
   const callOpenAI = async (userMessage: string, previousMessages: Message[]) => {
@@ -276,6 +327,34 @@ export function AIHealthAssistant({
     }
   };
 
+  const getMockResponse = (userMessage: string): string => {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes("hypertension") || lowerMessage.includes("blood pressure") || 
+        lowerMessage.includes("high blood") || lowerMessage.includes("hipertensión") || 
+        lowerMessage.includes("presión arterial")) {
+      return mockResponses[language].hypertension;
+    } else if (lowerMessage.includes("diabetes") || lowerMessage.includes("sugar") || 
+              lowerMessage.includes("glucose") || lowerMessage.includes("azúcar") || 
+              lowerMessage.includes("glucosa")) {
+      return mockResponses[language].diabetes;
+    } else if (lowerMessage.includes("covid") || lowerMessage.includes("coronavirus") || 
+              lowerMessage.includes("virus") || lowerMessage.includes("pandemic") || 
+              lowerMessage.includes("pandemia")) {
+      return mockResponses[language].covid;
+    } else if (lowerMessage.includes("stress") || lowerMessage.includes("anxiety") || 
+              lowerMessage.includes("tension") || lowerMessage.includes("estrés") || 
+              lowerMessage.includes("ansiedad")) {
+      return mockResponses[language].stress;
+    } else if (lowerMessage.includes("nutrition") || lowerMessage.includes("diet") || 
+              lowerMessage.includes("food") || lowerMessage.includes("nutrición") || 
+              lowerMessage.includes("dieta") || lowerMessage.includes("alimentación")) {
+      return mockResponses[language].nutrition;
+    } else {
+      return mockResponses[language].default.replace("{TOPIC}", userMessage);
+    }
+  };
+
   const getFallbackResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
     
@@ -307,8 +386,8 @@ export function AIHealthAssistant({
   const handleSendMessage = async () => {
     if (!input.trim()) return;
     
-    // Check if API key is available when not in fallback mode
-    if (!apiKey && !useFallbackMode) {
+    // Check if API key is available when not in fallback or test mode
+    if (!apiKey && !useFallbackMode && !useTestMode) {
       setShowAPIKeyInput(true);
       toast({
         title: language === "en" ? "API Key Required" : "Se Requiere Clave API",
@@ -336,8 +415,8 @@ export function AIHealthAssistant({
     try {
       let aiResponseText = "";
       
-      // Add to Firestore if not in fallback mode
-      if (auth.currentUser && !useFallbackMode) {
+      // Add to Firestore if authenticated
+      if (auth.currentUser) {
         await addDoc(collection(db, "aiChatHistory"), {
           content: userMessage.content,
           sender: userMessage.sender,
@@ -349,6 +428,11 @@ export function AIHealthAssistant({
       if (useFallbackMode) {
         // Use the fallback response system
         aiResponseText = getFallbackResponse(input) + " " + disclaimers[language];
+      } else if (useTestMode) {
+        // Use the mock response system
+        // Add a slight delay to simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        aiResponseText = getMockResponse(input) + " " + disclaimers[language];
       } else {
         // Call OpenAI API
         const aiResponse = await callOpenAI(input, messages);
@@ -365,8 +449,8 @@ export function AIHealthAssistant({
       
       setMessages(prev => [...prev, aiMessage]);
       
-      // Add AI response to Firestore if not in fallback mode
-      if (auth.currentUser && !useFallbackMode) {
+      // Add AI response to Firestore if authenticated
+      if (auth.currentUser) {
         await addDoc(collection(db, "aiChatHistory"), {
           content: aiMessage.content,
           sender: aiMessage.sender,
@@ -385,13 +469,13 @@ export function AIHealthAssistant({
         variant: "destructive",
       });
       
-      // Suggest fallback mode after error
-      if (!useFallbackMode) {
+      // Suggest test mode or fallback mode after error
+      if (!useTestMode && !useFallbackMode) {
         toast({
-          title: language === "en" ? "Try Offline Mode" : "Probar Modo Offline",
+          title: language === "en" ? "Try Test Mode" : "Probar Modo de Prueba",
           description: language === "en" 
-            ? "You can switch to offline mode to use basic responses without requiring an API key." 
-            : "Puede cambiar al modo offline para usar respuestas básicas sin necesitar una clave API.",
+            ? "You can switch to test mode to use simulated responses without requiring a working API key." 
+            : "Puede cambiar al modo de prueba para usar respuestas simuladas sin necesitar una clave API funcionando.",
           variant: "default",
         });
       }
@@ -428,7 +512,7 @@ export function AIHealthAssistant({
           <CardTitle className="text-lg flex items-center">
             <Bot className="mr-2 h-5 w-5 text-primary" />
             {language === "en" ? "Health Assistant" : "Asistente de Salud"}
-            {!useFallbackMode && (
+            {!useFallbackMode && !useTestMode && (
               <span className="ml-2 text-xs text-muted-foreground">
                 (OpenAI - {currentModel})
               </span>
@@ -436,6 +520,11 @@ export function AIHealthAssistant({
             {useFallbackMode && (
               <span className="ml-2 text-xs text-muted-foreground">
                 ({language === "en" ? "offline mode" : "modo offline"})
+              </span>
+            )}
+            {useTestMode && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                ({language === "en" ? "test mode" : "modo de prueba"})
               </span>
             )}
           </CardTitle>
@@ -477,19 +566,32 @@ export function AIHealthAssistant({
           )}
           
           <div className="w-full max-w-md space-y-4">
-            <div className="flex items-center justify-between space-x-2 py-2">
-              <Label htmlFor="offline-mode" className="text-base flex items-center gap-2">
-                {language === "en" ? "Use Offline Mode" : "Usar Modo Offline"}
-                <span className="text-xs text-muted-foreground">(no API key required)</span>
-              </Label>
-              <Switch
-                id="offline-mode"
-                checked={useFallbackMode}
-                onCheckedChange={toggleFallbackMode}
-              />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between space-x-2 py-2">
+                <Label htmlFor="test-mode" className="text-base flex items-center gap-2">
+                  {language === "en" ? "Use Test Mode" : "Usar Modo de Prueba"}
+                  <span className="text-xs text-muted-foreground">(simulated responses without API key)</span>
+                </Label>
+                <Switch
+                  id="test-mode"
+                  checked={useTestMode}
+                  onCheckedChange={toggleTestMode}
+                />
+              </div>
+              <div className="flex items-center justify-between space-x-2 py-2">
+                <Label htmlFor="offline-mode" className="text-base flex items-center gap-2">
+                  {language === "en" ? "Use Offline Mode" : "Usar Modo Offline"}
+                  <span className="text-xs text-muted-foreground">(limited predefined responses)</span>
+                </Label>
+                <Switch
+                  id="offline-mode"
+                  checked={useFallbackMode}
+                  onCheckedChange={toggleFallbackMode}
+                />
+              </div>
             </div>
             
-            {!useFallbackMode && (
+            {!useFallbackMode && !useTestMode && (
               <>
                 <div className="space-y-2">
                   <label htmlFor="apiKey" className="text-sm font-medium">
@@ -537,31 +639,42 @@ export function AIHealthAssistant({
               </>
             )}
             
+            {(useTestMode || useFallbackMode) && (
+              <Button 
+                onClick={() => setShowAPIKeyInput(false)} 
+                className="w-full"
+              >
+                {language === "en" ? "Continue" : "Continuar"}
+              </Button>
+            )}
+            
+            {useTestMode && (
+              <Alert className="bg-primary/10 border-primary/20">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <AlertDescription>
+                  {language === "en" 
+                    ? "Test mode provides simulated AI responses without requiring an API key. This is perfect for testing the application when you don't have a working OpenAI API key." 
+                    : "El modo de prueba proporciona respuestas de IA simuladas sin requerir una clave API. Esto es perfecto para probar la aplicación cuando no tienes una clave API de OpenAI funcionando."}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {useFallbackMode && (
-              <div className="space-y-3">
-                <Alert className="bg-primary/10 border-primary/20">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <AlertDescription>
-                    {language === "en" 
-                      ? "Offline mode uses pre-defined responses for common health topics without requiring an API key. Topics include: hypertension, diabetes, COVID-19, anxiety, and depression." 
-                      : "El modo offline utiliza respuestas predefinidas para temas comunes de salud sin requerir una clave API. Los temas incluyen: hipertensión, diabetes, COVID-19, ansiedad y depresión."}
-                  </AlertDescription>
-                </Alert>
-                
-                <Button 
-                  onClick={() => setShowAPIKeyInput(false)} 
-                  className="w-full"
-                >
-                  {language === "en" ? "Continue with Offline Mode" : "Continuar con Modo Offline"}
-                </Button>
-              </div>
+              <Alert className="bg-primary/10 border-primary/20">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <AlertDescription>
+                  {language === "en" 
+                    ? "Offline mode uses pre-defined responses for common health topics without requiring an API key. Topics include: hypertension, diabetes, COVID-19, anxiety, and depression." 
+                    : "El modo offline utiliza respuestas predefinidas para temas comunes de salud sin requerir una clave API. Los temas incluyen: hipertensión, diabetes, COVID-19, ansiedad y depresión."}
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         </CardContent>
       ) : (
         <>
           <CardContent className="flex-1 p-4 overflow-hidden">
-            {apiError && !useFallbackMode && (
+            {apiError && !useFallbackMode && !useTestMode && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>
@@ -577,6 +690,14 @@ export function AIHealthAssistant({
                       className="self-start"
                     >
                       {language === "en" ? "Change API Settings" : "Cambiar Configuración API"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => toggleTestMode(true)}
+                      className="self-start"
+                    >
+                      {language === "en" ? "Switch to Test Mode" : "Cambiar a Modo de Prueba"}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -603,14 +724,64 @@ export function AIHealthAssistant({
                       ? "You're using offline mode with limited pre-defined responses. Try asking about: hypertension, diabetes, COVID-19, anxiety, or depression." 
                       : "Está utilizando el modo offline con respuestas predefinidas limitadas. Intente preguntar sobre: hipertensión, diabetes, COVID-19, ansiedad o depresión."}
                   </span>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => toggleFallbackMode(false)}
-                    className="mt-1 self-start"
-                  >
-                    {language === "en" ? "Switch to API Mode" : "Cambiar a Modo API"}
-                  </Button>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => toggleTestMode(true)}
+                      className="self-start"
+                    >
+                      {language === "en" ? "Switch to Test Mode" : "Cambiar a Modo de Prueba"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        toggleFallbackMode(false);
+                        handleChangeAPIKey();
+                      }}
+                      className="self-start"
+                    >
+                      {language === "en" ? "Switch to API Mode" : "Cambiar a Modo API"}
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {useTestMode && (
+              <Alert className="mb-4 bg-primary/10 border-primary/20">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <AlertTitle>
+                  {language === "en" ? "Test Mode Active" : "Modo de Prueba Activo"}
+                </AlertTitle>
+                <AlertDescription className="flex flex-col gap-2">
+                  <span>
+                    {language === "en" 
+                      ? "You're using test mode with simulated AI responses. No API key is required. You can ask about any health topic." 
+                      : "Está utilizando el modo de prueba con respuestas de IA simuladas. No se requiere clave API. Puede preguntar sobre cualquier tema de salud."}
+                  </span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => toggleFallbackMode(true)}
+                      className="self-start"
+                    >
+                      {language === "en" ? "Switch to Offline Mode" : "Cambiar a Modo Offline"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        toggleTestMode(false);
+                        handleChangeAPIKey();
+                      }}
+                      className="self-start"
+                    >
+                      {language === "en" ? "Switch to API Mode" : "Cambiar a Modo API"}
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
