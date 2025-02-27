@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, Send, Bot, User, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { Mic, Send, Bot, User, ArrowLeft, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
@@ -16,6 +16,7 @@ interface AIHealthAssistantProps {
   language: "en" | "es";
   onBack: () => void;
   patientId?: string;
+  model?: string;
 }
 
 type Message = {
@@ -27,8 +28,8 @@ type Message = {
 
 // Greeting messages based on language
 const greetings = {
-  en: "Hello! I'm your Health Assistant powered by GPT-4. I can answer general health questions while you wait for your provider. How can I help you today?",
-  es: "¡Hola! Soy tu Asistente de Salud potenciado por GPT-4. Puedo responder preguntas generales sobre salud mientras esperas a tu proveedor. ¿Cómo puedo ayudarte hoy?"
+  en: "Hello! I'm your Health Assistant powered by AI. I can answer general health questions while you wait for your provider. How can I help you today?",
+  es: "¡Hola! Soy tu Asistente de Salud potenciado por IA. Puedo responder preguntas generales sobre salud mientras esperas a tu proveedor. ¿Cómo puedo ayudarte hoy?"
 };
 
 // Common disclaimer based on language
@@ -40,20 +41,20 @@ const disclaimers = {
 // Error messages based on language
 const errorMessages = {
   en: {
-    quotaExceeded: "OpenAI API quota exceeded. Please try again later or use a different API key.",
+    quotaExceeded: "OpenAI API quota exceeded. Please try using a different API key or try a more economical model like GPT-3.5 Turbo in the API settings.",
     invalidKey: "Invalid API key. Please check your API key and try again.",
     networkError: "Network error. Please check your internet connection and try again.",
     default: "An error occurred. Please try again."
   },
   es: {
-    quotaExceeded: "Cuota de API de OpenAI excedida. Intente de nuevo más tarde o use una clave API diferente.",
+    quotaExceeded: "Cuota de API de OpenAI excedida. Intente usar una clave API diferente o pruebe un modelo más económico como GPT-3.5 Turbo en la configuración de API.",
     invalidKey: "Clave API inválida. Por favor, verifique su clave API e inténtelo de nuevo.",
     networkError: "Error de red. Compruebe su conexión a Internet e inténtelo de nuevo.",
     default: "Se produjo un error. Inténtelo de nuevo."
   }
 };
 
-export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssistantProps) {
+export function AIHealthAssistant({ language, onBack, patientId, model = "gpt-4o-mini" }: AIHealthAssistantProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -61,6 +62,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
   const [openAIKey, setOpenAIKey] = useState<string>("");
   const [showAPIKeyInput, setShowAPIKeyInput] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [currentModel, setCurrentModel] = useState(model);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const auth = getAuth();
   const { toast } = useToast();
@@ -79,6 +81,12 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
     const storedKey = localStorage.getItem("openai_api_key");
     if (storedKey) {
       setOpenAIKey(storedKey);
+      
+      // Also get the model if available
+      const storedModel = localStorage.getItem("openai_model");
+      if (storedModel) {
+        setCurrentModel(storedModel);
+      }
     } else {
       setShowAPIKeyInput(true);
     }
@@ -122,13 +130,14 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
   const saveAPIKey = () => {
     if (openAIKey.trim()) {
       localStorage.setItem("openai_api_key", openAIKey);
+      localStorage.setItem("openai_model", currentModel);
       setShowAPIKeyInput(false);
       setApiError(null);
       toast({
-        title: language === "en" ? "API Key Saved" : "Clave API Guardada",
+        title: language === "en" ? "Settings Saved" : "Configuración Guardada",
         description: language === "en" 
-          ? "Your OpenAI API key has been saved for this session."
-          : "Tu clave API de OpenAI ha sido guardada para esta sesión.",
+          ? "Your OpenAI API settings have been saved."
+          : "Tu configuración de OpenAI API ha sido guardada.",
         variant: "default",
       });
     }
@@ -136,7 +145,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
 
   const callOpenAI = async (userMessage: string, previousMessages: Message[]) => {
     try {
-      console.log("Calling OpenAI API...");
+      console.log(`Calling OpenAI API using model: ${currentModel}...`);
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -144,7 +153,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
           Authorization: `Bearer ${openAIKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: currentModel,
           messages: [
             {
               role: "system",
@@ -294,6 +303,10 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
     setUseVoiceInput(false);
   };
 
+  const refreshPage = () => {
+    window.location.reload();
+  };
+
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="px-4 py-3 border-b flex flex-row items-center justify-between">
@@ -308,21 +321,31 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
           </Button>
           <CardTitle className="text-lg flex items-center">
             <Bot className="mr-2 h-5 w-5 text-primary" />
-            {language === "en" ? "Health Assistant (GPT-4)" : "Asistente de Salud (GPT-4)"}
+            {language === "en" ? "Health Assistant" : "Asistente de Salud"}
+            <span className="ml-2 text-xs text-muted-foreground">({currentModel})</span>
           </CardTitle>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={refreshPage}
+          title={language === "en" ? "Refresh" : "Actualizar"}
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       </CardHeader>
       
       {showAPIKeyInput ? (
         <CardContent className="flex-1 p-6 flex flex-col items-center justify-center gap-4">
           <div className="text-center max-w-md mx-auto space-y-2">
             <h3 className="text-lg font-semibold">
-              {language === "en" ? "OpenAI API Key Required" : "Se Requiere Clave API de OpenAI"}
+              {language === "en" ? "OpenAI API Settings" : "Configuración API de OpenAI"}
             </h3>
             <p className="text-sm text-muted-foreground">
               {language === "en" 
-                ? "Please enter your OpenAI API key to use the Health Assistant. Your key will be stored locally in your browser." 
-                : "Por favor, ingrese su clave API de OpenAI para usar el Asistente de Salud. Su clave se almacenará localmente en su navegador."}
+                ? "Please enter your OpenAI API key and select a model to use for the Health Assistant." 
+                : "Por favor, ingrese su clave API de OpenAI y seleccione un modelo para usar en el Asistente de Salud."}
             </p>
           </div>
           
@@ -338,26 +361,49 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
             </Alert>
           )}
           
-          <div className="w-full max-w-md space-y-2">
-            <Input
-              type="password"
-              value={openAIKey}
-              onChange={(e) => setOpenAIKey(e.target.value)}
-              placeholder={language === "en" ? "sk-..." : "sk-..."}
-              className="w-full"
-            />
+          <div className="w-full max-w-md space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="apiKey" className="text-sm font-medium">
+                {language === "en" ? "API Key" : "Clave API"}
+              </label>
+              <Input
+                id="apiKey"
+                type="password"
+                value={openAIKey}
+                onChange={(e) => setOpenAIKey(e.target.value)}
+                placeholder={language === "en" ? "sk-..." : "sk-..."}
+                className="w-full"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="model" className="text-sm font-medium">
+                {language === "en" ? "Model" : "Modelo"}
+              </label>
+              <select
+                id="model"
+                value={currentModel}
+                onChange={(e) => setCurrentModel(e.target.value)}
+                className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, less quota)</option>
+                <option value="gpt-4o-mini">GPT-4o Mini (Balanced)</option>
+                <option value="gpt-4o">GPT-4o (Advanced, more quota)</option>
+              </select>
+            </div>
+            
             <Button 
               onClick={saveAPIKey} 
               className="w-full"
               disabled={!openAIKey.trim()}
             >
-              {language === "en" ? "Save API Key" : "Guardar Clave API"}
+              {language === "en" ? "Save Settings" : "Guardar Configuración"}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-4 max-w-md text-center">
             {language === "en" 
-              ? "You can get an API key from OpenAI's website. This key will only be stored in your browser and is never sent to our servers." 
-              : "Puede obtener una clave API en el sitio web de OpenAI. Esta clave solo se almacenará en su navegador y nunca se enviará a nuestros servidores."}
+              ? "Try using the GPT-3.5 Turbo model if you're encountering quota issues. This key will only be stored in your browser and is never sent to our servers." 
+              : "Intente usar el modelo GPT-3.5 Turbo si está teniendo problemas de cuota. Esta clave solo se almacenará en su navegador y nunca se enviará a nuestros servidores."}
           </p>
         </CardContent>
       ) : (
@@ -377,7 +423,7 @@ export function AIHealthAssistant({ language, onBack, patientId }: AIHealthAssis
                     onClick={handleChangeAPIKey}
                     className="mt-1 self-start"
                   >
-                    {language === "en" ? "Change API Key" : "Cambiar Clave API"}
+                    {language === "en" ? "Change API Settings" : "Cambiar Configuración API"}
                   </Button>
                 </AlertDescription>
               </Alert>

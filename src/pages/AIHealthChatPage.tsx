@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { GlobeIcon } from "lucide-react";
+import { GlobeIcon, Settings } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
@@ -17,6 +18,7 @@ export const AIHealthChatPage = () => {
   });
   const [showApiDialog, setShowApiDialog] = useState(false);
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai_api_key") || "");
+  const [model, setModel] = useState(() => localStorage.getItem("openai_model") || "gpt-4o-mini");
 
   useEffect(() => {
     // Update session storage when language changes
@@ -34,14 +36,15 @@ export const AIHealthChatPage = () => {
   const saveApiKey = () => {
     if (apiKey.trim()) {
       localStorage.setItem("openai_api_key", apiKey);
+      localStorage.setItem("openai_model", model);
       setShowApiDialog(false);
       toast({
-        title: language === "en" ? "API Key Saved" : "Clave API Guardada",
+        title: language === "en" ? "Settings Saved" : "Configuración Guardada",
         description: language === "en" 
-          ? "Your OpenAI API key has been updated."
-          : "Tu clave API de OpenAI ha sido actualizada.",
+          ? "Your OpenAI API key and model have been updated."
+          : "Tu clave API de OpenAI y modelo han sido actualizados.",
       });
-      window.location.reload(); // Reload to refresh the component with the new API key
+      window.location.reload(); // Reload to refresh the component with the new settings
     } else {
       toast({
         title: language === "en" ? "Error" : "Error",
@@ -69,8 +72,10 @@ export const AIHealthChatPage = () => {
           variant="outline" 
           size="sm" 
           onClick={() => setShowApiDialog(true)}
+          className="flex items-center gap-1"
         >
-          {language === "en" ? "Change API Key" : "Cambiar Clave API"}
+          <Settings className="h-4 w-4 mr-1" />
+          {language === "en" ? "API Settings" : "Configuración API"}
         </Button>
       </div>
       
@@ -79,6 +84,7 @@ export const AIHealthChatPage = () => {
           language={language} 
           onBack={handleBack}
           patientId={patientId}
+          model={model}
         />
       </div>
 
@@ -86,25 +92,48 @@ export const AIHealthChatPage = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === "en" ? "OpenAI API Key" : "Clave API de OpenAI"}
+              {language === "en" ? "OpenAI API Settings" : "Configuración API de OpenAI"}
             </DialogTitle>
             <DialogDescription>
               {language === "en" 
-                ? "Enter your OpenAI API key to use the Health Assistant." 
-                : "Ingrese su clave API de OpenAI para usar el Asistente de Salud."}
+                ? "Enter your OpenAI API key and select a model to use for the Health Assistant." 
+                : "Ingrese su clave API de OpenAI y seleccione un modelo para usar en el Asistente de Salud."}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Input
-              type="password"
-              placeholder="sk-..."
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
-            <p className="mt-2 text-xs text-muted-foreground">
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="apiKey" className="text-sm font-medium">
+                {language === "en" ? "API Key" : "Clave API"}
+              </label>
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder="sk-..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="model" className="text-sm font-medium">
+                {language === "en" ? "Model" : "Modelo"}
+              </label>
+              <Select value={model} onValueChange={setModel}>
+                <SelectTrigger>
+                  <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, less quota)</SelectItem>
+                  <SelectItem value="gpt-4o-mini">GPT-4o Mini (Balanced)</SelectItem>
+                  <SelectItem value="gpt-4o">GPT-4o (Advanced, more quota)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <p className="text-xs text-muted-foreground mt-2">
               {language === "en" 
-                ? "You can get an API key from the OpenAI website. This key is stored locally in your browser."
-                : "Puede obtener una clave API en el sitio web de OpenAI. Esta clave se almacena localmente en su navegador."}
+                ? "You can get an API key from the OpenAI website. This key is stored locally in your browser. Try using the GPT-3.5 Turbo model if you're encountering quota issues."
+                : "Puede obtener una clave API en el sitio web de OpenAI. Esta clave se almacena localmente en su navegador. Intente usar el modelo GPT-3.5 Turbo si está teniendo problemas de cuota."}
             </p>
           </div>
           <DialogFooter>
