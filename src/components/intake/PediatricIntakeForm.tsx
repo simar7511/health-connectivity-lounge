@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { ConsentSection } from "./form-sections/ConsentSection";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
 import { SubmitButton } from "./components/SubmitButton";
+import { sendIntakeFormConfirmation } from "@/utils/twilioService";
 
 interface PediatricIntakeFormProps {
   language: "en" | "es";
@@ -143,6 +145,11 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       });
 
       sessionStorage.setItem("intakeId", docRef.id);
+
+      // Send SMS confirmation if a phone number was provided
+      if (formData.phoneNumber) {
+        await sendIntakeFormConfirmation(formData.phoneNumber, language);
+      }
 
       // ✅ Clears form fields after submission
       setFormData({

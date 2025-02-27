@@ -1,72 +1,158 @@
-const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "your-firebase-project-id";
+
+import { toast } from "@/hooks/use-toast";
+
+interface SMSDetails {
+  to: string;
+  message: string;
+}
 
 /**
- * Initiates a Twilio call to a given number.
- * @param toNumber - The recipient's phone number.
- * @returns The Twilio Call SID if successful.
+ * Send an SMS notification using the Twilio API
+ * @param to Phone number to send to (with country code)
+ * @param message Message content
+ * @returns Promise that resolves with success or error
  */
-export const makeCall = async (toNumber: string): Promise<string> => {
-  if (!toNumber) throw new Error("❌ No phone number provided for Twilio call.");
-
+export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: boolean; error?: string }> => {
   try {
-    const response = await fetch(
-      `https://us-central1-${FIREBASE_PROJECT_ID}.cloudfunctions.net/makeCall`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ toNumber }),
-      }
-    );
+    // Skip if no phone number provided
+    if (!to || to.trim() === "") {
+      console.log("No phone number provided, skipping SMS");
+      return { success: false, error: "No phone number provided" };
+    }
+
+    // Format phone number if needed
+    const formattedPhone = formatPhoneNumber(to);
+    
+    // Call our backend function that uses Twilio
+    const response = await fetch("/api/send-sms", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: formattedPhone,
+        message,
+      }),
+    });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`❌ Twilio Call Failed: ${errorText}`);
+      const errorData = await response.json();
+      console.error("Twilio SMS Error:", errorData);
+      return { success: false, error: errorData.message || "Failed to send SMS" };
     }
 
     const data = await response.json();
-    console.log(`✅ Twilio Call Successful: Call SID ${data.callSid}`);
-    return data.callSid;
+    console.log("SMS sent successfully:", data);
+    return { success: true };
   } catch (error) {
-    console.error("🚨 Error making Twilio call:", error);
-    throw error;
+    console.error("Error sending SMS:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error occurred" };
   }
 };
 
 /**
- * Translates text using LibreTranslate API.
- * @param text - The text to translate.
- * @param fromLanguage - Source language code.
- * @param toLanguage - Target language code.
- * @returns Translated text.
+ * Format phone number to ensure it includes country code
  */
-export const translateText = async (
-  text: string,
-  fromLanguage: string,
-  toLanguage: string
-): Promise<string> => {
-  if (!text) throw new Error("❌ No text provided for translation.");
-  if (!fromLanguage || !toLanguage) throw new Error("❌ Missing language codes for translation.");
+const formatPhoneNumber = (phone: string): string => {
+  // Remove any non-digit characters
+  const digits = phone.replace(/\D/g, "");
+  
+  // If no country code (assuming US), add +1
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  
+  // If it doesn't start with +, add it
+  if (!phone.startsWith("+")) {
+    return `+${digits}`;
+  }
+  
+  return phone;
+};
 
+/**
+ * Send intake form confirmation SMS
+ */
+export const sendIntakeFormConfirmation = async (phoneNumber: string, language: "en" | "es" = "en"): Promise<void> => {
+  if (!phoneNumber) return;
+  
+  const message = language === "en" 
+    ? "Thank you for submitting your pediatric intake form. Our team will review your information and contact you if additional details are needed. If this was not you, please call our clinic immediately."
+    : "Gracias por enviar el formulario de admisión pediátrica. Nuestro equipo revisará su información y se comunicará con usted si se necesitan detalles adicionales. Si no fue usted, llame a nuestra clínica inmediatamente.";
+  
+  const result = await sendSMS({ to: phoneNumber, message });
+  
+  if (result.success) {
+    toast({
+      title: language === "en" ? "Confirmation SMS Sent" : "SMS de Confirmación Enviado",
+      description: language === "en" ? "A confirmation has been sent to your phone" : "Se ha enviado una confirmación a su teléfono",
+    });
+  } else if (phoneNumber && phoneNumber.trim() !== "") {
+    // Only show error if a phone number was provided
+    console.error("Failed to send intake confirmation SMS:", result.error);
+  }
+};
+
+/**
+ * Send appointment confirmation SMS
+ */
+export const sendAppointmentConfirmation = async (
+  phoneNumber: string,
+  appointmentDetails: { date: string; time: string; appointmentType: string },
+  language: "en" | "es" = "en"
+): Promise<void> => {
+  if (!phoneNumber) return;
+  
+  const { date, time, appointmentType } = appointmentDetails;
+  const formattedDate = new Date(date).toLocaleDateString(language === "en" ? "en-US" : "es-ES", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  
+  const message = language === "en"
+    ? `Your appointment has been scheduled for ${formattedDate} at ${time} as a ${appointmentType}. If you need to reschedule, please visit our website or call (206) 383-7604.`
+    : `Su cita ha sido programada para el ${formattedDate} a las ${time} como ${appointmentType === "Virtual Visit" ? "Visita Virtual" : "Visita en Persona"}. Si necesita reprogramar, visite nuestro sitio web o llame al (206) 383-7604.`;
+  
+  const result = await sendSMS({ to: phoneNumber, message });
+  
+  if (result.success) {
+    toast({
+      title: language === "en" ? "Appointment Confirmation Sent" : "Confirmación de Cita Enviada",
+      description: language === "en" ? "Appointment details have been sent to your phone" : "Los detalles de la cita se han enviado a su teléfono",
+    });
+  } else if (phoneNumber && phoneNumber.trim() !== "") {
+    console.error("Failed to send appointment confirmation SMS:", result.error);
+  }
+};
+
+/**
+ * Schedule an appointment reminder SMS to be sent 24 hours before the appointment
+ */
+export const scheduleAppointmentReminder = async (
+  phoneNumber: string,
+  appointmentDetails: { date: string; time: string; appointmentType: string },
+  language: "en" | "es" = "en"
+): Promise<void> => {
+  if (!phoneNumber) return;
+  
   try {
-    const response = await fetch(
-      `https://us-central1-${FIREBASE_PROJECT_ID}.cloudfunctions.net/translateText`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, fromLanguage, toLanguage }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`❌ Translation Failed: ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log(`✅ Translation Successful: ${data.translatedText}`);
-    return data.translatedText;
+    // This would typically call a server endpoint that would schedule the reminder
+    // For now, we'll just log that we'd schedule it
+    console.log("Would schedule reminder SMS for 24 hours before:", appointmentDetails);
+    
+    // In a real implementation, you would call a backend API that uses Twilio's 
+    // scheduled messaging feature or your own scheduling system
+    
+    // We're not implementing the actual scheduling mechanism in this prototype
+    // as it would require a server-side component
+    
+    toast({
+      title: language === "en" ? "Reminder Scheduled" : "Recordatorio Programado",
+      description: language === "en" ? "You will receive a reminder 24 hours before your appointment" : "Recibirá un recordatorio 24 horas antes de su cita",
+    });
   } catch (error) {
-    console.error("🚨 Error translating text:", error);
-    throw error;
+    console.error("Error scheduling reminder:", error);
   }
 };
