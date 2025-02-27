@@ -14,6 +14,7 @@ import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
 import { SubmitButton } from "./components/SubmitButton";
 import { sendIntakeFormConfirmation } from "@/utils/twilioService";
+import { SmsMessageList } from "@/components/SmsMessageList";
 
 interface PediatricIntakeFormProps {
   language: "en" | "es";
@@ -144,7 +145,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         duration: 5000,
       });
 
-      sessionStorage.setItem("intakeId", docRef.id);
+      localStorage.setItem("intakeId", docRef.id);
 
       // Send SMS confirmation if a phone number was provided
       if (formData.phoneNumber) {
@@ -233,6 +234,9 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
           </div>
         </Card>
       </form>
+
+      {/* Add SMS Message List for free SMS implementation */}
+      <SmsMessageList />
     </div>
   );
 };

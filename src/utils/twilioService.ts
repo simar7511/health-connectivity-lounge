@@ -7,7 +7,7 @@ interface SMSDetails {
 }
 
 /**
- * Send an SMS notification using the Twilio API via Firebase Cloud Functions
+ * Send an SMS notification using the mock SMS system
  * @param to Phone number to send to (with country code)
  * @param message Message content
  * @returns Promise that resolves with success or error
@@ -24,84 +24,28 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     const formattedPhone = formatPhoneNumber(to);
     
     // Log the attempt
-    console.log(`Attempting to send SMS to ${formattedPhone} via cloud function`);
+    console.log(`Simulating SMS to ${formattedPhone}`);
 
-    // During development/testing, if the cloud function isn't deployed yet,
-    // we'll log the message but not actually try to send it
-    const isDevMode = window.location.hostname === 'localhost' || 
-                      window.location.hostname === '127.0.0.1';
+    // Always use emulation mode 
+    console.log("[FREE SMS SOLUTION] Capturing SMS:", { to: formattedPhone, message });
+    toast({
+      title: "SMS Notification Captured",
+      description: `A message to ${formattedPhone} has been logged`,
+    });
     
-    // For demo purposes, use emulation mode until the cloud function is properly deployed
-    // Set this to false once you've successfully deployed the cloud function
-    const useEmulationMode = true; // Keep as true until function is deployed
+    // Store this in local storage so we can track what SMS messages would have been sent
+    // Local storage persists across sessions, unlike sessionStorage
+    const sentMessages = JSON.parse(localStorage.getItem("sentSmsMessages") || "[]");
+    sentMessages.push({
+      to: formattedPhone,
+      message,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem("sentSmsMessages", JSON.stringify(sentMessages));
     
-    // If in development mode or using emulation mode, simulate SMS sending
-    if (isDevMode || useEmulationMode) {
-      console.log("[EMULATION MODE] Would send SMS:", { to: formattedPhone, message });
-      toast({
-        title: "SMS Notification (Demo Mode)",
-        description: `A message would be sent to ${formattedPhone}`,
-      });
-      // Store this in session storage so we can track what SMS messages would have been sent
-      const sentMessages = JSON.parse(sessionStorage.getItem("sentSmsMessages") || "[]");
-      sentMessages.push({
-        to: formattedPhone,
-        message,
-        timestamp: new Date().toISOString()
-      });
-      sessionStorage.setItem("sentSmsMessages", JSON.stringify(sentMessages));
-      return { success: true };
-    }
-
-    // Call our cloud function endpoint - this code will run once the cloud function is deployed
-    const apiUrl = "https://us-central1-health-connectivity-01.cloudfunctions.net/sendSMSFunction";
-    
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Origin': window.location.origin,
-        },
-        body: JSON.stringify({
-          to: formattedPhone,
-          message: message
-        })
-      });
-      
-      // Check if the response is ok
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("SMS API Error Response:", errorText);
-        throw new Error(`Server responded with ${response.status}: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log("SMS sent successfully:", data.sid);
-        return { success: true };
-      } else {
-        console.error("Twilio API Error:", data.error);
-        return { success: false, error: data.error || "Failed to send SMS" };
-      }
-    } catch (fetchError) {
-      // If there's a CORS error, we'll try a fallback approach
-      console.warn("CORS issue detected when sending SMS, using fallback method");
-      
-      // For demo purposes, we'll simulate a successful SMS
-      toast({
-        title: "SMS Notification (Fallback)",
-        description: `A message would have been sent to ${formattedPhone}`,
-      });
-      
-      console.error("Fetch error:", fetchError);
-      
-      // For demo purposes, we'll return success anyway
-      return { success: true };
-    }
+    return { success: true };
   } catch (error) {
-    console.error("Error sending SMS:", error);
+    console.error("Error capturing SMS:", error);
     return { success: false, error: error instanceof Error ? error.message : "Unknown error occurred" };
   }
 };
@@ -140,18 +84,18 @@ export const sendIntakeFormConfirmation = async (phoneNumber: string, language: 
   
   if (result.success) {
     toast({
-      title: language === "en" ? "Confirmation SMS Sent" : "SMS de Confirmación Enviado",
-      description: language === "en" ? "A confirmation has been sent to your phone" : "Se ha enviado una confirmación a su teléfono",
+      title: language === "en" ? "Confirmation SMS Captured" : "SMS de Confirmación Capturado",
+      description: language === "en" ? "A confirmation has been logged in your SMS inbox" : "Se ha registrado una confirmación en su bandeja de SMS",
     });
     
-    // Store the phone number in session storage for later use (e.g., for appointment confirmations)
-    sessionStorage.setItem("patientPhone", phoneNumber);
+    // Store the phone number in local storage for later use (e.g., for appointment confirmations)
+    localStorage.setItem("patientPhone", phoneNumber);
   } else if (phoneNumber && phoneNumber.trim() !== "") {
     // Only show error if a phone number was provided
-    console.error("Failed to send intake confirmation SMS:", result.error);
+    console.error("Failed to capture intake confirmation SMS:", result.error);
     toast({
       title: language === "en" ? "SMS Notification Failed" : "Fallo en Notificación SMS",
-      description: language === "en" ? "We couldn't send the confirmation SMS. Please check your phone number." : "No pudimos enviar el SMS de confirmación. Por favor verifique su número de teléfono.",
+      description: language === "en" ? "We couldn't capture the confirmation SMS. Please check your phone number." : "No pudimos capturar el SMS de confirmación. Por favor verifique su número de teléfono.",
       variant: "destructive",
     });
   }
@@ -184,26 +128,24 @@ export const sendAppointmentConfirmation = async (
   
   if (result.success) {
     toast({
-      title: language === "en" ? "Appointment Confirmation Sent" : "Confirmación de Cita Enviada",
-      description: language === "en" ? "Appointment details have been sent to your phone" : "Los detalles de la cita se han enviado a su teléfono",
+      title: language === "en" ? "Appointment Confirmation Captured" : "Confirmación de Cita Capturada",
+      description: language === "en" ? "Appointment details have been logged in your SMS inbox" : "Los detalles de la cita se han registrado en su bandeja de SMS",
     });
     
-    // Store the phone number in session storage for later use
-    sessionStorage.setItem("patientPhone", phoneNumber);
+    // Store the phone number in local storage for later use
+    localStorage.setItem("patientPhone", phoneNumber);
   } else if (phoneNumber && phoneNumber.trim() !== "") {
-    console.error("Failed to send appointment confirmation SMS:", result.error);
+    console.error("Failed to capture appointment confirmation SMS:", result.error);
     toast({
       title: language === "en" ? "SMS Notification Failed" : "Fallo en Notificación SMS",
-      description: language === "en" ? "We couldn't send the appointment confirmation SMS." : "No pudimos enviar el SMS de confirmación de la cita.",
+      description: language === "en" ? "We couldn't capture the appointment confirmation SMS." : "No pudimos capturar el SMS de confirmación de la cita.",
       variant: "destructive",
     });
   }
 };
 
 /**
- * Schedule an appointment reminder SMS to be sent 24 hours before the appointment
- * In this implementation, we'll actually send a SMS immediately that says it's a "scheduled reminder"
- * since we don't have a backend scheduler
+ * Schedule an appointment reminder SMS
  */
 export const scheduleAppointmentReminder = async (
   phoneNumber: string,
@@ -225,27 +167,26 @@ export const scheduleAppointmentReminder = async (
     const reminderDate = new Date(appointmentDate);
     reminderDate.setDate(reminderDate.getDate() - 1);
     
-    // Since we can't actually schedule for the future without a backend, 
-    // send an immediate SMS explaining this is what would be sent as a reminder
+    // Create a message that would be sent as a reminder
     const reminderMessage = language === "en"
-      ? `[Reminder Scheduled] You will receive this reminder 24 hours before your appointment: "You have an appointment tomorrow, ${formattedDate} at ${time} as a ${appointmentType}. Please arrive 15 minutes early. If you need to reschedule, please call (206) 383-7604."`
-      : `[Recordatorio Programado] Recibirá este recordatorio 24 horas antes de su cita: "Tiene una cita mañana, ${formattedDate} a las ${time} como ${appointmentType === "Virtual Visit" ? "Visita Virtual" : "Visita en Persona"}. Por favor llegue 15 minutos antes. Si necesita reprogramar, llame al (206) 383-7604."`;
+      ? `[Reminder] You have an appointment tomorrow, ${formattedDate} at ${time} as a ${appointmentType}. Please arrive 15 minutes early. If you need to reschedule, please call (206) 383-7604.`
+      : `[Recordatorio] Tiene una cita mañana, ${formattedDate} a las ${time} como ${appointmentType === "Virtual Visit" ? "Visita Virtual" : "Visita en Persona"}. Por favor llegue 15 minutos antes. Si necesita reprogramar, llame al (206) 383-7604.`;
     
     const result = await sendSMS({ to: phoneNumber, message: reminderMessage });
     
     if (result.success) {
       toast({
-        title: language === "en" ? "Reminder Scheduled" : "Recordatorio Programado",
-        description: language === "en" ? "You will receive a reminder 24 hours before your appointment" : "Recibirá un recordatorio 24 horas antes de su cita",
+        title: language === "en" ? "Reminder Captured" : "Recordatorio Capturado",
+        description: language === "en" ? "A reminder has been logged in your SMS inbox" : "Se ha registrado un recordatorio en su bandeja de SMS",
       });
     } else {
       throw new Error(result.error);
     }
   } catch (error) {
-    console.error("Error scheduling reminder:", error);
+    console.error("Error capturing reminder:", error);
     toast({
-      title: language === "en" ? "Reminder Scheduling Failed" : "Fallo al Programar Recordatorio",
-      description: language === "en" ? "We couldn't schedule a reminder for your appointment." : "No pudimos programar un recordatorio para su cita.",
+      title: language === "en" ? "Reminder Capture Failed" : "Fallo al Capturar Recordatorio",
+      description: language === "en" ? "We couldn't capture the reminder for your appointment." : "No pudimos capturar el recordatorio para su cita.",
       variant: "destructive",
     });
   }
