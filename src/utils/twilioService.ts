@@ -31,9 +31,9 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     const isDevMode = window.location.hostname === 'localhost' || 
                       window.location.hostname === '127.0.0.1';
     
-    // For demo purposes, always use the emulation mode until the cloud function is properly deployed
-    // Remove this line once the cloud function is deployed
-    const useEmulationMode = true;
+    // For demo purposes, use emulation mode until the cloud function is properly deployed
+    // Set this to false once you've successfully deployed the cloud function
+    const useEmulationMode = false;
     
     // If in development mode or using emulation mode, simulate SMS sending
     if (isDevMode || useEmulationMode) {
