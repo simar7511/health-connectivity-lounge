@@ -14,6 +14,7 @@ import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
 import { SubmitButton } from "./components/SubmitButton";
 import { sendIntakeFormConfirmation, sendIntakeFormWhatsAppConfirmation } from "@/utils/twilioService";
+import { notifyProviders, estimateUrgency } from "@/utils/providerNotifications";
 import { SmsMessageList } from "@/components/SmsMessageList";
 import { WhatsAppMessageList } from "@/components/WhatsAppMessageList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -158,6 +159,9 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       });
 
       localStorage.setItem("intakeId", docRef.id);
+      
+      // Save submission time for provider dashboard notifications
+      localStorage.setItem("lastIntakeSubmissionTime", new Date().toISOString());
 
       // Send confirmation if a phone number was provided
       if (formData.phoneNumber) {
@@ -166,6 +170,25 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         } else {
           await sendIntakeFormWhatsAppConfirmation(formData.phoneNumber, language);
         }
+      }
+      
+      // Notify providers about the new submission
+      const urgency = estimateUrgency(
+        formData.symptoms, 
+        formData.medicalHistory, 
+        formData.hasRecentHospitalVisits
+      );
+      
+      // Check if provider notification is configured
+      const providerPhones = localStorage.getItem("providerNotificationPhones");
+      if (providerPhones) {
+        await notifyProviders({
+          patientName: formData.childName,
+          symptoms: formData.symptoms,
+          urgency,
+          contactPhone: formData.phoneNumber,
+          language
+        });
       }
 
       // ✅ Clears form fields after submission
