@@ -30,10 +30,6 @@ type Message = {
   timestamp: Date;
 };
 
-// Hugging Face Spaces API URL - replace with your deployed Space URL when you have it
-// For direct Hugging Face Inference API (bypass Spaces)
-const HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/meta-llama";
-
 // Greeting messages based on language
 const greetings = {
   en: "Hello! I'm your Health Assistant powered by AI. I can answer general health questions while you wait for your provider. How can I help you today?",
@@ -69,7 +65,7 @@ const errorMessages = {
     llamaAuthError: "Authentication error with Hugging Face API. Please enter a valid Hugging Face API token in settings.",
     rateLimit: "You've reached the rate limit for API requests. Please wait a moment before trying again or switch to test mode.",
     serverError: "The AI server is experiencing issues. Please try again later or switch to test mode.",
-    corsError: "CORS error when trying to access the API. Try using the direct Hugging Face Inference API instead.",
+    corsError: "Browser security (CORS) is preventing direct API access. Please switch to test mode for now. In a production environment, you would need a proxy server to resolve this issue.",
     default: "An error occurred. Please try again or switch to test mode."
   },
   es: {
@@ -81,7 +77,7 @@ const errorMessages = {
     llamaAuthError: "Error de autenticación con la API de Hugging Face. Por favor, ingrese un token válido de API de Hugging Face en la configuración.",
     rateLimit: "Ha alcanzado el límite de frecuencia para las solicitudes de API. Espere un momento antes de intentarlo de nuevo o cambie al modo de prueba.",
     serverError: "El servidor de IA está experimentando problemas. Inténtelo de nuevo más tarde o cambie al modo de prueba.",
-    corsError: "Error CORS al intentar acceder a la API. Intente usar la API de inferencia directa de Hugging Face.",
+    corsError: "La seguridad del navegador (CORS) está impidiendo el acceso directo a la API. Por favor, cambie al modo de prueba por ahora. En un entorno de producción, necesitaría un servidor proxy para resolver este problema.",
     default: "Se produjo un error. Inténtelo de nuevo o cambie al modo de prueba."
   }
 };
@@ -153,10 +149,7 @@ export function AIHealthAssistant({
     return localStorage.getItem("use_fallback_mode") === "true";
   });
   const [useTestMode, setUseTestMode] = useState<boolean>(() => {
-    return localStorage.getItem("use_test_mode") === "true";
-  });
-  const [useDirectAPI, setUseDirectAPI] = useState<boolean>(() => {
-    return localStorage.getItem("use_direct_api") === "true";
+    return localStorage.getItem("use_test_mode") === "true" || true; // Default to test mode on for now due to CORS issues
   });
   const [consecutiveErrors, setConsecutiveErrors] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -241,6 +234,20 @@ export function AIHealthAssistant({
     }
   }, [consecutiveErrors, useTestMode, useFallbackMode, language, toast]);
 
+  // Show CORS warning on initial load
+  useEffect(() => {
+    if (currentProvider === 'llama' && !useTestMode && !useFallbackMode) {
+      toast({
+        title: language === "en" ? "Browser Security Notice" : "Aviso de Seguridad del Navegador",
+        description: language === "en" 
+          ? "Direct API calls may be blocked by your browser's security. Consider using test mode for now." 
+          : "Las llamadas API directas pueden ser bloqueadas por la seguridad de su navegador. Considere usar el modo de prueba por ahora.",
+        variant: "warning",
+        duration: 5000,
+      });
+    }
+  }, [currentProvider, useTestMode, useFallbackMode, language, toast]);
+
   const saveAPIKey = () => {
     if (currentProvider === "openai" && !apiKey.trim()) {
       toast({
@@ -274,7 +281,6 @@ export function AIHealthAssistant({
     // Save model preferences
     localStorage.setItem(`${currentProvider}_model`, currentModel);
     localStorage.setItem("ai_provider", currentProvider);
-    localStorage.setItem("use_direct_api", useDirectAPI.toString());
     
     setShowAPIKeyInput(false);
     setApiError(null);
@@ -343,14 +349,6 @@ export function AIHealthAssistant({
     
     // Reset consecutive errors
     setConsecutiveErrors(0);
-  };
-
-  const toggleDirectAPI = (value: boolean) => {
-    setUseDirectAPI(value);
-    localStorage.setItem("use_direct_api", value.toString());
-    
-    // If we change API mode, clear any existing errors
-    setApiError(null);
   };
 
   const callOpenAI = async (userMessage: string, previousMessages: Message[]) => {
@@ -428,118 +426,18 @@ export function AIHealthAssistant({
     }
   };
 
-  const callHuggingFaceInferenceAPI = async (userMessage: string, previousMessages: Message[], modelName: string) => {
+  const callHuggingFaceAPI = async (userMessage: string, previousMessages: Message[]) => {
     try {
-      console.log(`Calling Hugging Face Inference API using model: ${modelName}...`);
-
-      // Construct conversation history for the API
-      let prompt = systemPrompts.llama[language] + "\n\n";
+      console.log("Due to CORS limitations, this API call would fail in the browser.");
+      console.log("In a production environment, you would need a backend proxy server.");
       
-      for (const msg of previousMessages) {
-        if (msg.sender === "user") {
-          prompt += "Human: " + msg.content + "\n";
-        } else {
-          prompt += "Assistant: " + msg.content + "\n";
-        }
-      }
-      
-      prompt += "Human: " + userMessage + "\nAssistant:";
-      
-      console.log("Sending prompt to Hugging Face Inference API");
-
-      // Make sure we have the right model path
-      const modelPath = `/${modelName}`;
-      
-      // Call the Hugging Face Inference API directly
-      const response = await fetch(`${HUGGINGFACE_API_URL}${modelPath}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${huggingFaceToken}`
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 500,
-            temperature: 0.7,
-            top_p: 0.95,
-            do_sample: true,
-            return_full_text: false
-          }
-        }),
-      });
-
-      // Log response status for debugging
-      console.log("Hugging Face API response status:", response.status);
-
-      if (!response.ok) {
-        console.error("Hugging Face API error:", response.status, response.statusText);
-        
-        // Parse the error response
-        let errorMessage = "";
-        try {
-          const errorData = await response.json();
-          console.log("Error data:", errorData);
-          errorMessage = errorData.error || "";
-        } catch (e) {
-          console.log("Failed to parse error response as JSON");
-          errorMessage = await response.text();
-          console.log("Error text:", errorMessage);
-        }
-        
-        // Handle different error types
-        if (response.status === 429) {
-          setApiError("rateLimit");
-          throw new Error("Rate limit exceeded");
-        } else if (response.status === 401 || response.status === 403) {
-          setApiError("llamaAuthError");
-          throw new Error("Authentication error with Hugging Face API");
-        } else if (response.status >= 500) {
-          setApiError("serverError");
-          throw new Error("Server error");
-        } else {
-          setApiError("llamaError");
-          throw new Error(`API request failed: ${errorMessage}`);
-        }
-      }
-
-      // Clear previous errors on success
-      setApiError(null);
-      setConsecutiveErrors(0);
-      
-      // Parse the response
-      const data = await response.json();
-      console.log("Hugging Face API response:", data);
-      
-      if (Array.isArray(data) && data.length > 0) {
-        if (typeof data[0] === "string") {
-          return data[0].trim();
-        } else if (data[0].generated_text) {
-          return data[0].generated_text.trim();
-        }
-      } else if (data.generated_text) {
-        return data.generated_text.trim();
-      }
-      
-      // If we couldn't find a response in the expected format
-      console.error("Unexpected Hugging Face API response format:", data);
-      throw new Error("Unexpected response format from Hugging Face API");
-      
+      // This function is now set up to fail with a helpful error since direct API calls
+      // from the browser to Hugging Face will be blocked by CORS
+      setApiError("corsError");
+      throw new Error("CORS policy prevents direct API access. Use a backend proxy or test mode.");
     } catch (error) {
-      console.error("Error calling Hugging Face Inference API:", error);
-      
-      // Increment consecutive errors
+      console.error("Hugging Face API error (expected due to CORS):", error);
       setConsecutiveErrors(prev => prev + 1);
-      
-      // Set appropriate error message
-      if (!apiError) {
-        if (error instanceof TypeError && error.message.includes("fetch")) {
-          setApiError("networkError");
-        } else {
-          setApiError("llamaError");
-        }
-      }
-      
       throw error;
     }
   };
@@ -671,8 +569,8 @@ export function AIHealthAssistant({
         const aiResponse = await callOpenAI(input, messages);
         aiResponseText = aiResponse + " " + disclaimers[language];
       } else if (currentProvider === "llama") {
-        // Use direct Hugging Face Inference API (better for avoiding CORS issues)
-        const aiResponse = await callHuggingFaceInferenceAPI(input, messages, currentModel);
+        // Try to call Hugging Face API, but this will likely fail with CORS error
+        const aiResponse = await callHuggingFaceAPI(input, messages);
         aiResponseText = aiResponse + " " + disclaimers[language];
       }
       
@@ -693,31 +591,67 @@ export function AIHealthAssistant({
       console.error("Error sending message:", error);
       
       // Check for CORS errors
-      if (
-        error instanceof TypeError && 
-        error.message.includes("fetch") && 
-        (error.message.includes("CORS") || error.message.includes("cors"))
-      ) {
-        setApiError("corsError");
-      }
-      
-      // Display error message to user
-      const errorKey = apiError || "default";
-      toast({
-        title: language === "en" ? "Error" : "Error",
-        description: errorMessages[language][errorKey as keyof typeof errorMessages.en],
-        variant: "destructive",
-      });
-      
-      // Suggest test mode or fallback mode after error
-      if (!useTestMode && !useFallbackMode) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        if (!apiError) setApiError("corsError");
+        
+        // Display CORS-specific toast
         toast({
-          title: language === "en" ? "Try Test Mode" : "Probar Modo de Prueba",
+          title: language === "en" ? "Browser Security Restriction" : "Restricción de Seguridad del Navegador",
           description: language === "en" 
-            ? "You can switch to test mode to use simulated responses without requiring a working API connection." 
-            : "Puede cambiar al modo de prueba para usar respuestas simuladas sin necesitar una conexión API funcionando.",
-          variant: "default",
+            ? "Your browser is blocking direct API access. Switching to test mode." 
+            : "Su navegador está bloqueando el acceso directo a la API. Cambiando al modo de prueba.",
+          variant: "destructive",
         });
+        
+        // Automatically switch to test mode after CORS error
+        if (!useTestMode) {
+          toggleTestMode(true);
+          
+          // Add an explanation message
+          const corsMessage: Message = {
+            id: Date.now().toString(),
+            content: language === "en" 
+              ? "I've switched to test mode because your browser's security settings (CORS policy) are preventing direct API access. In a production environment, this would be solved with a server-side proxy." 
+              : "He cambiado al modo de prueba porque la configuración de seguridad de su navegador (política CORS) está impidiendo el acceso directo a la API. En un entorno de producción, esto se resolvería con un proxy del lado del servidor.",
+            sender: "ai",
+            timestamp: new Date(),
+          };
+          
+          setMessages(prev => [...prev, corsMessage]);
+          await saveMessageToFirestore(corsMessage);
+          
+          // Try again with test mode
+          setTimeout(() => {
+            const testMessage: Message = {
+              id: Date.now().toString() + "-test",
+              content: getMockResponse(input) + " " + disclaimers[language],
+              sender: "ai",
+              timestamp: new Date(),
+            };
+            
+            setMessages(prev => [...prev, testMessage]);
+            saveMessageToFirestore(testMessage);
+          }, 1500);
+        }
+      } else {
+        // Display error message to user
+        const errorKey = apiError || "default";
+        toast({
+          title: language === "en" ? "Error" : "Error",
+          description: errorMessages[language][errorKey as keyof typeof errorMessages.en],
+          variant: "destructive",
+        });
+        
+        // Suggest test mode or fallback mode after error
+        if (!useTestMode && !useFallbackMode) {
+          toast({
+            title: language === "en" ? "Try Test Mode" : "Probar Modo de Prueba",
+            description: language === "en" 
+              ? "You can switch to test mode to use simulated responses without requiring a working API connection." 
+              : "Puede cambiar al modo de prueba para usar respuestas simuladas sin necesitar una conexión API funcionando.",
+            variant: "default",
+          });
+        }
       }
     } finally {
       setIsProcessing(false);
@@ -839,6 +773,18 @@ export function AIHealthAssistant({
             
             {!useFallbackMode && !useTestMode && (
               <>
+                <Alert variant="warning" className="my-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>
+                    {language === "en" ? "Browser Security Notice" : "Aviso de Seguridad del Navegador"}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {language === "en"
+                      ? "Direct API calls to Hugging Face may not work in the browser due to CORS security restrictions. Consider using Test Mode or OpenAI."
+                      : "Las llamadas API directas a Hugging Face pueden no funcionar en el navegador debido a restricciones de seguridad CORS. Considere usar el Modo de Prueba o OpenAI."}
+                  </AlertDescription>
+                </Alert>
+                
                 <div className="space-y-2">
                   <label htmlFor="provider" className="text-sm font-medium">
                     {language === "en" ? "AI Provider" : "Proveedor de IA"}
@@ -928,8 +874,8 @@ export function AIHealthAssistant({
                     <Sparkles className="h-4 w-4 text-primary" />
                     <AlertDescription>
                       {language === "en" 
-                        ? "Llama 2 models require a Hugging Face API token. You can get one for free at huggingface.co/settings/tokens." 
-                        : "Los modelos Llama 2 requieren un token de API de Hugging Face. Puede obtener uno gratis en huggingface.co/settings/tokens."}
+                        ? "Llama 2 models require a Hugging Face API token. You can get one for free at huggingface.co/settings/tokens. Note that direct browser API calls may not work due to CORS restrictions." 
+                        : "Los modelos Llama 2 requieren un token de API de Hugging Face. Puede obtener uno gratis en huggingface.co/settings/tokens. Tenga en cuenta que las llamadas API directas desde el navegador pueden no funcionar debido a restricciones CORS."}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -1034,15 +980,35 @@ export function AIHealthAssistant({
             )}
             
             {currentProvider === "llama" && !useFallbackMode && !useTestMode && (
-              <Alert className="mb-4 bg-primary/10 border-primary/20">
-                <Sparkles className="h-4 w-4 text-primary" />
+              <Alert variant="warning" className="mb-4">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
                 <AlertTitle>
-                  {language === "en" ? "Using Llama 2" : "Usando Llama 2"}
+                  {language === "en" ? "CORS Restriction" : "Restricción CORS"}
                 </AlertTitle>
-                <AlertDescription>
-                  {language === "en" 
-                    ? "You're using Llama 2 via Hugging Face API. Response times may vary based on model size. If you experience slow responses, try using a smaller model or switch to test mode." 
-                    : "Está utilizando Llama 2 a través de la API de Hugging Face. Los tiempos de respuesta pueden variar según el tamaño del modelo. Si experimenta respuestas lentas, intente usar un modelo más pequeño o cambie al modo de prueba."}
+                <AlertDescription className="flex flex-col gap-2">
+                  <span>
+                    {language === "en" 
+                      ? "Browser security will likely block direct API calls to Hugging Face. For testing purposes, please use Test Mode instead." 
+                      : "La seguridad del navegador probablemente bloqueará las llamadas API directas a Hugging Face. Para propósitos de prueba, por favor use el Modo de Prueba en su lugar."}
+                  </span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => toggleTestMode(true)}
+                      className="self-start"
+                    >
+                      {language === "en" ? "Switch to Test Mode" : "Cambiar a Modo de Prueba"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleChangeAPIKey}
+                      className="self-start"
+                    >
+                      {language === "en" ? "Change AI Settings" : "Cambiar Configuración de IA"}
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}

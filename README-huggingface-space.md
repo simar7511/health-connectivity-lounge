@@ -256,22 +256,22 @@ fastapi>=0.100.0
 2. Once deployed, your Space will have a URL like: `https://huggingface.co/spaces/your-username/health-connectivity-llama-assistant`
 3. The API endpoint will be available at: `https://huggingface.co/spaces/your-username/health-connectivity-llama-assistant/api/predict`
 
-## Step 5: Update Your Frontend Application
+## Step 5: Important Note on CORS and Browser Limitations
 
-1. In your frontend application, update the `HUGGINGFACE_SPACE_URL` constant in the `AIHealthAssistant.tsx` file to point to your new Space API endpoint.
-2. Ensure users are prompted to enter their Hugging Face API token in the settings.
+While the Space includes CORS middleware to allow cross-origin requests, most browsers enforce security policies that may still block direct API calls from browser-based applications. This is a fundamental security feature of web browsers.
 
-## Troubleshooting CORS Issues
+For using the API in a browser-based environment like the Health Connectivity app, you have these options:
 
-If you encounter CORS (Cross-Origin Resource Sharing) errors when calling the API from your frontend application, there are two possible solutions:
+### Option 1: Use Test Mode in the App
 
-### Option 1: Use a Proxy Server
+The Health Assistant application has a built-in test mode that simulates AI responses without making actual API calls. This is the easiest solution for testing and demonstration purposes.
 
-The simplest solution is to set up a small proxy server that forwards requests to the Hugging Face Space API. This can be done using a service like Cloudflare Workers, Netlify Functions, or a simple Express server.
+### Option 2: Create a Backend Proxy Server
 
-Example using a simple Express server:
+For production use, the proper solution is to create a small backend proxy server that handles requests between your frontend and the Hugging Face API:
 
 ```javascript
+// Example Node.js/Express proxy server
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -303,33 +303,47 @@ app.listen(3000, () => {
 });
 ```
 
-### Option 2: Update Your Frontend Code
+### Option 3: Use Serverless Functions
 
-If you can't set up a proxy server, you can modify the frontend code to use the mode: 'no-cors' option, but this will limit the response data you can access:
+Cloud platforms like Vercel, Netlify, or AWS Lambda offer serverless functions that can act as proxies:
 
 ```javascript
-// In AIHealthAssistant.tsx
-const response = await fetch(HUGGINGFACE_SPACE_URL, {
-  method: "POST",
-  mode: 'no-cors', // Add this line
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${huggingFaceToken}`
-  },
-  body: JSON.stringify({
-    inputs: prompt,
-    parameters: {
-      model: modelName,
-      max_new_tokens: 500,
-      temperature: 0.7,
-      top_p: 0.95,
-      do_sample: true
-    }
-  })
-});
+// Example Netlify serverless function
+exports.handler = async function(event, context) {
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: "Method Not Allowed" };
+  }
+  
+  try {
+    const fetch = require("node-fetch");
+    const body = JSON.parse(event.body);
+    
+    const response = await fetch(
+      "https://huggingface.co/spaces/your-username/health-connectivity-llama-assistant/api/predict",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": event.headers.authorization
+        },
+        body: JSON.stringify(body)
+      }
+    );
+    
+    const data = await response.json();
+    
+    return {
+      statusCode: 200,
+      body: JSON.stringify(data)
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message })
+    };
+  }
+};
 ```
-
-However, with mode: 'no-cors', you won't be able to access the response data directly, so this is not ideal for an API that needs to return data.
 
 ## Usage Considerations
 
