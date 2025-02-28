@@ -242,7 +242,7 @@ export function AIHealthAssistant({
         description: language === "en" 
           ? "Direct API calls may be blocked by your browser's security. Consider using test mode for now." 
           : "Las llamadas API directas pueden ser bloqueadas por la seguridad de su navegador. Considere usar el modo de prueba por ahora.",
-        variant: "warning",
+        variant: "default",
         duration: 5000,
       });
     }
@@ -773,7 +773,7 @@ export function AIHealthAssistant({
             
             {!useFallbackMode && !useTestMode && (
               <>
-                <Alert variant="warning" className="my-2">
+                <Alert variant="default" className="my-2">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>
                     {language === "en" ? "Browser Security Notice" : "Aviso de Seguridad del Navegador"}
@@ -980,8 +980,8 @@ export function AIHealthAssistant({
             )}
             
             {currentProvider === "llama" && !useFallbackMode && !useTestMode && (
-              <Alert variant="warning" className="mb-4">
-                <AlertCircle className="h-4 w-4 text-amber-600" />
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4 text-white" />
                 <AlertTitle>
                   {language === "en" ? "CORS Restriction" : "Restricción CORS"}
                 </AlertTitle>
