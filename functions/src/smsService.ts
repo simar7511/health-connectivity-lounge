@@ -1,6 +1,7 @@
+
 import * as functions from "firebase-functions";
-import twilio from "twilio"; // ✅ Corrected import
-import cors from "cors"; // ✅ Corrected import
+import twilio from "twilio";
+import cors from "cors";
 
 const corsHandler = cors({ origin: true });
 
@@ -9,7 +10,7 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID || "ACa7a76e6d230ef13e0631f01d
 const authToken = process.env.TWILIO_AUTH_TOKEN || "b76ce2403f8aecc261288328088510a5";
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || "+12063837604";
 
-const client = twilio(accountSid, authToken); // ✅ Corrected Twilio initialization
+const client = twilio(accountSid, authToken);
 
 // Cloud function to handle SMS sending
 export const sendSMS = functions.https.onRequest((request, response) => {

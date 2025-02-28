@@ -56,30 +56,27 @@ export const sendSMSDirect = async (to: string, message: string) => {
   }
 };
 
-// Schedule SMS messages
-export const scheduleSMS = async (req: express.Request, res: express.Response) => {
+// Expose as a Cloud Function
+export const twilioSendSMS = functions.https.onCall(async (data, context) => {
   try {
-    const { to, message, scheduledTime } = req.body;
+    const { to, message } = data;
     
-    if (!to || !message || !scheduledTime) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Missing required parameters: to, message, or scheduledTime" 
-      });
+    if (!to || !message) {
+      throw new Error("Missing required parameters: to or message");
     }
     
-    // Free implementation: just log the scheduled SMS
-    console.log(`Would schedule SMS to ${to} at ${scheduledTime}: ${message}`);
+    // Just log in this example
+    console.log(`Would send SMS to ${to}: ${message}`);
     
-    return res.status(200).json({
+    return {
       success: true,
-      message: `SMS to ${to} would be scheduled for ${scheduledTime} with message: ${message}`
-    });
+      message: `SMS to ${to} would be sent with message: ${message}`
+    };
   } catch (error) {
-    console.error("Error scheduling SMS:", error);
-    return res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : "Unknown error" 
-    });
+    console.error("Error in twilioSendSMS:", error);
+    throw new functions.https.HttpsError(
+      'internal',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
   }
-};
+});

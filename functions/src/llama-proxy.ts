@@ -1,7 +1,7 @@
 
 import * as functions from "firebase-functions";
-import * as cors from "cors";
-import * as express from "express";
+import express from "express";
+import cors from "cors";
 import * as dotenv from "dotenv";
 import fetch from "node-fetch";
 
@@ -15,7 +15,7 @@ const app = express();
 app.use(cors({ origin: true }));
 
 // Define the endpoint that will proxy requests to Hugging Face
-app.post("/generate", async (req, res) => {
+app.post("/generate", async (req: express.Request, res: express.Response) => {
   try {
     const { prompt, model, max_new_tokens, temperature, top_p, do_sample } = req.body;
     
@@ -89,10 +89,10 @@ app.post("/generate", async (req, res) => {
     // Extract the generated text
     let generatedText;
     
-    if (Array.isArray(data) && data.length > 0 && data[0].generated_text) {
+    if (Array.isArray(data) && data.length > 0 && 'generated_text' in data[0]) {
       // Format returned by newer Hugging Face API
       generatedText = data[0].generated_text;
-    } else if (data.generated_text) {
+    } else if ('generated_text' in data) {
       // Format returned by older Hugging Face API
       generatedText = data.generated_text;
     } else {

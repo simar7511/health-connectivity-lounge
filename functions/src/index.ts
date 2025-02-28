@@ -1,18 +1,13 @@
 
 import * as functions from "firebase-functions";
 import { aiHealthAssistant } from "./aiHealthAssistant";
-import { sendSms, scheduledSmsReminders, onNewAppointment } from "./smsService";
-import { twilioReceive, twilioStatus } from "./twilioFunctions";
+import { sendSMS } from "./smsService";
 import { llamaProxy } from "./llama-proxy";
 
 // Export all our functions
 export {
   aiHealthAssistant,
-  sendSms,
-  scheduledSmsReminders,
-  onNewAppointment,
-  twilioReceive,
-  twilioStatus,
+  sendSMS,
   llamaProxy,
 };
 
