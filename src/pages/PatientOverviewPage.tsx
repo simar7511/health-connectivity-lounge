@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -668,7 +667,10 @@ const PatientOverviewPage = () => {
       title: "Record Saved",
       description: "Patient record has been successfully saved.",
       variant: "default",
+      duration: 5000,
     });
+    
+    console.log("Save Patient Record toast triggered");
   };
 
   return (
