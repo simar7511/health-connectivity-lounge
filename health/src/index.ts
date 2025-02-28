@@ -21,8 +21,9 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-// Start server only if not in Firebase Functions environment
-if (process.env.NODE_ENV !== 'production') {
+// IMPORTANT: Only start the server if explicitly running in development mode
+// and NOT during Firebase deployment
+if (process.env.NODE_ENV === 'development' && !process.env.FIREBASE_CONFIG) {
   app.listen(PORT, () => {
     console.log(`Health service listening on port ${PORT}`);
   });
