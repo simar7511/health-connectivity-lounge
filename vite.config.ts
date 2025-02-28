@@ -9,44 +9,44 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default defineConfig(({ mode }) => ({
-  base: mode === "production" ? "/" : "/",
-  server: {
-    host: "0.0.0.0",
-    port: 8080,
-    fs: {
-      // Allow serving files from one level up to the project root
-      allow: ['..']
-    },
-    cors: true,
-    hmr: {
-      clientPort: 443,
-      host: '958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com'
-    }
-  },
-  optimizeDeps: {
-    exclude: [],
-    esbuildOptions: {
-      // Node.js global to browser globalThis
-      define: {
-        global: 'globalThis'
+export default defineConfig(({ mode }) => {
+  return {
+    base: mode === "production" ? "/" : "/",
+    server: {
+      host: "0.0.0.0",
+      port: 8080,
+      fs: {
+        allow: ['..']
       },
+      cors: true,
+      hmr: {
+        clientPort: 443,
+        host: '958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com'
+      }
+    },
+    optimizeDeps: {
+      exclude: [],
+      esbuildOptions: {
+        define: {
+          global: 'globalThis'
+        }
+      }
+    },
+    plugins: [
+      react(),
+      mode === "development" && componentTagger()
+    ].filter(Boolean),
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src")
+      }
+    },
+    build: {
+      outDir: "dist",
+      sourcemap: true,
+      commonjsOptions: {
+        transformMixedEsModules: true
+      }
     }
-  },
-  plugins: [
-    react(),
-    mode === "development" && componentTagger(),
-  ].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-  build: {
-    outDir: "dist",
-    sourcemap: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  }
-}));
+  };
+});
