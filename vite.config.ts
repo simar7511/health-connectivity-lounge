@@ -25,12 +25,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      exclude: [],
-      esbuildOptions: {
-        define: {
-          global: 'globalThis'
-        }
-      }
+      exclude: []
     },
     plugins: [
       react(),
@@ -43,10 +38,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: "dist",
-      sourcemap: true,
-      commonjsOptions: {
-        transformMixedEsModules: true
-      }
+      sourcemap: true
     }
   };
 });
