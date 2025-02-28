@@ -18,10 +18,9 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 8080,
     cors: true,
-    allowedHosts: [
-      "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com",
-      "localhost"
-    ],
+    proxy: {
+      // You can add proxy configuration here if needed
+    },
     fs: {
       allow: ['..']
     }
