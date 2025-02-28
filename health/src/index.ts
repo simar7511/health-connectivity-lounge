@@ -2,9 +2,11 @@
 import express from "express";
 import cors from "cors";
 import { sendSMS, scheduleSMS } from "./twilioFunctions";
+import * as functions from "firebase-functions";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Use a different port (8379 instead of 8378)
+const PORT = process.env.PORT || 8379;
 
 // Middleware
 app.use(cors());
@@ -19,10 +21,12 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Health service listening on port ${PORT}`);
-});
+// Start server only if not in Firebase Functions environment
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Health service listening on port ${PORT}`);
+  });
+}
 
 // Export the express app for Firebase Functions
-export const healthApi = app;
+export const healthApi = functions.https.onRequest(app);
