@@ -14,19 +14,15 @@ export default defineConfig({
     componentTagger()
   ],
   server: {
-    host: true, // ✅ Ensures the server is accessible from any network
+    host: "0.0.0.0",
     port: 8080,
     cors: true,
-    strictPort: true, // Prevents Vite from changing the port automatically
     allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"], // ✅ Allow specific host
-    headers: {
-      "Access-Control-Allow-Origin": "*", // ✅ Ensures CORS allows all origins
-    },
     proxy: {
-      // Add proxy configurations if necessary
+      // You can add proxy configuration here if needed
     },
     fs: {
-      allow: [".."]
+      allow: ['..']
     }
   },
   resolve: {
