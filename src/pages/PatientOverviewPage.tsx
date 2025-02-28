@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -662,15 +661,6 @@ const PatientOverviewPage = () => {
     });
   };
 
-  const handleSavePatientRecord = () => {
-    // In a real application, this would save the patient data to a database
-    toast({
-      title: "Record Saved",
-      description: "Patient record has been successfully saved.",
-      variant: "default",
-    });
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Button 
@@ -1113,7 +1103,6 @@ const PatientOverviewPage = () => {
                 <Button
                   variant="default"
                   className="w-full flex items-center justify-center gap-2"
-                  onClick={handleSavePatientRecord}
                 >
                   <Save className="h-4 w-4" />
                   Save Patient Record
