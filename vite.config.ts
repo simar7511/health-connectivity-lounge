@@ -14,19 +14,19 @@ export default defineConfig({
     componentTagger()
   ],
   server: {
-    host: "0.0.0.0",
+    host: true, // ✅ Ensures the server is accessible from any network
     port: 8080,
     cors: true,
+    strictPort: true, // Prevents Vite from changing the port automatically
     allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"], // ✅ Allow specific host
+    headers: {
+      "Access-Control-Allow-Origin": "*", // ✅ Ensures CORS allows all origins
+    },
     proxy: {
-      // You can add proxy configuration here if needed
+      // Add proxy configurations if necessary
     },
     fs: {
-      allow: ['..']
-    },
-    hmr: {
-      // This should help with the host blocking issue
-      host: "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"
+      allow: [".."]
     }
   },
   resolve: {
