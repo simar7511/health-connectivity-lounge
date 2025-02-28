@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -636,7 +637,7 @@ const PatientOverviewPage = () => {
           ...category,
           recommendations: [...category.recommendations, ""]
         } : category
-      ))
+      )
     }));
     setEditMode(prev => ({ ...prev, lifestyleChanges: true }));
   };
@@ -662,12 +663,11 @@ const PatientOverviewPage = () => {
   };
 
   const handleSavePatientRecord = () => {
-    console.log("Saving patient record...");
-    
+    // In a real application, this would save the patient data to a database
     toast({
-      title: "Success!",
+      title: "Record Saved",
       description: "Patient record has been successfully saved.",
-      duration: 5000,
+      variant: "default",
     });
   };
 
