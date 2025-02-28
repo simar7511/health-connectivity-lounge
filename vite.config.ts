@@ -18,18 +18,6 @@ export default defineConfig(({ mode }) => ({
       // Allow serving files from one level up to the project root
       allow: ['..']
     },
-    // Add this section to allow the specific host
-    hmr: {
-      host: '958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com'
-    }
-  },
-  // Allow the specific host that's being blocked
-  server: {
-    host: "0.0.0.0",
-    port: 8080,
-    fs: {
-      allow: ['..']
-    },
     cors: true,
     hmr: {
       clientPort: 443,
