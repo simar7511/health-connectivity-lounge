@@ -2,11 +2,7 @@
 import * as functions from "firebase-functions";
 import express from "express";
 import cors from "cors";
-import * as dotenv from "dotenv";
 import fetch from "node-fetch";
-
-// Load environment variables
-dotenv.config();
 
 // Create an Express app
 const app = express();
@@ -110,6 +106,20 @@ app.post("/generate", async (req: express.Request, res: express.Response) => {
     });
   }
 });
+
+// Health check endpoint required by Cloud Run
+app.get("/", (req, res) => {
+  res.status(200).send("Llama Proxy is healthy and running!");
+});
+
+// Listen on the port provided by the environment if running standalone
+// (important for Cloud Run)
+const PORT = process.env.PORT || 8080;
+if (process.env.NODE_ENV !== 'firebase-functions') {
+  app.listen(PORT, () => {
+    console.log(`Llama Proxy listening on port ${PORT}`);
+  });
+}
 
 // Export the Express app as a Cloud Function
 export const llamaProxy = functions.https.onRequest(app);
