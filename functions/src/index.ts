@@ -1,13 +1,13 @@
 
 import * as functions from "firebase-functions";
 import { aiHealthAssistant } from "./aiHealthAssistant";
-import { sendSMS } from "./smsService";
+import { smsService } from "./smsService";
 import { llamaProxy } from "./llama-proxy";
 
 // Export all our functions
 export {
   aiHealthAssistant,
-  sendSMS,
+  smsService,
   llamaProxy,
 };
 
