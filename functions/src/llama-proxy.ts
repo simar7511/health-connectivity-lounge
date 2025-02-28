@@ -89,12 +89,12 @@ app.post("/generate", async (req: express.Request, res: express.Response) => {
     // Extract the generated text
     let generatedText;
     
-    if (Array.isArray(data) && data.length > 0 && 'generated_text' in data[0]) {
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && data[0] !== null && 'generated_text' in data[0]) {
       // Format returned by newer Hugging Face API
       generatedText = data[0].generated_text;
-    } else if ('generated_text' in data) {
+    } else if (typeof data === 'object' && data !== null && 'generated_text' in data) {
       // Format returned by older Hugging Face API
-      generatedText = data.generated_text;
+      generatedText = (data as {generated_text: string}).generated_text;
     } else {
       // Fallback
       generatedText = JSON.stringify(data);

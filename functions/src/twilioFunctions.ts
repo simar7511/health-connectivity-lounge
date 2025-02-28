@@ -56,8 +56,14 @@ export const sendSMSDirect = async (to: string, message: string) => {
   }
 };
 
+// Define the data structure expected by the callable function
+interface TwilioSendSMSData {
+  to: string;
+  message: string;
+}
+
 // Expose as a Cloud Function
-export const twilioSendSMS = functions.https.onCall(async (data, context) => {
+export const twilioSendSMS = functions.https.onCall(async (data: TwilioSendSMSData, context) => {
   try {
     const { to, message } = data;
     
