@@ -21,15 +21,9 @@ export default defineConfig({
     hmr: {
       clientPort: 443
     },
-    proxy: {
-      // You can add proxy configuration here if needed
-    },
     fs: {
       allow: ['..']
-    },
-    // Explicitly allow all hosts to connect
-    strictPort: false,
-    origin: 'http://0.0.0.0:8080',
+    }
   },
   preview: {
     host: "0.0.0.0",

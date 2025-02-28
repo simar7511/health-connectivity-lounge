@@ -636,7 +636,7 @@ const PatientOverviewPage = () => {
           ...category,
           recommendations: [...category.recommendations, ""]
         } : category
-      )
+      ))
     }));
     setEditMode(prev => ({ ...prev, lifestyleChanges: true }));
   };
@@ -662,15 +662,13 @@ const PatientOverviewPage = () => {
   };
 
   const handleSavePatientRecord = () => {
-    // In a real application, this would save the patient data to a database
+    console.log("Saving patient record...");
+    
     toast({
-      title: "Record Saved",
+      title: "Success!",
       description: "Patient record has been successfully saved.",
-      variant: "default",
       duration: 5000,
     });
-    
-    console.log("Save Patient Record toast triggered");
   };
 
   return (
