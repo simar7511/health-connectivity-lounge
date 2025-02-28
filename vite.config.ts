@@ -18,12 +18,19 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 8080,
     cors: true,
+    hmr: {
+      clientPort: 443
+    },
     proxy: {
       // You can add proxy configuration here if needed
     },
     fs: {
       allow: ['..']
     }
+  },
+  preview: {
+    host: "0.0.0.0",
+    port: 8080
   },
   resolve: {
     alias: {
