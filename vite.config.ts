@@ -24,10 +24,10 @@ export default defineConfig({
     fs: {
       allow: ['..']
     },
-    allowedHosts: [
-      "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com",
-      ".lovableproject.com"
-    ]
+    hmr: {
+      // This should help with the host blocking issue
+      host: "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"
+    }
   },
   resolve: {
     alias: {
