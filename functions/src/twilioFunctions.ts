@@ -62,27 +62,28 @@ interface TwilioSendSMSData {
   message: string;
 }
 
-// Expose as a Cloud Function
-export const twilioSendSMS = functions.https.onCall(async (data: TwilioSendSMSData, context) => {
+export const twilioSendSMS = functions.https.onCall(async (request, context) => {
   try {
+    // Extract the request data properly
+    const data = request.data as TwilioSendSMSData;
     const { to, message } = data;
-    
+
     if (!to || !message) {
-      throw new Error("Missing required parameters: to or message");
+      throw new functions.https.HttpsError("invalid-argument", "Missing required parameters: 'to' or 'message'.");
     }
-    
-    // Just log in this example
+
+    // Log instead of sending SMS (for free implementation)
     console.log(`Would send SMS to ${to}: ${message}`);
-    
+
     return {
       success: true,
-      message: `SMS to ${to} would be sent with message: ${message}`
+      message: `SMS to ${to} would be sent with message: ${message}`,
     };
   } catch (error) {
     console.error("Error in twilioSendSMS:", error);
     throw new functions.https.HttpsError(
-      'internal',
-      error instanceof Error ? error.message : 'Unknown error'
+      "internal",
+      error instanceof Error ? error.message : "Unknown error"
     );
   }
 });
