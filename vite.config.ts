@@ -14,6 +14,19 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 8080,
+    fs: {
+      // Allow serving files from one level up to the project root
+      allow: ['..']
+    },
+  },
+  optimizeDeps: {
+    exclude: [],
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis'
+      },
+    }
   },
   plugins: [
     react(),
@@ -26,6 +39,9 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: "dist",
-    sourcemap: true
+    sourcemap: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   }
 }));
