@@ -68,11 +68,3 @@ app.get("/", (req, res) => {
 
 // Export the express app for Cloud Functions
 export const smsService = functions.https.onRequest(app);
-
-// Only start the server if this file is run directly (not during deployment/build)
-if (require.main === module) {
-  const PORT = process.env.PORT || 8080;
-  app.listen(PORT, () => {
-    console.log(`SMS service listening on port ${PORT}`);
-  });
-}
