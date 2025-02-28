@@ -112,14 +112,13 @@ app.get("/", (req, res) => {
   res.status(200).send("Llama Proxy is healthy and running!");
 });
 
-// Listen on the port provided by the environment if running standalone
-// (important for Cloud Run)
-const PORT = process.env.PORT || 8080;
-if (process.env.NODE_ENV !== 'firebase-functions') {
+// Export the Express app as a Cloud Function
+export const llamaProxy = functions.https.onRequest(app);
+
+// Only start the server if this file is run directly (not during deployment/build)
+if (require.main === module) {
+  const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => {
     console.log(`Llama Proxy listening on port ${PORT}`);
   });
 }
-
-// Export the Express app as a Cloud Function
-export const llamaProxy = functions.https.onRequest(app);

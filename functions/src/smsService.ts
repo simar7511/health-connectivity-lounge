@@ -66,14 +66,13 @@ app.get("/", (req, res) => {
   res.status(200).send("SMS Service is healthy and running!");
 });
 
-// Listen on the port provided by the environment if running standalone
-// (important for Cloud Run)
-const PORT = process.env.PORT || 8080;
-if (process.env.NODE_ENV !== 'firebase-functions') {
+// Export the express app for Cloud Functions
+export const smsService = functions.https.onRequest(app);
+
+// Only start the server if this file is run directly (not during deployment/build)
+if (require.main === module) {
+  const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => {
     console.log(`SMS service listening on port ${PORT}`);
   });
 }
-
-// Export the express app for Cloud Functions
-export const smsService = functions.https.onRequest(app);
