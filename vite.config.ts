@@ -25,6 +25,7 @@ export default defineConfig({
     hmr: {
       host: "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"
     },
+    allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"],
     proxy: {
       // Add proxy configurations if necessary
     },
