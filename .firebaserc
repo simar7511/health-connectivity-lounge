@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "health-connectivity-01"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }
