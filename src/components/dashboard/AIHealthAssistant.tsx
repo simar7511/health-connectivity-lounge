@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from "firebase/firestore";
 
-// Add isOnline prop to the component
 interface AIHealthAssistantProps {
   language: "en" | "es";
   onBack: () => void;
@@ -44,7 +42,6 @@ export const AIHealthAssistant = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initial system message based on language
   useEffect(() => {
     const systemMessage: Message = {
       role: "system",
@@ -57,17 +54,14 @@ export const AIHealthAssistant = ({
     setMessages([systemMessage]);
   }, [language]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  // Load chat history if patientId is provided
   useEffect(() => {
     if (!patientId) return;
     
@@ -119,7 +113,6 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      // Save user message to Firestore if patientId exists
       if (patientId) {
         await addDoc(collection(db, "aiChats"), {
           patientId,
@@ -127,15 +120,9 @@ export const AIHealthAssistant = ({
         });
       }
       
-      // Determine which API to use based on connectivity
-      let apiUrl = "/api/ai-chat";
       let apiKey = "";
       
-      if (!isOnline) {
-        // Use local model when offline
-        apiUrl = "/api/local-ai-chat";
-        apiKey = localStorage.getItem("huggingface_token") || "";
-      } else if (provider === "openai") {
+      if (provider === "openai") {
         apiKey = localStorage.getItem("openai_api_key") || "";
       } else if (provider === "llama") {
         apiKey = localStorage.getItem("huggingface_token") || "";
@@ -147,19 +134,18 @@ export const AIHealthAssistant = ({
           : "Clave API no encontrada. Por favor, configúrala en ajustes.");
       }
       
-      // Prepare conversation history
       const conversationHistory = messages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
       
-      // Add user's latest message
       conversationHistory.push({
         role: "user",
         content: input
       });
       
-      // Make API request
+      const apiUrl = `/api/ai-chat`;
+      
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -182,7 +168,6 @@ export const AIHealthAssistant = ({
       
       const data = await response.json();
       
-      // Create assistant message
       const assistantMessage: Message = {
         role: "assistant",
         content: data.response || (language === "en" ? "I'm sorry, I couldn't generate a response." : "Lo siento, no pude generar una respuesta."),
@@ -191,7 +176,6 @@ export const AIHealthAssistant = ({
       
       setMessages((prev) => [...prev, assistantMessage]);
       
-      // Save assistant message to Firestore if patientId exists
       if (patientId) {
         await addDoc(collection(db, "aiChats"), {
           patientId,
@@ -204,7 +188,6 @@ export const AIHealthAssistant = ({
         ? "Failed to get response from AI. Please try again."
         : "Error al obtener respuesta de la IA. Por favor, inténtalo de nuevo."));
       
-      // Add error message to chat
       setMessages((prev) => [
         ...prev,
         {
@@ -229,9 +212,8 @@ export const AIHealthAssistant = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Connection status indicator */}
       {!isOnline && (
-        <Alert className="m-2 bg-amber-50 border-amber-200">
+        <Alert className="m-2 bg-amber-50 border-amber-200" variant="warning">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertTitle>
             {language === "en" ? "Offline Mode" : "Modo Sin Conexión"}
@@ -244,7 +226,6 @@ export const AIHealthAssistant = ({
         </Alert>
       )}
       
-      {/* Error message */}
       {error && (
         <Alert variant="destructive" className="m-2">
           <AlertCircle className="h-4 w-4" />
@@ -255,7 +236,6 @@ export const AIHealthAssistant = ({
         </Alert>
       )}
       
-      {/* Chat messages */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message, index) => (
@@ -286,7 +266,6 @@ export const AIHealthAssistant = ({
         </div>
       </ScrollArea>
       
-      {/* Input area */}
       <div className="p-4 border-t">
         <div className="flex gap-2">
           <Input
