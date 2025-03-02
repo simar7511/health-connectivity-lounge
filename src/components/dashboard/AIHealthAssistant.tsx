@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 interface AIHealthAssistantProps {
   language: "en" | "es";
@@ -41,6 +43,7 @@ export const AIHealthAssistant = ({
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const functions = getFunctions();
 
   useEffect(() => {
     const systemMessage: Message = {
@@ -144,33 +147,29 @@ export const AIHealthAssistant = ({
         content: input
       });
       
-      const apiUrl = `/api/ai-chat`;
+      // Use Firebase Cloud Functions instead of direct API call
+      const aiChatFunction = httpsCallable(functions, 'aiChat');
       
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          messages: conversationHistory,
-          model: model,
-          provider: provider,
-          language: language
-        })
+      console.log(`Calling AI model: ${provider}/${model} with ${conversationHistory.length} messages`);
+      
+      const response = await aiChatFunction({
+        messages: conversationHistory,
+        model: model,
+        provider: provider,
+        language: language,
+        apiKey: apiKey
       });
       
-      if (!response.ok) {
-        throw new Error(language === "en" 
-          ? `Server error: ${response.status}`
-          : `Error del servidor: ${response.status}`);
-      }
+      console.log("AI response received:", response.data);
       
-      const data = await response.json();
+      // @ts-ignore - handle the response data structure
+      const aiResponse = response.data?.response || (language === "en" 
+        ? "I'm sorry, I couldn't generate a response." 
+        : "Lo siento, no pude generar una respuesta.");
       
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.response || (language === "en" ? "I'm sorry, I couldn't generate a response." : "Lo siento, no pude generar una respuesta."),
+        content: aiResponse,
         timestamp: serverTimestamp()
       };
       
@@ -184,9 +183,23 @@ export const AIHealthAssistant = ({
       }
     } catch (err: any) {
       console.error("Error in AI chat:", err);
-      setError(err.message || (language === "en" 
+      
+      let errorMessage = err.message || (language === "en" 
         ? "Failed to get response from AI. Please try again."
-        : "Error al obtener respuesta de la IA. Por favor, inténtalo de nuevo."));
+        : "Error al obtener respuesta de la IA. Por favor, inténtalo de nuevo.");
+        
+      // Check for specific error codes from Firebase Functions
+      if (err.code === 'functions/invalid-argument') {
+        errorMessage = language === "en" 
+          ? "Invalid API key or model configuration. Please check your settings."
+          : "Clave API o configuración de modelo inválida. Por favor, verifica tus ajustes.";
+      } else if (err.code === 'functions/resource-exhausted') {
+        errorMessage = language === "en"
+          ? "API quota exceeded. Please try again later or use a different model."
+          : "Cuota de API excedida. Por favor, intenta más tarde o usa un modelo diferente.";
+      }
+      
+      setError(errorMessage);
       
       setMessages((prev) => [
         ...prev,
@@ -213,7 +226,7 @@ export const AIHealthAssistant = ({
   return (
     <div className="flex flex-col h-full">
       {!isOnline && (
-        <Alert className="m-2 bg-amber-50 border-amber-200" variant="warning">
+        <Alert className="m-2 bg-amber-50 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertTitle>
             {language === "en" ? "Offline Mode" : "Modo Sin Conexión"}
@@ -294,3 +307,4 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
+
