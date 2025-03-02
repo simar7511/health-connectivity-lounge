@@ -7,10 +7,6 @@ import { AISettingsDialog } from "@/components/dashboard/AISettingsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
-// Default API keys
-const DEFAULT_OPENAI_API_KEY = "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";
-const DEFAULT_HUGGINGFACE_TOKEN = "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";
-
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
   const navigate = useNavigate();
@@ -23,51 +19,76 @@ export const AIHealthChatPage = () => {
   
   // Auto-select model based on connectivity
   const [provider, setProvider] = useState(() => {
-    return isOnline ? "openai" : "llama";
+    return localStorage.getItem("ai_provider") || (isOnline ? "openai" : "llama");
   });
   
   const [model, setModel] = useState(() => {
+    const savedProvider = localStorage.getItem("ai_provider");
+    if (savedProvider) {
+      return localStorage.getItem(`${savedProvider}_model`) || 
+        (savedProvider === "openai" ? "gpt-4o" : "llama-2-7b-chat");
+    }
     return isOnline ? "gpt-4o" : "llama-2-7b-chat";
   });
   
-  // Initialize API keys in localStorage if they don't exist
+  // Check if API keys are configured
   useEffect(() => {
-    if (!localStorage.getItem("openai_api_key")) {
-      localStorage.setItem("openai_api_key", DEFAULT_OPENAI_API_KEY);
+    const openaiKey = localStorage.getItem("openai_api_key");
+    const huggingfaceToken = localStorage.getItem("huggingface_token");
+    
+    // Show settings dialog if required API key is missing
+    if ((provider === "openai" && !openaiKey) || 
+        (provider === "llama" && !huggingfaceToken)) {
+      setShowApiDialog(true);
+      toast({
+        title: language === "en" ? "API Key Required" : "Se requiere clave API",
+        description: language === "en" 
+          ? "Please configure your API key to use the AI assistant."
+          : "Por favor, configura tu clave API para usar el asistente de IA.",
+        variant: "default",
+      });
     }
-    if (!localStorage.getItem("huggingface_token")) {
-      localStorage.setItem("huggingface_token", DEFAULT_HUGGINGFACE_TOKEN);
-    }
-  }, []);
+  }, [provider, language, toast]);
 
   // Auto-switch between online and offline models
   useEffect(() => {
-    const newProvider = isOnline ? "openai" : "llama";
-    const newModel = isOnline ? "gpt-4o" : "llama-2-7b-chat";
+    const savedProvider = localStorage.getItem("ai_provider");
     
-    if (provider !== newProvider) {
-      setProvider(newProvider);
-      localStorage.setItem("ai_provider", newProvider);
+    // Only auto-switch if user hasn't manually set a preference
+    if (!savedProvider) {
+      const newProvider = isOnline ? "openai" : "llama";
       
-      // Show toast notification about connectivity change
-      const message = isOnline 
-        ? language === "en" 
-          ? "You're now online. Switched to GPT-4 model." 
-          : "Ahora estás en línea. Cambiado al modelo GPT-4."
-        : language === "en" 
-          ? "You're offline. Switched to local Llama model." 
-          : "Estás desconectado. Cambiado al modelo local Llama.";
+      if (provider !== newProvider) {
+        setProvider(newProvider);
+        
+        const openaiKey = localStorage.getItem("openai_api_key");
+        const huggingfaceToken = localStorage.getItem("huggingface_token");
+        
+        // Only show toast for connectivity change if keys are configured
+        if ((newProvider === "openai" && openaiKey) || 
+            (newProvider === "llama" && huggingfaceToken)) {
+          // Show toast notification about connectivity change
+          const message = isOnline 
+            ? language === "en" 
+              ? "You're now online. Switched to GPT-4 model." 
+              : "Ahora estás en línea. Cambiado al modelo GPT-4."
+            : language === "en" 
+              ? "You're offline. Switched to local Llama model." 
+              : "Estás desconectado. Cambiado al modelo local Llama.";
+          
+          toast({
+            title: isOnline ? "Connected" : "Offline Mode",
+            description: message,
+            variant: "default",
+          });
+        }
+      }
       
-      toast({
-        title: isOnline ? "Connected" : "Offline Mode",
-        description: message,
-        variant: isOnline ? "default" : "default",
-      });
-    }
-    
-    if (model !== newModel) {
-      setModel(newModel);
-      localStorage.setItem("ai_model", newModel);
+      // Update model based on provider
+      const newModel = isOnline ? "gpt-4o" : "llama-2-7b-chat";
+      if (model !== newModel) {
+        setModel(newModel);
+      }
     }
   }, [isOnline, provider, model, toast, language]);
 
@@ -82,6 +103,12 @@ export const AIHealthChatPage = () => {
       return newLang;
     });
   };
+
+  // Handle saving provider/model preferences
+  useEffect(() => {
+    localStorage.setItem("ai_provider", provider);
+    localStorage.setItem(`${provider}_model`, model);
+  }, [provider, model]);
 
   return (
     <div className="flex flex-col h-screen bg-background">

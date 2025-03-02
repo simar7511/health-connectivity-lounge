@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles } from "lucide-react";
+import { Sparkles, KeyRound, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Default API keys
-const DEFAULT_OPENAI_API_KEY = "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";
-const DEFAULT_HUGGINGFACE_TOKEN = "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";
+// Default API keys (empty - will prompt user to enter them)
+const DEFAULT_OPENAI_API_KEY = "";
+const DEFAULT_HUGGINGFACE_TOKEN = "";
 
 interface AISettingsDialogProps {
   open: boolean;
@@ -32,24 +32,33 @@ export const AISettingsDialog = ({
   setModel
 }: AISettingsDialogProps) => {
   const { toast } = useToast();
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai_api_key") || DEFAULT_OPENAI_API_KEY);
-  const [huggingFaceToken, setHuggingFaceToken] = useState(() => localStorage.getItem("huggingface_token") || DEFAULT_HUGGINGFACE_TOKEN);
+  const [apiKey, setApiKey] = useState(() => {
+    const savedKey = localStorage.getItem("openai_api_key");
+    return savedKey ? "••••••••••••••••••••••••••" : "";
+  });
+  const [newApiKey, setNewApiKey] = useState("");
+  const [huggingFaceToken, setHuggingFaceToken] = useState(() => {
+    const savedToken = localStorage.getItem("huggingface_token");
+    return savedToken ? "••••••••••••••••••••••••••" : "";
+  });
+  const [newHuggingFaceToken, setNewHuggingFaceToken] = useState("");
+  const [showResetKeySection, setShowResetKeySection] = useState(false);
 
   // Update API key based on provider
   useEffect(() => {
     if (provider === "openai") {
-      const key = localStorage.getItem("openai_api_key") || DEFAULT_OPENAI_API_KEY;
-      setApiKey(key);
+      const savedKey = localStorage.getItem("openai_api_key");
+      setApiKey(savedKey ? "••••••••••••••••••••••••••" : "");
     } else if (provider === "llama") {
-      const token = localStorage.getItem("huggingface_token") || DEFAULT_HUGGINGFACE_TOKEN;
-      setHuggingFaceToken(token);
+      const savedToken = localStorage.getItem("huggingface_token");
+      setHuggingFaceToken(savedToken ? "••••••••••••••••••••••••••" : "");
     }
     
     // Set default model based on provider
     if (provider === "openai" && !localStorage.getItem("openai_model")) {
-      setModel("gpt-3.5-turbo");
+      setModel("gpt-4o");
     } else if (provider === "llama" && !localStorage.getItem("llama_model")) {
-      setModel("llama-2-7b");
+      setModel("llama-2-7b-chat");
     }
     
     // Load model if saved
@@ -60,44 +69,98 @@ export const AISettingsDialog = ({
   }, [provider, setModel]);
 
   const saveApiKey = () => {
-    if (provider === "openai" && !apiKey.trim()) {
-      toast({
-        title: language === "en" ? "Error" : "Error",
-        description: language === "en" 
-          ? "API key cannot be empty for OpenAI."
-          : "La clave API no puede estar vacía para OpenAI.",
-        variant: "destructive",
-      });
-      return;
+    // Validate OpenAI API key
+    if (provider === "openai") {
+      if (newApiKey) {
+        if (!newApiKey.startsWith("sk-") && !newApiKey.startsWith("sk-proj-")) {
+          toast({
+            title: language === "en" ? "Invalid API Key" : "Clave API inválida",
+            description: language === "en" 
+              ? "OpenAI API keys should start with 'sk-' or 'sk-proj-'"
+              : "Las claves API de OpenAI deben comenzar con 'sk-' o 'sk-proj-'",
+            variant: "destructive",
+          });
+          return;
+        }
+        // Save new OpenAI key
+        localStorage.setItem("openai_api_key", newApiKey);
+        setApiKey("••••••••••••••••••••••••••");
+        setNewApiKey("");
+      } else if (!localStorage.getItem("openai_api_key")) {
+        toast({
+          title: language === "en" ? "Error" : "Error",
+          description: language === "en" 
+            ? "API key cannot be empty for OpenAI."
+            : "La clave API no puede estar vacía para OpenAI.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
-    if (provider === "llama" && !huggingFaceToken.trim()) {
-      toast({
-        title: language === "en" ? "Error" : "Error",
-        description: language === "en" 
-          ? "Hugging Face token cannot be empty for Llama 2 models."
-          : "El token de Hugging Face no puede estar vacío para los modelos Llama 2.",
-        variant: "destructive",
-      });
-      return;
+    // Validate Hugging Face token
+    if (provider === "llama") {
+      if (newHuggingFaceToken) {
+        if (!newHuggingFaceToken.startsWith("hf_")) {
+          toast({
+            title: language === "en" ? "Invalid Token" : "Token inválido",
+            description: language === "en" 
+              ? "Hugging Face tokens should start with 'hf_'"
+              : "Los tokens de Hugging Face deben comenzar con 'hf_'",
+            variant: "destructive",
+          });
+          return;
+        }
+        // Save new Hugging Face token
+        localStorage.setItem("huggingface_token", newHuggingFaceToken);
+        setHuggingFaceToken("••••••••••••••••••••••••••");
+        setNewHuggingFaceToken("");
+      } else if (!localStorage.getItem("huggingface_token")) {
+        toast({
+          title: language === "en" ? "Error" : "Error",
+          description: language === "en" 
+            ? "Hugging Face token cannot be empty for Llama 2 models."
+            : "El token de Hugging Face no puede estar vacío para los modelos Llama 2.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
     
-    if (provider === "openai") {
-      localStorage.setItem("openai_api_key", apiKey);
-    } else if (provider === "llama") {
-      localStorage.setItem("huggingface_token", huggingFaceToken);
-    }
-    
+    // Save model and provider preferences
     localStorage.setItem(`${provider}_model`, model);
     localStorage.setItem("ai_provider", provider);
+    
+    // Close dialog and notify user
     onOpenChange(false);
+    setShowResetKeySection(false);
     toast({
       title: language === "en" ? "Settings Saved" : "Configuración Guardada",
       description: language === "en" 
-        ? "Your API settings have been updated."
-        : "Tu configuración de API ha sido actualizada.",
+        ? "Your AI settings have been updated successfully."
+        : "Tu configuración de IA ha sido actualizada con éxito.",
     });
-    window.location.reload(); // Reload to refresh the component with the new settings
+  };
+
+  const resetApiKey = () => {
+    if (provider === "openai") {
+      localStorage.removeItem("openai_api_key");
+      setApiKey("");
+      setNewApiKey("");
+    } else if (provider === "llama") {
+      localStorage.removeItem("huggingface_token");
+      setHuggingFaceToken("");
+      setNewHuggingFaceToken("");
+    }
+    
+    toast({
+      title: language === "en" ? "API Key Reset" : "Clave API Reiniciada",
+      description: language === "en" 
+        ? "Your API key has been removed. Please enter a new one."
+        : "Tu clave API ha sido eliminada. Por favor, ingresa una nueva.",
+    });
+    
+    setShowResetKeySection(false);
   };
 
   return (
@@ -123,39 +186,177 @@ export const AISettingsDialog = ({
                 <SelectValue placeholder={language === "en" ? "Select provider" : "Seleccionar proveedor"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="llama">Llama 2 (Requires Hugging Face token)</SelectItem>
-                <SelectItem value="openai">OpenAI (Requires API Key)</SelectItem>
+                <SelectItem value="openai">OpenAI (GPT-4o)</SelectItem>
+                <SelectItem value="llama">Llama 2 (Offline Capable)</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           {provider === "openai" && (
             <div className="space-y-2">
-              <label htmlFor="apiKey" className="text-sm font-medium">
-                {language === "en" ? "OpenAI API Key" : "Clave API de OpenAI"}
-              </label>
-              <Input
-                id="apiKey"
-                type="password"
-                placeholder="sk-..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
+              <div className="flex justify-between items-center">
+                <label htmlFor="apiKey" className="text-sm font-medium">
+                  {language === "en" ? "OpenAI API Key" : "Clave API de OpenAI"}
+                </label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowResetKeySection(!showResetKeySection)}
+                  className="h-7 text-xs"
+                >
+                  {language === "en" ? "Reset Key" : "Reiniciar Clave"}
+                </Button>
+              </div>
+              
+              {showResetKeySection && (
+                <Alert variant="destructive" className="mb-2">
+                  <ShieldAlert className="h-4 w-4" />
+                  <AlertDescription>
+                    {language === "en" 
+                      ? "This will delete your stored API key. Are you sure?" 
+                      : "Esto eliminará tu clave API almacenada. ¿Estás seguro?"}
+                    <div className="mt-2 flex gap-2">
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={resetApiKey}
+                        className="h-7 text-xs"
+                      >
+                        {language === "en" ? "Yes, Delete Key" : "Sí, Eliminar Clave"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setShowResetKeySection(false)} 
+                        className="h-7 text-xs"
+                      >
+                        {language === "en" ? "Cancel" : "Cancelar"}
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {!showResetKeySection && (
+                <>
+                  {apiKey ? (
+                    <div className="space-y-2">
+                      <Input
+                        value={apiKey}
+                        readOnly
+                        className="bg-muted font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {language === "en" 
+                          ? "To change your API key, enter a new one below:" 
+                          : "Para cambiar tu clave API, ingresa una nueva a continuación:"}
+                      </p>
+                    </div>
+                  ) : (
+                    <Alert className="bg-primary/10 border-primary/20 mb-2">
+                      <KeyRound className="h-4 w-4 text-primary" />
+                      <AlertDescription>
+                        {language === "en" 
+                          ? "Please enter your OpenAI API key below to enable GPT-4o" 
+                          : "Por favor, ingresa tu clave API de OpenAI para habilitar GPT-4o"}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <Input
+                    id="newApiKey"
+                    type="password"
+                    placeholder={language === "en" ? "Enter new API key (sk-...)" : "Ingresa nueva clave API (sk-...)"}
+                    value={newApiKey}
+                    onChange={(e) => setNewApiKey(e.target.value)}
+                    className="font-mono"
+                  />
+                </>
+              )}
             </div>
           )}
           
           {provider === "llama" && (
             <div className="space-y-2">
-              <label htmlFor="huggingFaceToken" className="text-sm font-medium">
-                {language === "en" ? "Hugging Face API Token" : "Token de API de Hugging Face"}
-              </label>
-              <Input
-                id="huggingFaceToken"
-                type="password"
-                placeholder="hf_..."
-                value={huggingFaceToken}
-                onChange={(e) => setHuggingFaceToken(e.target.value)}
-              />
+              <div className="flex justify-between items-center">
+                <label htmlFor="huggingFaceToken" className="text-sm font-medium">
+                  {language === "en" ? "Hugging Face API Token" : "Token de API de Hugging Face"}
+                </label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowResetKeySection(!showResetKeySection)}
+                  className="h-7 text-xs"
+                >
+                  {language === "en" ? "Reset Token" : "Reiniciar Token"}
+                </Button>
+              </div>
+              
+              {showResetKeySection && (
+                <Alert variant="destructive" className="mb-2">
+                  <ShieldAlert className="h-4 w-4" />
+                  <AlertDescription>
+                    {language === "en" 
+                      ? "This will delete your stored token. Are you sure?" 
+                      : "Esto eliminará tu token almacenado. ¿Estás seguro?"}
+                    <div className="mt-2 flex gap-2">
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={resetApiKey}
+                        className="h-7 text-xs"
+                      >
+                        {language === "en" ? "Yes, Delete Token" : "Sí, Eliminar Token"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setShowResetKeySection(false)} 
+                        className="h-7 text-xs"
+                      >
+                        {language === "en" ? "Cancel" : "Cancelar"}
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {!showResetKeySection && (
+                <>
+                  {huggingFaceToken ? (
+                    <div className="space-y-2">
+                      <Input
+                        value={huggingFaceToken}
+                        readOnly
+                        className="bg-muted font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {language === "en" 
+                          ? "To change your token, enter a new one below:" 
+                          : "Para cambiar tu token, ingresa uno nuevo a continuación:"}
+                      </p>
+                    </div>
+                  ) : (
+                    <Alert className="bg-primary/10 border-primary/20 mb-2">
+                      <KeyRound className="h-4 w-4 text-primary" />
+                      <AlertDescription>
+                        {language === "en" 
+                          ? "Please enter your Hugging Face token below to enable Llama 2" 
+                          : "Por favor, ingresa tu token de Hugging Face para habilitar Llama 2"}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <Input
+                    id="newHuggingFaceToken"
+                    type="password"
+                    placeholder={language === "en" ? "Enter new token (hf_...)" : "Ingresa nuevo token (hf_...)"}
+                    value={newHuggingFaceToken}
+                    onChange={(e) => setNewHuggingFaceToken(e.target.value)}
+                    className="font-mono"
+                  />
+                </>
+              )}
             </div>
           )}
           
@@ -218,7 +419,10 @@ export const AISettingsDialog = ({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              onOpenChange(false);
+              setShowResetKeySection(false);
+            }}
           >
             {language === "en" ? "Cancel" : "Cancelar"}
           </Button>
