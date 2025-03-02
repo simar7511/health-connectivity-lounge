@@ -2,8 +2,8 @@
 import { initializeApp } from "firebase/app";
 import type { Firestore } from "firebase/firestore";
 import type { Auth } from "firebase/auth";
-import { getFirestore, setLogLevel } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getFirestore, setLogLevel } from "@/types/firebase";
+import { getAuth } from "@/types/firebase";
 import { toast } from "@/hooks/use-toast";
 
 // Firebase configuration

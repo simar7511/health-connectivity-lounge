@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { auth } from "@/lib/firebase";
-import { PhoneAuthProvider, signInWithPhoneNumber as firebaseSignInWithPhoneNumber } from "firebase/auth";
+import { PhoneAuthProvider, signInWithPhoneNumber } from "@/types/firebase";
 import { Loader2 } from "lucide-react";
 
 interface PatientLoginProps {

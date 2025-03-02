@@ -11,14 +11,17 @@ import {
   addDoc,
   serverTimestamp,
   onSnapshot,
-  DocumentData
+  DocumentData,
+  getFirestore,
+  setLogLevel
 } from 'firebase/firestore';
 
 import {
   getAuth,
   onAuthStateChanged,
   signInAnonymously,
-  signInWithPhoneNumber
+  signInWithPhoneNumber,
+  PhoneAuthProvider
 } from 'firebase/auth';
 
 export { 
@@ -34,10 +37,13 @@ export {
   serverTimestamp,
   onSnapshot,
   DocumentData,
+  getFirestore,
+  setLogLevel,
   
   // Auth exports
   getAuth,
   onAuthStateChanged,
   signInAnonymously,
-  signInWithPhoneNumber
+  signInWithPhoneNumber,
+  PhoneAuthProvider
 };

@@ -30,7 +30,8 @@ export default defineConfig({
       // Add proxy configurations if necessary
     },
     fs: {
-      allow: [".."]
+      allow: [".."],
+      strict: false // This can help with certain file access issues
     }
   },
   resolve: {
@@ -42,6 +43,7 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
     emptyOutDir: true, // Clean the output directory before build
+    chunkSizeWarningLimit: 1000, // Increase chunk size warning limit
     rollupOptions: {
       output: {
         manualChunks: {
@@ -61,5 +63,8 @@ export default defineConfig({
     'process.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "429069343294"),
     'process.env.VITE_FIREBASE_APP_ID': JSON.stringify(process.env.VITE_FIREBASE_APP_ID || "1:429069343294:web:943a1998a83e63353c0f6f"),
     'process.env.VITE_FIREBASE_MEASUREMENT_ID': JSON.stringify(process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-3BVWXWV69Q")
+  },
+  optimizeDeps: {
+    include: ['firebase/app', 'firebase/auth', 'firebase/firestore']
   }
 });
