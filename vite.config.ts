@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -11,10 +10,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: "/",
   plugins: [
-    react({
-      // Reduce memory usage by disabling some features
-      plugins: []
-    }),
+    react(),
     componentTagger()
   ],
   server: {
@@ -44,7 +40,6 @@ export default defineConfig({
     sourcemap: true,
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
-    // Add options to reduce memory usage during build
     minify: "esbuild",
     cssMinify: "lightningcss",
     rollupOptions: {
@@ -68,7 +63,7 @@ export default defineConfig({
     esbuildOptions: {
       target: 'es2020'
     },
-    force: true, // Force re-optimization to resolve dependency conflicts
-    exclude: ['firebase'], // Exclude firebase from optimization to reduce memory usage
+    force: true,
+    exclude: ['firebase'],
   }
 });
