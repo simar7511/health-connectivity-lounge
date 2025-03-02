@@ -61,7 +61,7 @@ export const AIHealthChatPage = () => {
       toast({
         title: isOnline ? "Connected" : "Offline Mode",
         description: message,
-        variant: isOnline ? "default" : "secondary",
+        variant: isOnline ? "default" : "default",
       });
     }
     

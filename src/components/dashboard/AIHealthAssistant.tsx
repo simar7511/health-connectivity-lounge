@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -230,7 +231,7 @@ export const AIHealthAssistant = ({
     <div className="flex flex-col h-full">
       {/* Connection status indicator */}
       {!isOnline && (
-        <Alert variant="warning" className="m-2 bg-amber-50 border-amber-200">
+        <Alert className="m-2 bg-amber-50 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertTitle>
             {language === "en" ? "Offline Mode" : "Modo Sin Conexión"}
