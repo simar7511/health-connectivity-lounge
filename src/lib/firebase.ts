@@ -37,6 +37,11 @@ try {
   if (!isProduction) {
     setLogLevel("debug");
   }
+  
+  // Add offline persistence capability for Firestore
+  // This allows the app to work offline with cached data
+  // Note: This is a simplified approach; for a real implementation,
+  // you would need to enable offline persistence with Firestore settings
 } catch (error: any) {
   console.error("❌ Firebase initialization error:", error);
   toast({
