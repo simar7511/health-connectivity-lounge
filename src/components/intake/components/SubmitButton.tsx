@@ -9,10 +9,14 @@ interface SubmitButtonProps {
 
 export const SubmitButton = ({ language, isSubmitting }: SubmitButtonProps) => {
   return (
-    <Button type="submit" className="w-full" disabled={isSubmitting}>
+    <Button 
+      type="submit" 
+      className="w-full py-6 bg-primary hover:bg-primary/90 text-white font-medium text-lg shadow-md transition-all" 
+      disabled={isSubmitting}
+    >
       {isSubmitting ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           {language === "en" ? "Submitting..." : "Enviando..."}
         </>
       ) : (

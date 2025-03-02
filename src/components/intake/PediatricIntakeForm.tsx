@@ -20,6 +20,7 @@ import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
 import { SubmitButton } from "./components/SubmitButton";
 import { notifyProviders, estimateUrgency } from "@/utils/providerNotifications";
+import { Hospital } from "lucide-react";
 
 interface PediatricIntakeFormProps {
   language: "en" | "es";
@@ -217,17 +218,20 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   };
   
   return (
-    <div className="container mx-auto max-w-3xl p-6 space-y-6">
+    <div className="container mx-auto max-w-3xl p-6 space-y-6 bg-gradient-to-br from-purple-50 to-white min-h-screen">
       <ConfidentialityNotice language={language} />
       <LanguageSwitcher currentLanguage={language} onLanguageChange={setLanguage} />
 
       <form onSubmit={handleSubmit}>
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold text-center mb-6">
-            {language === "en" ? "🏥 Pediatric Intake Form" : "🏥 Formulario de Ingreso Pediátrico"}
+        <Card className="p-6 border-t-4 border-primary shadow-lg">
+          <div className="flex justify-center mb-6">
+            <Hospital className="h-12 w-12 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-center mb-4 text-primary">
+            {language === "en" ? "Safe Haven Pediatric Intake Form" : "Formulario de Ingreso Pediátrico Safe Haven"}
           </h2>
 
-          <p className="text-center text-gray-600">
+          <p className="text-center text-gray-600 mb-6 px-4 py-2 bg-purple-50 rounded-md">
             {language === "en"
               ? "We provide free and compassionate pediatric care, regardless of immigration or insurance status."
               : "Brindamos atención pediátrica gratuita y compasiva, sin importar el estado migratorio o de seguro."

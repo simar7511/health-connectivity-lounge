@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -25,11 +26,11 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#2B6CB0",
+          DEFAULT: "#6E59A5", // Changed to previous purple color
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#48BB78",
+          DEFAULT: "#8E9196", // Changed to a more muted color
           foreground: "#FFFFFF",
         },
         destructive: {
@@ -41,8 +42,8 @@ export default {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#D6BCFA", // Light purple accent
+          foreground: "#1A1F2C",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
