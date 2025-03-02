@@ -1,16 +1,16 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, Send, User, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { Bot, Send, User, AlertCircle, Loader2, RefreshCw, Settings } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from "firebase/firestore";
-import { getFunctions, httpsCallable, HttpsCallableResult } from "firebase/functions";
+import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, getDocs, limit } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface AIHealthAssistantProps {
@@ -29,6 +29,24 @@ interface Message {
   timestamp?: any;
 }
 
+// Pre-defined offline responses for basic questions
+const OFFLINE_RESPONSES = {
+  en: {
+    greeting: "Hello! I'm your AI assistant (offline mode). How can I help you?",
+    appointment: "To book an appointment, please go to the Appointments section once you're back online.",
+    form: "I can help you fill out forms once you're back online. Please check your connection.",
+    medical: "I can't provide medical advice in offline mode. Please consult with a healthcare professional.",
+    fallback: "I'm sorry, I can't help with that in offline mode. Please try again when you're online."
+  },
+  es: {
+    greeting: "¡Hola! Soy tu asistente de IA (modo sin conexión). ¿Cómo puedo ayudarte?",
+    appointment: "Para reservar una cita, ve a la sección de Citas cuando vuelvas a estar en línea.",
+    form: "Puedo ayudarte a completar formularios cuando vuelvas a estar en línea. Por favor, verifica tu conexión.",
+    medical: "No puedo proporcionar asesoramiento médico en modo sin conexión. Por favor, consulta con un profesional de la salud.",
+    fallback: "Lo siento, no puedo ayudar con eso en modo sin conexión. Por favor, inténtalo de nuevo cuando estés en línea."
+  }
+};
+
 export const AIHealthAssistant = ({ 
   language, 
   onBack, 
@@ -44,10 +62,15 @@ export const AIHealthAssistant = ({
   const [error, setError] = useState<string | null>(null);
   const [showTroubleshootingDialog, setShowTroubleshootingDialog] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [conversationContext, setConversationContext] = useState<string>("");
+  const [apiCallCount, setApiCallCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const functions = getFunctions();
+  const MAX_API_CALLS = 50; // Set a reasonable limit to prevent overuse
+  const MAX_RETRIES = 3;
 
+  // Initialize system message based on language
   useEffect(() => {
     const systemMessage: Message = {
       role: "system",
@@ -60,14 +83,17 @@ export const AIHealthAssistant = ({
     setMessages([systemMessage]);
   }, [language]);
 
+  // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
+  // Load conversation history from Firestore
   useEffect(() => {
     if (!patientId) return;
     
@@ -75,7 +101,8 @@ export const AIHealthAssistant = ({
       const q = query(
         collection(db, "aiChats"),
         where("patientId", "==", patientId),
-        orderBy("timestamp", "asc")
+        orderBy("timestamp", "desc"),
+        limit(15) // Limit to recent messages for context
       );
       
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -90,8 +117,16 @@ export const AIHealthAssistant = ({
           });
         });
         
+        // Reverse to get chronological order
         if (loadedMessages.length > 0) {
-          setMessages(loadedMessages);
+          setMessages(loadedMessages.reverse());
+          
+          // Build conversation context from previous messages
+          const contextBuilder = loadedMessages
+            .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+            .join("\n");
+          
+          setConversationContext(contextBuilder);
         }
       });
       
@@ -104,7 +139,24 @@ export const AIHealthAssistant = ({
     }
   }, [patientId, language]);
 
-  const handleRetry = () => {
+  // Function to determine the appropriate offline response
+  const getOfflineResponse = (userInput: string): string => {
+    const input = userInput.toLowerCase();
+    const responses = language === "en" ? OFFLINE_RESPONSES.en : OFFLINE_RESPONSES.es;
+    
+    if (input.includes("appointment") || input.includes("book") || input.includes("cita") || input.includes("reservar")) {
+      return responses.appointment;
+    } else if (input.includes("form") || input.includes("fill") || input.includes("formulario") || input.includes("llenar")) {
+      return responses.form;
+    } else if (input.includes("doctor") || input.includes("medical") || input.includes("health") || input.includes("médico") || input.includes("salud")) {
+      return responses.medical;
+    }
+    
+    return responses.fallback;
+  };
+
+  // Handle retry of last user message
+  const handleRetry = useCallback(() => {
     setError(null);
     if (messages.length > 1) {
       // Find the last user message to retry
@@ -118,12 +170,13 @@ export const AIHealthAssistant = ({
         setMessages(newMessages);
         setRetryCount(prev => prev + 1);
         
-        // Call handleSend with the last user message
+        // Call handleAIRequest with the last user message
         handleAIRequest(userMessage.content, newMessages);
       }
     }
-  };
+  }, [messages]);
 
+  // Handle sending a new message
   const handleSend = async () => {
     if (!input.trim()) return;
     
@@ -145,6 +198,28 @@ export const AIHealthAssistant = ({
         });
       }
       
+      if (!isOnline) {
+        // Handle offline mode with predefined responses
+        const offlineResponse = getOfflineResponse(input);
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: offlineResponse,
+          timestamp: serverTimestamp()
+        };
+        
+        setTimeout(() => {
+          setMessages((prev) => [...prev, assistantMessage]);
+          if (patientId) {
+            addDoc(collection(db, "aiChats"), {
+              patientId,
+              ...assistantMessage
+            });
+          }
+        }, 1000); // Simulate thinking time
+        
+        return;
+      }
+      
       await handleAIRequest(input, [...messages, userMessage]);
       
     } catch (err: any) {
@@ -155,17 +230,67 @@ export const AIHealthAssistant = ({
     }
   };
 
-  const handleAIRequest = async (userInput: string, conversationHistory: Message[]) => {
+  // Main function to handle AI requests with fallback and retry logic
+  const handleAIRequest = async (userInput: string, conversationHistory: Message[], currentRetry = 0) => {
+    if (apiCallCount >= MAX_API_CALLS) {
+      setError(language === "en"
+        ? "You've reached the maximum number of AI requests for this session. Please try again later."
+        : "Has alcanzado el número máximo de solicitudes de IA para esta sesión. Por favor, inténtalo más tarde.");
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     
     try {
+      // Automatically select API key from environment or local storage
       let apiKey = "";
+      let currentProvider = provider;
+      let currentModel = model;
       
-      if (provider === "openai") {
-        apiKey = localStorage.getItem("openai_api_key") || "";
-      } else if (provider === "llama") {
-        apiKey = localStorage.getItem("huggingface_token") || "";
+      // Try to get API key from environment first (if configured in Firebase functions)
+      const getEnvApiKey = httpsCallable(functions, 'getApiKey');
+      try {
+        const envResult = await getEnvApiKey({ provider: currentProvider });
+        // @ts-ignore - handle environment API key response
+        if (envResult.data && envResult.data.apiKey) {
+          // @ts-ignore
+          apiKey = envResult.data.apiKey;
+          console.log(`Using environment API key for ${currentProvider}`);
+        }
+      } catch (envError) {
+        console.log("No environment API key available, falling back to local storage");
+      }
+      
+      // If no environment API key, try local storage
+      if (!apiKey) {
+        if (currentProvider === "openai") {
+          apiKey = localStorage.getItem("openai_api_key") || "";
+        } else if (currentProvider === "llama") {
+          apiKey = localStorage.getItem("huggingface_token") || "";
+        }
+      }
+      
+      // If still no API key and we haven't tried fallback yet, switch providers
+      if (!apiKey && currentRetry === 0) {
+        // Try the alternative provider
+        currentProvider = currentProvider === "openai" ? "llama" : "openai";
+        currentModel = currentProvider === "openai" ? "gpt-4o" : "llama-2-7b-chat";
+        
+        console.log(`No API key for ${provider}, trying ${currentProvider} instead`);
+        
+        if (currentProvider === "openai") {
+          apiKey = localStorage.getItem("openai_api_key") || "";
+        } else {
+          apiKey = localStorage.getItem("huggingface_token") || "";
+        }
+        
+        // If we still don't have an API key, show error
+        if (!apiKey) {
+          throw new Error(language === "en" 
+            ? "API keys not configured. Please set up API keys in settings."
+            : "Claves API no configuradas. Por favor, configura las claves API en ajustes.");
+        }
       }
       
       if (!apiKey) {
@@ -174,25 +299,43 @@ export const AIHealthAssistant = ({
           : "Clave API no encontrada. Por favor, configúrala en ajustes.");
       }
       
+      // Prepare messages with conversation context
       const messageHistory = conversationHistory.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
       
-      // Use Firebase Cloud Functions instead of direct API call
+      // Add conversation memory to provide context
+      if (conversationContext && messageHistory.length > 2) {
+        messageHistory.unshift({
+          role: "system",
+          content: `Previous conversation context:\n${conversationContext}\n\nPlease continue the conversation naturally.`
+        });
+      }
+      
+      // Add medical disclaimer to system instructions
+      messageHistory.unshift({
+        role: "system",
+        content: language === "en"
+          ? "You are a helpful AI assistant providing health information. IMPORTANT: Always clarify that you are not a doctor and cannot provide medical diagnoses. For any serious medical concerns, advise users to consult a healthcare professional."
+          : "Eres un asistente de IA útil que proporciona información de salud. IMPORTANTE: Siempre aclara que no eres un médico y no puedes proporcionar diagnósticos médicos. Para cualquier problema médico grave, aconseja a los usuarios que consulten a un profesional de la salud."
+      });
+      
+      // Use Firebase Cloud Functions for AI chat
       const aiChatFunction = httpsCallable(functions, 'aiChat');
       
-      console.log(`Calling AI model: ${provider}/${model} with ${messageHistory.length} messages`);
+      console.log(`Calling AI model: ${currentProvider}/${currentModel} with ${messageHistory.length} messages`);
       
       const response = await aiChatFunction({
         messages: messageHistory,
-        model: model,
-        provider: provider,
+        model: currentModel,
+        provider: currentProvider,
         language: language,
         apiKey: apiKey
       });
       
       console.log("AI response received:", response.data);
+      setApiCallCount(prev => prev + 1);
       
       // @ts-ignore - handle the response data structure
       const aiResponse = response.data?.response || (language === "en" 
@@ -213,8 +356,39 @@ export const AIHealthAssistant = ({
           ...assistantMessage
         });
       }
+      
+      // Update conversation context with new messages
+      setConversationContext(prev => 
+        `${prev}\nUser: ${userInput}\nAssistant: ${aiResponse}`
+      );
+      
     } catch (err: any) {
       console.error("Error in AI chat:", err);
+      
+      // Log error to Firestore for admin notification
+      try {
+        await addDoc(collection(db, "aiErrors"), {
+          error: err.message || "Unknown error",
+          provider,
+          model,
+          timestamp: serverTimestamp(),
+          patientId
+        });
+      } catch (logErr) {
+        console.error("Failed to log error:", logErr);
+      }
+      
+      // Attempt retry with alternative model if available
+      if (currentRetry < MAX_RETRIES) {
+        console.log(`Retry attempt ${currentRetry + 1} of ${MAX_RETRIES}`);
+        
+        // Switch provider if first retry
+        const fallbackProvider = provider === "openai" ? "llama" : "openai";
+        const fallbackModel = fallbackProvider === "openai" ? "gpt-4o" : "llama-2-7b-chat";
+        
+        setIsLoading(false);
+        return handleAIRequest(userInput, conversationHistory, currentRetry + 1);
+      }
       
       let errorMessage = err.message || (language === "en" 
         ? "Failed to get response from AI. Please try again."
@@ -364,10 +538,15 @@ export const AIHealthAssistant = ({
             )}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          {language === "en" 
-            ? `Using ${provider === "openai" ? "OpenAI" : "Llama"} ${model} model`
-            : `Usando modelo ${provider === "openai" ? "OpenAI" : "Llama"} ${model}`}
+        <p className="text-xs text-muted-foreground mt-2 flex justify-between items-center">
+          <span>
+            {language === "en" 
+              ? `Using ${provider === "openai" ? "OpenAI" : "Llama"} ${model} model`
+              : `Usando modelo ${provider === "openai" ? "OpenAI" : "Llama"} ${model}`}
+          </span>
+          <span>
+            {apiCallCount > 0 && `${apiCallCount}/${MAX_API_CALLS}`}
+          </span>
         </p>
       </div>
 
