@@ -54,6 +54,7 @@ export default defineConfig({
   optimizeDeps: {
     esbuildOptions: {
       target: 'es2020'
-    }
+    },
+    force: true // Force re-optimization to resolve dependency conflicts
   }
 });

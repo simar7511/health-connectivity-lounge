@@ -24,6 +24,7 @@ import {
   PhoneAuthProvider
 } from 'firebase/auth';
 
+// Export non-type values
 export { 
   // Firestore exports
   collection, 
@@ -36,7 +37,6 @@ export {
   addDoc,
   serverTimestamp,
   onSnapshot,
-  DocumentData,
   getFirestore,
   setLogLevel,
   
