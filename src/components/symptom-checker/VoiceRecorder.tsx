@@ -90,11 +90,11 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
 
   return (
     <div className="flex flex-col items-center space-y-2">
-      <div className="w-full p-3 bg-muted/50 rounded-md">
+      <div className="w-full p-3 bg-muted/50 rounded-md min-h-[60px] flex items-center">
         {transcript ? (
           <p className="text-sm">{transcript}</p>
         ) : (
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-sm text-muted-foreground text-center w-full">
             {language === "en" 
               ? "Speak after clicking the button below" 
               : "Hable después de hacer clic en el botón de abajo"}
@@ -106,6 +106,7 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
         className={`w-full py-4 ${isRecording ? "bg-red-600 hover:bg-red-700" : ""}`}
         onClick={isRecording ? handleStopListening : handleStartListening}
         variant={isRecording ? "destructive" : "default"}
+        type="button"
       >
         {isRecording ? (
           <>
