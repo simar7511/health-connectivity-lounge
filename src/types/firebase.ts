@@ -47,3 +47,6 @@ export {
   signInWithPhoneNumber,
   PhoneAuthProvider
 };
+
+// Export types separately with 'export type'
+export type { DocumentData };
