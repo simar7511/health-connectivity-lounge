@@ -11,7 +11,10 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: "/",
   plugins: [
-    react(),
+    react({
+      // Reduce memory usage by disabling some features
+      plugins: []
+    }),
     componentTagger()
   ],
   server: {
@@ -40,7 +43,17 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
     emptyOutDir: true,
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    // Add options to reduce memory usage during build
+    minify: "esbuild",
+    cssMinify: "lightningcss",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom']
+        }
+      }
+    }
   },
   define: {
     'process.env.VITE_FIREBASE_API_KEY': JSON.stringify(process.env.VITE_FIREBASE_API_KEY || "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw"),
@@ -55,6 +68,7 @@ export default defineConfig({
     esbuildOptions: {
       target: 'es2020'
     },
-    force: true // Force re-optimization to resolve dependency conflicts
+    force: true, // Force re-optimization to resolve dependency conflicts
+    exclude: ['firebase'], // Exclude firebase from optimization to reduce memory usage
   }
 });

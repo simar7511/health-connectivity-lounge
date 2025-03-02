@@ -4,15 +4,15 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Enhanced error handling
+// Enhanced error handling with performance optimizations
 window.addEventListener('error', (event) => {
-  console.error('Global error caught:', event.error);
+  console.error('Global error caught:', event.error?.message || 'Unknown error');
   // Prevent the error from crashing the application
   event.preventDefault();
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  console.error('Unhandled promise rejection:', event.reason?.message || 'Unknown rejection');
   // Prevent the rejection from crashing the application
   event.preventDefault();
 });

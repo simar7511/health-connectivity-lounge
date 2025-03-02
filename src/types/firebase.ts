@@ -11,9 +11,9 @@ import {
   addDoc,
   serverTimestamp,
   onSnapshot,
-  DocumentData,
   getFirestore,
-  setLogLevel
+  setLogLevel,
+  DocumentData
 } from 'firebase/firestore';
 
 import {

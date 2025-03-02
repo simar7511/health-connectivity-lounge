@@ -22,19 +22,21 @@ let db: Firestore;
 let auth: Auth;
 
 try {
-  // Initialize Firebase with detailed logging
-  console.log("🔄 Attempting to initialize Firebase with config:", firebaseConfig);
+  // Initialize Firebase with minimal logging in production
+  const isProduction = process.env.NODE_ENV === 'production';
   const app = initializeApp(firebaseConfig);
-  console.log("✅ Firebase app initialized successfully:", app);
+  
+  if (!isProduction) {
+    console.log("✅ Firebase app initialized");
+  }
 
   db = getFirestore(app);
-  console.log("✅ Firestore initialized:", db);
-
   auth = getAuth(app);
-  console.log("✅ Authentication initialized:", auth);
 
-  // Enable Firestore Debug Logging
-  setLogLevel("debug");
+  // Only enable debug logging in development
+  if (!isProduction) {
+    setLogLevel("debug");
+  }
 } catch (error: any) {
   console.error("❌ Firebase initialization error:", error);
   toast({
