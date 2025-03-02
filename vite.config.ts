@@ -38,7 +38,7 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    sourcemap: false, // Disable sourcemaps for faster builds
+    sourcemap: false,
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
     minify: "esbuild",
@@ -65,7 +65,7 @@ export default defineConfig({
     esbuildOptions: {
       target: 'es2020'
     },
-    force: false, // Don't force re-optimization
+    force: false,
     exclude: ['firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth'],
   }
 });

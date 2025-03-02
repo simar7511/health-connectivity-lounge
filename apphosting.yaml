@@ -6,8 +6,8 @@ runConfig:
   maxInstances: 10
   concurrency: 80
   cpu: 1
-  memoryMiB: 1024  # Increased memory for build process
-  timeoutSeconds: 120  # Increased timeout
+  memoryMiB: 2048  # Increased memory for build process
+  timeoutSeconds: 300  # Increased timeout significantly
   port: 8080
 
 # Environment variables and secrets.
@@ -24,6 +24,10 @@ env:
     availability:
       - BUILD
   - variable: NODE_OPTIONS
-    value: "--max-old-space-size=1024"
+    value: "--max-old-space-size=2048"
+    availability:
+      - BUILD
+  - variable: BUN_INSTALL_TIMEOUT
+    value: "240000"
     availability:
       - BUILD
