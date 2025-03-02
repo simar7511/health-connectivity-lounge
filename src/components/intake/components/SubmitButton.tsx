@@ -11,7 +11,7 @@ export const SubmitButton = ({ language, isSubmitting }: SubmitButtonProps) => {
   return (
     <Button 
       type="submit" 
-      className="w-full py-6 bg-primary hover:bg-primary/90 text-white font-medium text-lg shadow-md transition-all" 
+      className="w-full py-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold text-lg shadow-lg transition-all rounded-xl border border-primary/20" 
       disabled={isSubmitting}
     >
       {isSubmitting ? (
