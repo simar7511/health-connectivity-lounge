@@ -31,3 +31,4 @@ env:
     value: "600000"  # Increased from 360000 to 600000 (10 minutes)
     availability:
       - BUILD
+

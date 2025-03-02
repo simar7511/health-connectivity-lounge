@@ -39,7 +39,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src")
-    }
+    },
+    dedupe: ['react', 'react-dom', 'firebase']
   },
   build: {
     outDir: "dist",
@@ -70,7 +71,22 @@ export default defineConfig({
     esbuildOptions: {
       target: 'es2020'
     },
-    force: false,
-    exclude: ['firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth'],
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'firebase',
+      'recharts',
+      'input-otp',
+      'vaul',
+      'cmdk',
+      'sonner',
+      'react-resizable-panels',
+      'embla-carousel-react',
+      'tailwind-merge',
+      'react-hook-form'
+    ],
+    force: true,
+    exclude: [],
   }
 });
