@@ -11,20 +11,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: "/",
   plugins: [
-    react({
-      // Use lighter configuration for SWC
-      swcOptions: {
-        jsc: {
-          transform: {
-            react: {
-              runtime: "automatic",
-              development: false,
-              refresh: false
-            }
-          }
-        }
-      }
-    }),
+    react(),
     componentTagger()
   ],
   server: {
