@@ -31,6 +31,11 @@ export default defineConfig({
       strict: false
     }
   },
+  css: {
+    postcss: {
+      plugins: [], // This will use the system's postcss.config.js without modification
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src")
