@@ -1,3 +1,4 @@
+
 {
   "emulators": {
     "dataconnect": {
@@ -71,5 +72,10 @@
   },
   "storage": {
     "rules": "storage.rules"
+  },
+  "ci": {
+    "npm": {
+      "timeout": 300
+    }
   }
 }

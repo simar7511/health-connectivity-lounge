@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -10,7 +11,20 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: "/",
   plugins: [
-    react(),
+    react({
+      // Use lighter configuration for SWC
+      swcOptions: {
+        jsc: {
+          transform: {
+            react: {
+              runtime: "automatic",
+              development: false,
+              refresh: false
+            }
+          }
+        }
+      }
+    }),
     componentTagger()
   ],
   server: {
@@ -37,7 +51,7 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    sourcemap: true,
+    sourcemap: false, // Disable sourcemaps for faster builds
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
     minify: "esbuild",
@@ -45,7 +59,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom']
+          vendor: ['react', 'react-dom'],
+          firebase: ['firebase']
         }
       }
     }
@@ -63,7 +78,7 @@ export default defineConfig({
     esbuildOptions: {
       target: 'es2020'
     },
-    force: true,
-    exclude: ['firebase'],
+    force: false, // Don't force re-optimization
+    exclude: ['firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth'],
   }
 });
