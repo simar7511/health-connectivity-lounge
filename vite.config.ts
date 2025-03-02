@@ -40,7 +40,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src")
     },
-    dedupe: ['react', 'react-dom', 'firebase']
+    dedupe: ['react', 'react-dom', 'firebase', 'axios']
   },
   build: {
     outDir: "dist",
@@ -53,7 +53,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          firebase: ['firebase']
+          firebase: ['firebase'],
+          utils: ['axios', 'tailwind-merge']
         }
       }
     }
@@ -84,9 +85,10 @@ export default defineConfig({
       'react-resizable-panels',
       'embla-carousel-react',
       'tailwind-merge',
-      'react-hook-form'
+      'react-hook-form',
+      'axios'
     ],
     force: true,
-    exclude: [],
+    exclude: []
   }
 });

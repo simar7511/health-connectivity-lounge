@@ -75,7 +75,8 @@
   },
   "ci": {
     "npm": {
-      "timeout": 1800
+      "timeout": 3600,
+      "retry": 3
     }
   }
 }
