@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, Send, User, AlertCircle, Loader2 } from "lucide-react";
+import { Bot, Send, User, AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { getFunctions, httpsCallable, HttpsCallableResult } from "firebase/functions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface AIHealthAssistantProps {
   language: "en" | "es";
@@ -41,6 +42,8 @@ export const AIHealthAssistant = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showTroubleshootingDialog, setShowTroubleshootingDialog] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const functions = getFunctions();
@@ -101,6 +104,26 @@ export const AIHealthAssistant = ({
     }
   }, [patientId, language]);
 
+  const handleRetry = () => {
+    setError(null);
+    if (messages.length > 1) {
+      // Find the last user message to retry
+      const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.role === "user");
+      if (lastUserMessageIndex >= 0) {
+        const actualIndex = messages.length - 1 - lastUserMessageIndex;
+        const userMessage = messages[actualIndex];
+        
+        // Remove any subsequent assistant messages
+        const newMessages = messages.slice(0, actualIndex + 1);
+        setMessages(newMessages);
+        setRetryCount(prev => prev + 1);
+        
+        // Call handleSend with the last user message
+        handleAIRequest(userMessage.content, newMessages);
+      }
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
     
@@ -112,7 +135,6 @@ export const AIHealthAssistant = ({
     
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    setIsLoading(true);
     setError(null);
     
     try {
@@ -123,6 +145,21 @@ export const AIHealthAssistant = ({
         });
       }
       
+      await handleAIRequest(input, [...messages, userMessage]);
+      
+    } catch (err: any) {
+      console.error("Error in chat message handling:", err);
+      setError(language === "en" 
+        ? "Failed to send message. Please try again."
+        : "Error al enviar el mensaje. Por favor, inténtalo de nuevo.");
+    }
+  };
+
+  const handleAIRequest = async (userInput: string, conversationHistory: Message[]) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       let apiKey = "";
       
       if (provider === "openai") {
@@ -137,23 +174,18 @@ export const AIHealthAssistant = ({
           : "Clave API no encontrada. Por favor, configúrala en ajustes.");
       }
       
-      const conversationHistory = messages.map(msg => ({
+      const messageHistory = conversationHistory.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
       
-      conversationHistory.push({
-        role: "user",
-        content: input
-      });
-      
       // Use Firebase Cloud Functions instead of direct API call
       const aiChatFunction = httpsCallable(functions, 'aiChat');
       
-      console.log(`Calling AI model: ${provider}/${model} with ${conversationHistory.length} messages`);
+      console.log(`Calling AI model: ${provider}/${model} with ${messageHistory.length} messages`);
       
       const response = await aiChatFunction({
-        messages: conversationHistory,
+        messages: messageHistory,
         model: model,
         provider: provider,
         language: language,
@@ -188,8 +220,12 @@ export const AIHealthAssistant = ({
         ? "Failed to get response from AI. Please try again."
         : "Error al obtener respuesta de la IA. Por favor, inténtalo de nuevo.");
         
-      // Check for specific error codes from Firebase Functions
-      if (err.code === 'functions/invalid-argument') {
+      // Enhanced error handling with specific error messages
+      if (err.code === 'functions/internal') {
+        errorMessage = language === "en" 
+          ? "The AI service encountered an internal error. This could be due to high demand or service limitations."
+          : "El servicio de IA encontró un error interno. Esto podría deberse a una alta demanda o limitaciones del servicio.";
+      } else if (err.code === 'functions/invalid-argument') {
         errorMessage = language === "en" 
           ? "Invalid API key or model configuration. Please check your settings."
           : "Clave API o configuración de modelo inválida. Por favor, verifica tus ajustes.";
@@ -197,6 +233,14 @@ export const AIHealthAssistant = ({
         errorMessage = language === "en"
           ? "API quota exceeded. Please try again later or use a different model."
           : "Cuota de API excedida. Por favor, intenta más tarde o usa un modelo diferente.";
+      } else if (err.code === 'functions/unavailable') {
+        errorMessage = language === "en"
+          ? "AI service is temporarily unavailable. Please try again later."
+          : "El servicio de IA no está disponible temporalmente. Por favor, inténtalo más tarde.";
+      } else if (err.code === 'functions/unauthenticated') {
+        errorMessage = language === "en"
+          ? "Authentication error. Please check your API key in settings."
+          : "Error de autenticación. Por favor, verifica tu clave API en ajustes.";
       }
       
       setError(errorMessage);
@@ -245,7 +289,29 @@ export const AIHealthAssistant = ({
           <AlertTitle>
             {language === "en" ? "Error" : "Error"}
           </AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex flex-col gap-2">
+            <div>{error}</div>
+            <div className="flex gap-2 mt-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRetry} 
+                className="h-7 text-xs"
+                disabled={isLoading}
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                {language === "en" ? "Retry" : "Reintentar"}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowTroubleshootingDialog(true)}
+                className="h-7 text-xs"
+              >
+                {language === "en" ? "Troubleshooting" : "Solución de problemas"}
+              </Button>
+            </div>
+          </AlertDescription>
         </Alert>
       )}
       
@@ -304,7 +370,55 @@ export const AIHealthAssistant = ({
             : `Usando modelo ${provider === "openai" ? "OpenAI" : "Llama"} ${model}`}
         </p>
       </div>
+
+      <Dialog open={showTroubleshootingDialog} onOpenChange={setShowTroubleshootingDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {language === "en" ? "Troubleshooting" : "Solución de problemas"}
+            </DialogTitle>
+            <DialogDescription>
+              {language === "en" 
+                ? "Try these steps to resolve the issue:" 
+                : "Intenta estos pasos para resolver el problema:"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>
+                {language === "en" 
+                  ? "Check your API key in settings (make sure it's valid and has not expired)"
+                  : "Verifica tu clave API en ajustes (asegúrate de que sea válida y no haya expirado)"}
+              </li>
+              <li>
+                {language === "en" 
+                  ? "Check your internet connection"
+                  : "Verifica tu conexión a internet"}
+              </li>
+              <li>
+                {language === "en" 
+                  ? "Try switching to a different AI model"
+                  : "Intenta cambiar a un modelo de IA diferente"}
+              </li>
+              <li>
+                {language === "en" 
+                  ? "If using OpenAI, ensure your account has available credits"
+                  : "Si estás usando OpenAI, asegúrate de que tu cuenta tenga créditos disponibles"}
+              </li>
+              <li>
+                {language === "en" 
+                  ? "Try again later - the AI service might be experiencing high demand"
+                  : "Intenta más tarde - el servicio de IA podría estar experimentando alta demanda"}
+              </li>
+            </ol>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowTroubleshootingDialog(false)}>
+              {language === "en" ? "Close" : "Cerrar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
-
