@@ -15,23 +15,20 @@ export default defineConfig({
     componentTagger()
   ],
   server: {
-    host: true, // Ensures the server is accessible from any network
+    host: true, 
     port: 8080,
     cors: true,
-    strictPort: true, // Prevents Vite from changing the port automatically
+    strictPort: true,
     headers: {
-      "Access-Control-Allow-Origin": "*", // Ensures CORS allows all origins
+      "Access-Control-Allow-Origin": "*",
     },
     hmr: {
       host: "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"
     },
     allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"],
-    proxy: {
-      // Add proxy configurations if necessary
-    },
     fs: {
-      allow: [".."],
-      strict: false // This can help with certain file access issues
+      allow: ["..", "./"],
+      strict: false
     }
   },
   resolve: {
@@ -42,20 +39,10 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: true,
-    emptyOutDir: true, // Clean the output directory before build
-    chunkSizeWarningLimit: 1000, // Increase chunk size warning limit
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Optimize chunks for better loading performance
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore']
-        }
-      }
-    }
+    emptyOutDir: true,
+    chunkSizeWarningLimit: 1000
   },
   define: {
-    // Define environment variables for the client-side
     'process.env.VITE_FIREBASE_API_KEY': JSON.stringify(process.env.VITE_FIREBASE_API_KEY || "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw"),
     'process.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.VITE_FIREBASE_AUTH_DOMAIN || "health-connectivity-01.firebaseapp.com"),
     'process.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(process.env.VITE_FIREBASE_PROJECT_ID || "health-connectivity-01"),
@@ -65,6 +52,8 @@ export default defineConfig({
     'process.env.VITE_FIREBASE_MEASUREMENT_ID': JSON.stringify(process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-3BVWXWV69Q")
   },
   optimizeDeps: {
-    include: ['firebase/app', 'firebase/auth', 'firebase/firestore']
+    esbuildOptions: {
+      target: 'es2020'
+    }
   }
 });
