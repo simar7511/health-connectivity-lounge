@@ -2,7 +2,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,8 +10,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: "/",
   plugins: [
-    react(),
-    componentTagger()
+    react()
   ],
   server: {
     host: true, 
@@ -40,7 +38,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src")
     },
-    dedupe: ['react', 'react-dom', 'firebase', 'axios']
+    dedupe: ['react', 'react-dom', 'firebase', 'axios', 'tailwind-merge']
   },
   build: {
     outDir: "dist",
