@@ -4,8 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
+import { 
+  collection, 
+  addDoc, 
+  serverTimestamp, 
+  getAuth, 
+  onAuthStateChanged, 
+  signInAnonymously 
+} from "@/types/firebase";
 import { BasicInfoSection } from "./form-sections/BasicInfoSection";
 import { MedicalInfoSection } from "./form-sections/MedicalInfoSection";
 import { SocialInfoSection } from "./form-sections/SocialInfoSection";

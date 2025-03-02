@@ -1,23 +1,25 @@
 
 import { initializeApp } from "firebase/app";
+import type { Firestore } from "firebase/firestore";
+import type { Auth } from "firebase/auth";
 import { getFirestore, setLogLevel } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw",
-  authDomain: "health-connectivity-01.firebaseapp.com",
-  projectId: "health-connectivity-01",
-  storageBucket: "health-connectivity-01.appspot.com",
-  messagingSenderId: "429069343294",
-  appId: "1:429069343294:web:943a1998a83e63353c0f6f",
-  measurementId: "G-3BVWXWV69Q"
+  apiKey: process.env.VITE_FIREBASE_API_KEY || "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw",
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "health-connectivity-01.firebaseapp.com",
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID || "health-connectivity-01",
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "health-connectivity-01.appspot.com",
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "429069343294",
+  appId: process.env.VITE_FIREBASE_APP_ID || "1:429069343294:web:943a1998a83e63353c0f6f",
+  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-3BVWXWV69Q"
 };
 
 // Declare Firebase services
-let db;
-let auth;
+let db: Firestore;
+let auth: Auth;
 
 try {
   // Initialize Firebase with detailed logging
@@ -42,8 +44,8 @@ try {
   });
 
   // Fallback: Create empty objects to prevent runtime errors
-  db = {} as any;
-  auth = {} as any;
+  db = {} as Firestore;
+  auth = {} as Auth;
 }
 
 export { db, auth };

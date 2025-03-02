@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -12,7 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, orderBy, limit, Timestamp } from "firebase/firestore";
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  Timestamp 
+} from "@/types/firebase";
 
 interface ProviderDashboardProps {
   language: "en" | "es";
@@ -77,20 +84,17 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
-    // Set initial last checked timestamp if not already set
     if (!lastCheckedTimestamp) {
       const storedTimestamp = localStorage.getItem("lastCheckedIntakeTimestamp");
       if (storedTimestamp) {
         setLastCheckedTimestamp(Timestamp.fromMillis(parseInt(storedTimestamp)));
       } else {
-        // Set to current time if never checked before
         const now = Timestamp.now();
         setLastCheckedTimestamp(now);
         localStorage.setItem("lastCheckedIntakeTimestamp", now.toMillis().toString());
       }
     }
 
-    // Check for new submissions since last check
     const checkForNewSubmissions = async () => {
       try {
         if (!lastCheckedTimestamp) return;
@@ -106,7 +110,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
           setHasNewSubmissions(true);
-          // Notify provider of new submissions
           toast({
             title: translations[currentLanguage].newSubmissionsAlert,
             description: translations[currentLanguage].newSubmissionsMessage,
@@ -120,10 +123,8 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       }
     };
     
-    // Check immediately on load
     checkForNewSubmissions();
     
-    // Set up interval to check periodically (every 60 seconds)
     const intervalId = setInterval(checkForNewSubmissions, 60000);
     
     return () => clearInterval(intervalId);
@@ -138,7 +139,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 
   const handleViewIntakeForms = () => {
     setActiveTab("intake");
-    // Update the last checked timestamp to current time
     const now = Timestamp.now();
     setLastCheckedTimestamp(now);
     localStorage.setItem("lastCheckedIntakeTimestamp", now.toMillis().toString());
@@ -206,12 +206,10 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 
             <TabsContent value="intake" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Left Column */}
                 <div className="lg:col-span-8">
                   <IntakeSubmissionsList language={currentLanguage} />
                 </div>
 
-                {/* Right Column */}
                 <div className="lg:col-span-4">
                   <MessagingInbox
                     language={currentLanguage}
@@ -223,7 +221,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 
             <TabsContent value="appointments" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Left Column */}
                 <div className="lg:col-span-8">
                   <AppointmentsList
                     language={currentLanguage}
@@ -231,7 +228,6 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
                   />
                 </div>
 
-                {/* Right Column */}
                 <div className="lg:col-span-4">
                   <MessagingInbox
                     language={currentLanguage}
@@ -243,12 +239,10 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 
             <TabsContent value="health-data">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Left Column */}
                 <div className="lg:col-span-8">
                   <HealthDataLogs patient={mockPatients[0]} />
                 </div>
 
-                {/* Right Column */}
                 <div className="lg:col-span-4">
                   <MessagingInbox
                     language={currentLanguage}

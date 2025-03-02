@@ -1,7 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy, DocumentData } from "firebase/firestore";
+import { 
+  collection, 
+  onSnapshot, 
+  query, 
+  orderBy,
+  DocumentData 
+} from "@/types/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
