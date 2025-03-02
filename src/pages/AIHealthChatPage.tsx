@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AIHealthAssistant } from "@/components/dashboard/AIHealthAssistant";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,6 +9,10 @@ import { GlobeIcon, Settings, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+// Default API keys
+const DEFAULT_OPENAI_API_KEY = "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";
+const DEFAULT_HUGGINGFACE_TOKEN = "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";
+
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
   const navigate = useNavigate();
@@ -18,15 +21,20 @@ export const AIHealthChatPage = () => {
     return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
   });
   const [showApiDialog, setShowApiDialog] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai_api_key") || "");
-  const [huggingFaceToken, setHuggingFaceToken] = useState(() => localStorage.getItem("huggingface_token") || "");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("openai_api_key") || DEFAULT_OPENAI_API_KEY);
+  const [huggingFaceToken, setHuggingFaceToken] = useState(() => localStorage.getItem("huggingface_token") || DEFAULT_HUGGINGFACE_TOKEN);
   const [model, setModel] = useState(() => localStorage.getItem("ai_model") || "llama-2-7b");
   const [provider, setProvider] = useState(() => localStorage.getItem("ai_provider") || "llama");
   
+  // Initialize API keys in localStorage if they don't exist
   useEffect(() => {
-    // Update session storage when language changes
-    sessionStorage.setItem("preferredLanguage", language);
-  }, [language]);
+    if (!localStorage.getItem("openai_api_key")) {
+      localStorage.setItem("openai_api_key", DEFAULT_OPENAI_API_KEY);
+    }
+    if (!localStorage.getItem("huggingface_token")) {
+      localStorage.setItem("huggingface_token", DEFAULT_HUGGINGFACE_TOKEN);
+    }
+  }, []);
 
   const handleBack = () => {
     navigate(-1);
@@ -39,10 +47,10 @@ export const AIHealthChatPage = () => {
   // Update API key based on provider
   useEffect(() => {
     if (provider === "openai") {
-      const key = localStorage.getItem("openai_api_key") || "";
+      const key = localStorage.getItem("openai_api_key") || DEFAULT_OPENAI_API_KEY;
       setApiKey(key);
     } else if (provider === "llama") {
-      const token = localStorage.getItem("huggingface_token") || "";
+      const token = localStorage.getItem("huggingface_token") || DEFAULT_HUGGINGFACE_TOKEN;
       setHuggingFaceToken(token);
     }
     
