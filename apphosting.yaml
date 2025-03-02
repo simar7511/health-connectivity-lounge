@@ -6,8 +6,8 @@ runConfig:
   maxInstances: 10
   concurrency: 80
   cpu: 1
-  memoryMiB: 6144  # Increased memory for build process
-  timeoutSeconds: 1200  # Extended timeout for build process
+  memoryMiB: 8192  # Increased memory for build process
+  timeoutSeconds: 1800  # Extended timeout for build process
   port: 8080
 
 # Environment variables and secrets.
@@ -24,11 +24,11 @@ env:
     availability:
       - BUILD
   - variable: NODE_OPTIONS
-    value: "--max-old-space-size=6144"
+    value: "--max-old-space-size=8192"
     availability:
       - BUILD
   - variable: BUN_INSTALL_TIMEOUT
-    value: "1200000"  # Increased to 20 minutes
+    value: "1800000"  # Increased to 30 minutes
     availability:
       - BUILD
   - variable: NPM_CONFIG_FORCE
@@ -41,5 +41,17 @@ env:
       - BUILD
   - variable: NPM_CONFIG_LEGACY_PEER_DEPS
     value: "true"
+    availability:
+      - BUILD
+  - variable: NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT
+    value: "60000"
+    availability:
+      - BUILD
+  - variable: NPM_CONFIG_FETCH_RETRY_MINTIMEOUT
+    value: "10000"
+    availability:
+      - BUILD
+  - variable: NPM_CONFIG_FETCH_RETRIES
+    value: "5"
     availability:
       - BUILD
