@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,7 +82,7 @@ export const AIHealthAssistant = ({
   const [showOfflineModeDialog, setShowOfflineModeDialog] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isUsingFallback, setIsUsingFallback] = useState(false);
-  const [offlineModeChoice, setOfflineModeChoice] = useState<"simulated" | "localLLM">(
+  const [offlineModeChoice, setOfflineModeChoice] = useState<OfflineModeType>(
     offlineMode === "localLLM" ? "localLLM" : "simulated"
   );
   const [isLoadingOfflineModel, setIsLoadingOfflineModel] = useState(false);
