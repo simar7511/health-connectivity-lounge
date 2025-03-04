@@ -66,6 +66,8 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
       <NavigationHeader 
         title={pageTitle}
         language={language}
+        showBackButton={true}
+        showBreadcrumbs={true}
       />
       
       <main className="flex-1 container mx-auto p-6">

@@ -6,6 +6,7 @@ import { ClipboardCheck } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
+import { NavigationHeader } from "@/components/layout/NavigationHeader";
 
 export interface ConfirmationPageProps {
   language: "en" | "es";
@@ -22,6 +23,7 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
 
   const translations = {
     en: {
+      pageTitle: "Confirmation",
       submitted: "Form Submitted!",
       success: "Your intake form has been successfully submitted to the clinic.",
       whatNext: "What Happens Next?",
@@ -32,6 +34,7 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
       scheduleAppointment: "Schedule an Appointment"
     },
     es: {
+      pageTitle: "Confirmación",
       submitted: "¡Formulario Enviado!",
       success: "Su formulario de ingreso ha sido enviado con éxito a la clínica.",
       whatNext: "¿Qué Sucede Ahora?",
@@ -46,53 +49,62 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ language }) => {
   const content = translations[language];
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <Card className="shadow-lg p-6">
-        <CardHeader>
-          <h1 className="text-3xl font-bold flex items-center space-x-2">
-            <ClipboardCheck className="h-7 w-7 text-green-500" />
-            <span>{content.submitted}</span>
-          </h1>
-        </CardHeader>
+    <div className="flex flex-col min-h-screen">
+      <NavigationHeader 
+        title={content.pageTitle}
+        language={language}
+        showBackButton={true}
+        showBreadcrumbs={true}
+      />
+      
+      <main className="flex-1 container mx-auto p-6 max-w-3xl">
+        <Card className="shadow-lg p-6">
+          <CardHeader>
+            <h1 className="text-3xl font-bold flex items-center space-x-2">
+              <ClipboardCheck className="h-7 w-7 text-green-500" />
+              <span>{content.submitted}</span>
+            </h1>
+          </CardHeader>
 
-        <CardContent className="space-y-4">
-          <p className="text-lg text-gray-700">
-            {content.success}
-          </p>
-
-          <div className="bg-gray-100 p-4 rounded-md text-gray-800">
-            <h2 className="font-semibold text-xl">
-              {content.whatNext}
-            </h2>
-            <p className="mt-2">
-              {content.reviewMessage}
+          <CardContent className="space-y-4">
+            <p className="text-lg text-gray-700">
+              {content.success}
             </p>
-            <p>
-              {content.urgentConcerns}
-            </p>
-          </div>
-          
-          <Alert className="bg-blue-50 border-blue-200">
-            <InfoIcon className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-800">
-              {content.providerAlert}
-            </AlertDescription>
-          </Alert>
-        </CardContent>
 
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/")}>
-            {content.returnHome}
-          </Button>
-          <Button
-            className="w-full bg-green-600 hover:bg-green-700"
-            variant="outline"
-            onClick={() => navigate("/appointment")}
-          >
-            {content.scheduleAppointment}
-          </Button>
-        </CardFooter>
-      </Card>
+            <div className="bg-gray-100 p-4 rounded-md text-gray-800">
+              <h2 className="font-semibold text-xl">
+                {content.whatNext}
+              </h2>
+              <p className="mt-2">
+                {content.reviewMessage}
+              </p>
+              <p>
+                {content.urgentConcerns}
+              </p>
+            </div>
+            
+            <Alert className="bg-blue-50 border-blue-200">
+              <InfoIcon className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                {content.providerAlert}
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-4">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/")}>
+              {content.returnHome}
+            </Button>
+            <Button
+              className="w-full bg-green-600 hover:bg-green-700"
+              variant="outline"
+              onClick={() => navigate("/appointment")}
+            >
+              {content.scheduleAppointment}
+            </Button>
+          </CardFooter>
+        </Card>
+      </main>
     </div>
   );
 };

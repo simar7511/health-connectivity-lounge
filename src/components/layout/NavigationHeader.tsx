@@ -1,8 +1,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home, Menu } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Home } from "lucide-react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -33,11 +33,23 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
       home: "Home",
       back: "Back",
       menu: "Menu",
+      findClinic: "Find a Clinic",
+      appointments: "Appointments",
+      chat: "Chat",
+      aiHealth: "AI Health Assistant",
+      switchToSpanish: "Switch to Spanish",
+      switchToEnglish: "Switch to English"
     },
     es: {
       home: "Inicio",
       back: "Atrás",
       menu: "Menú",
+      findClinic: "Encontrar una Clínica",
+      appointments: "Citas",
+      chat: "Chat",
+      aiHealth: "Asistente de Salud IA",
+      switchToSpanish: "Cambiar a Español",
+      switchToEnglish: "Cambiar a Inglés"
     },
   };
 
@@ -52,10 +64,16 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
     { label: language === "en" ? "AI Health Assistant" : "Asistente de Salud IA", path: "/ai-chat" },
   ];
 
+  const handleLanguageSwitch = () => {
+    const newLanguage = language === "en" ? "es" : "en";
+    sessionStorage.setItem("preferredLanguage", newLanguage);
+    window.location.reload();
+  };
+
   return (
-    <header className={cn("border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60", className)}>
+    <header className={cn("border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10", className)}>
       <div className="container flex items-center justify-between h-14 gap-4 px-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           {showBackButton && !isRootPath && (
             <Button
               variant="ghost"
@@ -70,15 +88,16 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
           )}
           
           {showHomeButton && !isRootPath && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/")}
-              className="hidden sm:flex"
-            >
-              <Home className="h-4 w-4 mr-2" />
-              {t.home}
-            </Button>
+            <Link to="/" className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:flex items-center gap-1"
+              >
+                <Home className="h-4 w-4" />
+                {t.home}
+              </Button>
+            </Link>
           )}
           
           <h1 className="text-lg font-semibold truncate">{title}</h1>
@@ -90,13 +109,34 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
           </div>
         )}
 
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-3">
+          {navLinks.map((link) => (
+            <Button
+              key={link.path}
+              variant={location.pathname === link.path ? "default" : "ghost"}
+              size="sm"
+              onClick={() => navigate(link.path)}
+              className={location.pathname === link.path ? "bg-primary text-primary-foreground" : ""}
+            >
+              {link.label}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLanguageSwitch}
+          >
+            {language === "en" ? t.switchToSpanish : t.switchToEnglish}
+          </Button>
+        </nav>
+
         {/* Mobile Menu */}
-        <div className="sm:hidden">
+        <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={t.menu}>
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">{t.menu}</span>
+              <Button variant="outline" size="sm" aria-label={t.menu}>
+                {t.menu}
               </Button>
             </SheetTrigger>
             <SheetContent>
@@ -113,25 +153,17 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
                     {link.label}
                   </Button>
                 ))}
+                <Button
+                  variant="outline"
+                  className="justify-start"
+                  onClick={handleLanguageSwitch}
+                >
+                  {language === "en" ? t.switchToSpanish : t.switchToEnglish}
+                </Button>
               </nav>
             </SheetContent>
           </Sheet>
         </div>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden sm:flex items-center gap-1">
-          {navLinks.map((link) => (
-            <Button
-              key={link.path}
-              variant={location.pathname === link.path ? "default" : "ghost"}
-              size="sm"
-              onClick={() => navigate(link.path)}
-              className="hidden lg:flex"
-            >
-              {link.label}
-            </Button>
-          ))}
-        </nav>
       </div>
     </header>
   );

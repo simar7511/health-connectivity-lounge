@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { SmsMessageList } from "@/components/SmsMessageList";
 import { WhatsAppMessageList } from "@/components/WhatsAppMessageList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NavigationHeader } from "@/components/layout/NavigationHeader";
 
 interface AppointmentConfirmationProps {
   language: "en" | "es";
@@ -258,164 +259,174 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
   };
 
   const content = translations[language];
+  const pageTitle = language === "en" ? "Appointment Confirmation" : "Confirmación de Cita";
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <Card className="shadow-lg p-6">
-        <CardHeader>
-          <h1 className="text-3xl font-bold flex items-center space-x-2 text-green-600">
-            <CheckCircle className="h-7 w-7" />
-            <span>{content.title}</span>
-          </h1>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <p className="text-lg">{content.successMessage}</p>
-
-          {appointmentDetails.date && appointmentDetails.time ? (
-            <div className="bg-gray-100 p-4 rounded-md">
-              <h2 className="font-semibold text-xl">{content.appointmentDetails}</h2>
-              <p className="mt-2">📅 <strong>{content.date}:</strong> {formattedDate}</p>
-              <p>⏰ <strong>{content.time}:</strong> {appointmentDetails.time}</p>
-              <p>🩺 <strong>{content.visitType}:</strong> {appointmentDetails.appointmentType}</p>
-
-              {appointmentDetails.appointmentType === "Virtual Visit" && appointmentDetails.meetingCode && (
-                <div className="mt-4 bg-white p-3 border rounded-md flex items-center justify-between">
-                  <span className="font-bold text-blue-600">🔢 {content.virtualMeetingCode}: {appointmentDetails.meetingCode}</span>
-                  <Button variant="outline" size="sm" onClick={handleCopyCode}>
-                    {copied ? content.copied : content.copyCode}
-                  </Button>
-                </div>
-              )}
-
-              {appointmentDetails.appointmentType === "In-Person Visit" && (
-                <div className="mt-4 bg-blue-50 p-4 rounded-md border border-blue-200">
-                  <h3 className="font-semibold text-xl text-blue-700">{content.inPersonVisitTitle}</h3>
-                  
-                  <div className="mt-4 flex flex-col items-center">
-                    <p className="mb-3 text-center">
-                      <MapPin className="h-5 w-5 text-blue-600 inline mr-2" />
-                      <span>{transportationInfo.clinicAddress}</span>
-                    </p>
-                    
-                    <Button 
-                      className="mt-2 bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-                      onClick={() => window.open(transportationInfo.mapsUrl, '_blank')}
-                    >
-                      <Navigation className="h-4 w-4" />
-                      <span>{content.openInMaps}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                    <p className="mt-4 text-sm text-blue-700 text-center">{content.seeYouSoon}</p>
-                  </div>
-                </div>
-              )}
-
-              {appointmentDetails.transportation && (
-                <div className="mt-4 bg-green-50 p-4 rounded-md border border-green-300">
-                  <h3 className="font-semibold text-lg">{content.transportation}</h3>
-                  <p>🚌 <strong>{content.pickupTime}:</strong> {appointmentDetails.pickupTime}</p>
-                  <p>📍 <strong>{content.pickupLocation}:</strong> {appointmentDetails.pickupLocation}</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-red-500">{content.missingDetails}</p>
-          )}
-
-          {error && (
-            <div className="mt-4 bg-red-50 p-4 rounded-md flex items-start gap-2 text-red-700 border border-red-300">
-              <AlertCircle className="h-6 w-6 text-red-600" />
-              <div>
-                <p className="font-semibold">{content.error}</p>
-                <p className="text-sm mt-1">{error}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4 bg-gray-100 p-4 rounded-md border">
-            <Tabs defaultValue="sms" onValueChange={(value) => setNotificationType(value as "sms" | "whatsapp")}>
-              <div className="mb-4">
-                <p className="mb-2">{content.notificationMethod}:</p>
-                <TabsList className="w-full">
-                  <TabsTrigger value="sms" className="flex-1">SMS</TabsTrigger>
-                  <TabsTrigger value="whatsapp" className="flex-1">WhatsApp</TabsTrigger>
-                </TabsList>
-              </div>
-              
-              <TabsContent value="sms">
-                {smsSent ? (
-                  <div className="bg-green-50 p-4 rounded-md flex items-center gap-2 text-green-700 border border-green-300">
-                    <MessageCircle className="h-6 w-6 text-green-600" />
-                    <p>{content.smsSent}</p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="mb-2">{content.smsNotSent}</p>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                        <input 
-                          type="tel" 
-                          placeholder={content.phoneLabel}
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="border rounded-md pl-10 pr-3 py-2 w-full"
-                        />
-                      </div>
-                      <Button onClick={handleManualSend} disabled={!phoneNumber || isSending}>
-                        {isSending ? content.sending : content.sendSMS}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="whatsapp">
-                {whatsAppSent ? (
-                  <div className="bg-green-50 p-4 rounded-md flex items-center gap-2 text-green-700 border border-green-300">
-                    <MessageCircle className="h-6 w-6 text-green-600" />
-                    <p>{content.whatsAppSent}</p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="mb-2">{content.smsNotSent}</p>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                        <input 
-                          type="tel" 
-                          placeholder={content.phoneLabel}
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="border rounded-md pl-10 pr-3 py-2 w-full"
-                        />
-                      </div>
-                      <Button onClick={handleManualSend} disabled={!phoneNumber || isSending} className="bg-green-600 hover:bg-green-700">
-                        {isSending ? content.sending : content.sendWhatsApp}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/")}>
-            {content.returnHome}
-          </Button>
-          <Button className="w-full bg-red-600 hover:bg-red-700" variant="outline" onClick={() => navigate("/appointment")}>
-            {content.reschedule}
-          </Button>
-        </CardFooter>
-      </Card>
+    <div className="flex flex-col min-h-screen">
+      <NavigationHeader 
+        title={pageTitle}
+        language={language}
+        showBackButton={true}
+        showBreadcrumbs={true}
+      />
       
-      <div className="mt-4 space-y-4">
-        <SmsMessageList />
-        <WhatsAppMessageList />
-      </div>
+      <main className="flex-1 container mx-auto p-6 max-w-3xl">
+        <Card className="shadow-lg p-6">
+          <CardHeader>
+            <h1 className="text-3xl font-bold flex items-center space-x-2 text-green-600">
+              <CheckCircle className="h-7 w-7" />
+              <span>{content.title}</span>
+            </h1>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <p className="text-lg">{content.successMessage}</p>
+
+            {appointmentDetails.date && appointmentDetails.time ? (
+              <div className="bg-gray-100 p-4 rounded-md">
+                <h2 className="font-semibold text-xl">{content.appointmentDetails}</h2>
+                <p className="mt-2">📅 <strong>{content.date}:</strong> {formattedDate}</p>
+                <p>⏰ <strong>{content.time}:</strong> {appointmentDetails.time}</p>
+                <p>🩺 <strong>{content.visitType}:</strong> {appointmentDetails.appointmentType}</p>
+
+                {appointmentDetails.appointmentType === "Virtual Visit" && appointmentDetails.meetingCode && (
+                  <div className="mt-4 bg-white p-3 border rounded-md flex items-center justify-between">
+                    <span className="font-bold text-blue-600">🔢 {content.virtualMeetingCode}: {appointmentDetails.meetingCode}</span>
+                    <Button variant="outline" size="sm" onClick={handleCopyCode}>
+                      {copied ? content.copied : content.copyCode}
+                    </Button>
+                  </div>
+                )}
+
+                {appointmentDetails.appointmentType === "In-Person Visit" && (
+                  <div className="mt-4 bg-blue-50 p-4 rounded-md border border-blue-200">
+                    <h3 className="font-semibold text-xl text-blue-700">{content.inPersonVisitTitle}</h3>
+                    
+                    <div className="mt-4 flex flex-col items-center">
+                      <p className="mb-3 text-center">
+                        <MapPin className="h-5 w-5 text-blue-600 inline mr-2" />
+                        <span>{transportationInfo.clinicAddress}</span>
+                      </p>
+                      
+                      <Button 
+                        className="mt-2 bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                        onClick={() => window.open(transportationInfo.mapsUrl, '_blank')}
+                      >
+                        <Navigation className="h-4 w-4" />
+                        <span>{content.openInMaps}</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                      <p className="mt-4 text-sm text-blue-700 text-center">{content.seeYouSoon}</p>
+                    </div>
+                  </div>
+                )}
+
+                {appointmentDetails.transportation && (
+                  <div className="mt-4 bg-green-50 p-4 rounded-md border border-green-300">
+                    <h3 className="font-semibold text-lg">{content.transportation}</h3>
+                    <p>🚌 <strong>{content.pickupTime}:</strong> {appointmentDetails.pickupTime}</p>
+                    <p>📍 <strong>{content.pickupLocation}:</strong> {appointmentDetails.pickupLocation}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-red-500">{content.missingDetails}</p>
+            )}
+
+            {error && (
+              <div className="mt-4 bg-red-50 p-4 rounded-md flex items-start gap-2 text-red-700 border border-red-300">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+                <div>
+                  <p className="font-semibold">{content.error}</p>
+                  <p className="text-sm mt-1">{error}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 bg-gray-100 p-4 rounded-md border">
+              <Tabs defaultValue="sms" onValueChange={(value) => setNotificationType(value as "sms" | "whatsapp")}>
+                <div className="mb-4">
+                  <p className="mb-2">{content.notificationMethod}:</p>
+                  <TabsList className="w-full">
+                    <TabsTrigger value="sms" className="flex-1">SMS</TabsTrigger>
+                    <TabsTrigger value="whatsapp" className="flex-1">WhatsApp</TabsTrigger>
+                  </TabsList>
+                </div>
+                
+                <TabsContent value="sms">
+                  {smsSent ? (
+                    <div className="bg-green-50 p-4 rounded-md flex items-center gap-2 text-green-700 border border-green-300">
+                      <MessageCircle className="h-6 w-6 text-green-600" />
+                      <p>{content.smsSent}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="mb-2">{content.smsNotSent}</p>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                          <input 
+                            type="tel" 
+                            placeholder={content.phoneLabel}
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="border rounded-md pl-10 pr-3 py-2 w-full"
+                          />
+                        </div>
+                        <Button onClick={handleManualSend} disabled={!phoneNumber || isSending}>
+                          {isSending ? content.sending : content.sendSMS}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="whatsapp">
+                  {whatsAppSent ? (
+                    <div className="bg-green-50 p-4 rounded-md flex items-center gap-2 text-green-700 border border-green-300">
+                      <MessageCircle className="h-6 w-6 text-green-600" />
+                      <p>{content.whatsAppSent}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="mb-2">{content.smsNotSent}</p>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                          <input 
+                            type="tel" 
+                            placeholder={content.phoneLabel}
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="border rounded-md pl-10 pr-3 py-2 w-full"
+                          />
+                        </div>
+                        <Button onClick={handleManualSend} disabled={!phoneNumber || isSending} className="bg-green-600 hover:bg-green-700">
+                          {isSending ? content.sending : content.sendWhatsApp}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-4">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/")}>
+              {content.returnHome}
+            </Button>
+            <Button className="w-full bg-red-600 hover:bg-red-700" variant="outline" onClick={() => navigate("/appointment")}>
+              {content.reschedule}
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        <div className="mt-4 space-y-4">
+          <SmsMessageList />
+          <WhatsAppMessageList />
+        </div>
+      </main>
     </div>
   );
 };

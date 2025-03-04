@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -21,6 +20,7 @@ import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
 import { SubmitButton } from "./components/SubmitButton";
 import { notifyProviders, estimateUrgency } from "@/utils/providerNotifications";
 import { Hospital } from "lucide-react";
+import { NavigationHeader } from "@/components/layout/NavigationHeader";
 
 interface PediatricIntakeFormProps {
   language: "en" | "es";
@@ -51,7 +51,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     return () => unsubscribe();
   }, []);
 
-  // ✅ Ensure `hasInsurance` and `hasRecentHospitalVisits` are `null` initially (not pre-selected)
   const [formData, setFormData] = useState(() => ({
     childName: "",
     dob: "",
@@ -62,9 +61,9 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     symptoms: "",
     medicalHistory: "",
     medicationsAndAllergies: "",
-    hasRecentHospitalVisits: null, // ✅ Prevents auto-selection
+    hasRecentHospitalVisits: null,
     hospitalVisitLocation: "",
-    hasInsurance: null, // ✅ Prevents auto-selection
+    hasInsurance: null,
     otherConcerns: "",
     consentToTreatment: false,
   }));
@@ -101,7 +100,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     }));
   };
 
-  // ✅ Ensure onVoiceInput exists for `MedicalInfoSection` and `SocialInfoSection`
   const handleVoiceInput = (field: string, input: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -138,7 +136,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     try {
       console.log("Submitting intake form to Firestore - pediatricIntake collection");
       
-      // Use serverTimestamp to ensure consistent timestamps across devices
       const docRef = await addDoc(collection(db, "pediatricIntake"), {
         ...formData,
         userId: currentUser.uid,
@@ -158,22 +155,18 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
 
       localStorage.setItem("intakeId", docRef.id);
       
-      // Save submission time for provider dashboard notifications
       localStorage.setItem("lastIntakeSubmissionTime", new Date().toISOString());
 
-      // Store the phone number in local storage for later use
       if (formData.phoneNumber) {
         localStorage.setItem("patientPhone", formData.phoneNumber);
       }
       
-      // Notify providers about the new submission
       const urgency = estimateUrgency(
         formData.symptoms, 
         formData.medicalHistory, 
         formData.hasRecentHospitalVisits
       );
       
-      // Check if provider notification is configured
       const providerPhones = localStorage.getItem("providerNotificationPhones");
       if (providerPhones) {
         await notifyProviders({
@@ -185,7 +178,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         });
       }
 
-      // ✅ Clears form fields after submission
       setFormData({
         childName: "",
         dob: "",
@@ -216,61 +208,72 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       setIsSubmitting(false);
     }
   };
-  
+
+  const pageTitle = language === "en" ? "Pediatric Intake Form" : "Formulario de Admisión Pediátrica";
+
   return (
-    <div className="container mx-auto max-w-3xl p-6 space-y-6 bg-gradient-to-br from-purple-50 to-white min-h-screen">
-      <ConfidentialityNotice language={language} />
-      <LanguageSwitcher currentLanguage={language} onLanguageChange={setLanguage} />
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-50 to-white">
+      <NavigationHeader 
+        title={pageTitle}
+        language={language}
+        showBackButton={true}
+        showBreadcrumbs={true}
+      />
+      
+      <div className="container mx-auto max-w-3xl p-6 space-y-6 flex-1">
+        <ConfidentialityNotice language={language} />
+        <LanguageSwitcher currentLanguage={language} onLanguageChange={setLanguage} />
 
-      <form onSubmit={handleSubmit}>
-        <Card className="p-6 border-t-4 border-primary shadow-lg">
-          <div className="flex justify-center mb-6">
-            <Hospital className="h-12 w-12 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold text-center mb-4 text-primary">
-            {language === "en" ? "Safe Haven Pediatric Intake Form" : "Formulario de Ingreso Pediátrico Safe Haven"}
-          </h2>
+        <form onSubmit={handleSubmit}>
+          <Card className="p-6 border-t-4 border-primary shadow-lg">
+            <div className="flex justify-center mb-6">
+              <Hospital className="h-12 w-12 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-center mb-4 text-primary">
+              {language === "en" ? "Safe Haven Pediatric Intake Form" : "Formulario de Ingreso Pediátrico Safe Haven"}
+            </h2>
 
-          <p className="text-center text-gray-600 mb-6 px-4 py-2 bg-purple-50 rounded-md">
-            {language === "en"
-              ? "We provide free and compassionate pediatric care, regardless of immigration or insurance status."
-              : "Brindamos atención pediátrica gratuita y compasiva, sin importar el estado migratorio o de seguro."
-            }
-          </p>
+            <p className="text-center text-gray-600 mb-6 px-4 py-2 bg-purple-50 rounded-md">
+              {language === "en"
+                ? "We provide free and compassionate pediatric care, regardless of immigration or insurance status."
+                : "Brindamos atención pediátrica gratuita y compasiva, sin importar el estado migratorio o de seguro."
+              }
+            </p>
 
-          <div className="space-y-8">
-            <BasicInfoSection 
-              language={language} 
-              formData={formData} 
-              handleChange={handleChange} 
-            />
+            <div className="space-y-8">
+              <BasicInfoSection 
+                language={language} 
+                formData={formData} 
+                handleChange={handleChange} 
+              />
 
-            <MedicalInfoSection 
-              language={language} 
-              formData={formData} 
-              handleChange={handleChange} 
-              handleCheckboxChange={handleCheckboxChange} 
-              onVoiceInput={handleVoiceInput} 
-            />
+              <MedicalInfoSection 
+                language={language} 
+                formData={formData} 
+                handleChange={handleChange} 
+                handleCheckboxChange={handleCheckboxChange} 
+                onVoiceInput={handleVoiceInput} 
+              />
 
-            <SocialInfoSection 
-              language={language} 
-              formData={formData} 
-              handleChange={handleChange} 
-              handleCheckboxChange={handleCheckboxChange} 
-              onVoiceInput={handleVoiceInput} 
-            />
+              <SocialInfoSection 
+                language={language} 
+                formData={formData} 
+                handleChange={handleChange} 
+                handleCheckboxChange={handleCheckboxChange} 
+                onVoiceInput={handleVoiceInput} 
+              />
 
-            <ConsentSection 
-              language={language} 
-              checked={formData.consentToTreatment} 
-              onCheckedChange={(checked) => handleCheckboxChange("consentToTreatment", checked)} 
-            />
+              <ConsentSection 
+                language={language} 
+                checked={formData.consentToTreatment} 
+                onCheckedChange={(checked) => handleCheckboxChange("consentToTreatment", checked)} 
+              />
 
-            <SubmitButton language={language} isSubmitting={isSubmitting} />
-          </div>
-        </Card>
-      </form>
+              <SubmitButton language={language} isSubmitting={isSubmitting} />
+            </div>
+          </Card>
+        </form>
+      </div>
     </div>
   );
 };
