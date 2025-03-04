@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, MessageCircle, Phone, AlertCircle } from "lucide-react";
+import { CheckCircle, MessageCircle, Phone, AlertCircle, MapPin, Car, Bus, Walking, Navigation, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { sendAppointmentConfirmation, scheduleAppointmentReminder } from "@/utils/firebaseMessagingService";
 import { toast } from "@/hooks/use-toast";
@@ -25,6 +25,16 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notificationType, setNotificationType] = useState<"sms" | "whatsapp">("sms");
+
+  const transportationInfo = {
+    distance: "5.2",
+    carTravelTime: "15 minutes",
+    transitRoute: "Bus #42",
+    transitTravelTime: "25 minutes",
+    walkingTravelTime: "45 minutes",
+    clinicAddress: "123 Healthcare Ave, Seattle, WA 98101",
+    mapsUrl: "https://maps.google.com/?q=123+Healthcare+Ave+Seattle+WA+98101"
+  };
 
   useEffect(() => {
     if (!appointmentDetails.date || !appointmentDetails.time) {
@@ -194,7 +204,21 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       pickupLocation: "Pickup Location",
       sending: "Sending...",
       error: "Error details:",
-      notificationMethod: "Notification Method"
+      notificationMethod: "Notification Method",
+      inPersonVisitTitle: "You're all set for your in-person visit! 🏥✨",
+      inPersonVisitMessage: "To make your trip smooth and stress-free, here's everything you need to get to your appointment:",
+      distance: "Distance to the Clinic",
+      miles: "miles",
+      byCar: "By Car",
+      estimatedTime: "Estimated travel time",
+      parkingInfo: "Parking Info",
+      byPublicTransit: "By Public Transit",
+      take: "Take",
+      walking: "Walking/Biking",
+      enjoyFreshAir: "Enjoy the fresh air along the way!",
+      needDirections: "Need directions? We've got you covered! Tap below to open your personalized route in Google Maps:",
+      openInMaps: "Open in Google Maps",
+      seeYouSoon: "We can't wait to see you! Let us know if you have any questions or need special accommodations. Safe travels! 💙😊"
     },
     es: {
       title: "¡Cita Confirmada!",
@@ -220,7 +244,21 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       pickupLocation: "Lugar de Recogida",
       sending: "Enviando...",
       error: "Detalles del error:",
-      notificationMethod: "Método de Notificación"
+      notificationMethod: "Método de Notificación",
+      inPersonVisitTitle: "¡Todo listo para su visita en persona! 🏥✨",
+      inPersonVisitMessage: "Para que su viaje sea tranquilo y sin estrés, aquí tiene todo lo que necesita para llegar a su cita:",
+      distance: "Distancia a la Clínica",
+      miles: "millas",
+      byCar: "En Coche",
+      estimatedTime: "Tiempo estimado de viaje",
+      parkingInfo: "Información de estacionamiento",
+      byPublicTransit: "En Transporte Público",
+      take: "Tome",
+      walking: "Caminando/En Bicicleta",
+      enjoyFreshAir: "¡Disfrute del aire fresco en el camino!",
+      needDirections: "¿Necesita indicaciones? ¡Le cubrimos! Toque a continuación para abrir su ruta personalizada en Google Maps:",
+      openInMaps: "Abrir en Google Maps",
+      seeYouSoon: "¡Estamos ansiosos por verle! Háganos saber si tiene alguna pregunta o necesita adaptaciones especiales. ¡Buen viaje! 💙😊"
     },
   };
 
@@ -252,6 +290,48 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
                   <Button variant="outline" size="sm" onClick={handleCopyCode}>
                     {copied ? content.copied : content.copyCode}
                   </Button>
+                </div>
+              )}
+
+              {appointmentDetails.appointmentType === "In-Person Visit" && (
+                <div className="mt-4 bg-blue-50 p-4 rounded-md border border-blue-200">
+                  <h3 className="font-semibold text-xl text-blue-700">{content.inPersonVisitTitle}</h3>
+                  <p className="mt-2 mb-4">{content.inPersonVisitMessage}</p>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <p><strong>{content.distance}:</strong> {transportationInfo.distance} {content.miles}</p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Car className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <p><strong>{content.byCar}:</strong> {content.estimatedTime}: {transportationInfo.carTravelTime} – {content.parkingInfo}</p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Bus className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <p><strong>{content.byPublicTransit}:</strong> {content.take} {transportationInfo.transitRoute} – {content.estimatedTime}: {transportationInfo.transitTravelTime}</p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Walking className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <p><strong>{content.walking}:</strong> {content.estimatedTime}: {transportationInfo.walkingTravelTime} – {content.enjoyFreshAir}</p>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <p className="font-medium">{content.needDirections}</p>
+                      <Button 
+                        className="mt-2 bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                        onClick={() => window.open(transportationInfo.mapsUrl, '_blank')}
+                      >
+                        <Navigation className="h-4 w-4" />
+                        <span>{content.openInMaps}</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                      <p className="mt-4 text-sm text-blue-700">{content.seeYouSoon}</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
