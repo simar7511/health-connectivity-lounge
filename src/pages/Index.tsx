@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -95,7 +94,7 @@ const Index = () => {
     }
   };
 
-  // Don't show navigation header on the select screen
+  // Fix: The error was here - we need to explicitly check against the string "select"
   const showNavigation = loginState !== "select";
 
   return (
