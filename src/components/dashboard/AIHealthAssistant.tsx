@@ -15,6 +15,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { generateOfflineResponse, isOfflineModelReady, initOfflineModel } from "@/utils/offlineLLM";
 
+type OfflineModeType = "simulated" | "localLLM" | "none";
+
 interface AIHealthAssistantProps {
   language: "en" | "es";
   onBack: () => void;
@@ -22,7 +24,7 @@ interface AIHealthAssistantProps {
   model: string;
   provider: string;
   isOnline?: boolean;
-  offlineMode?: "simulated" | "localLLM" | "none";
+  offlineMode?: OfflineModeType;
 }
 
 interface Message {
