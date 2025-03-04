@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, MessageCircle, Phone, AlertCircle, MapPin, Car, Bus, Walk, Navigation, ArrowRight } from "lucide-react";
+import { CheckCircle, MessageCircle, Phone, AlertCircle, MapPin, Car, Bus, Footprints, Navigation, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { sendAppointmentConfirmation, scheduleAppointmentReminder } from "@/utils/firebaseMessagingService";
 import { toast } from "@/hooks/use-toast";
@@ -315,7 +315,7 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
                     </div>
                     
                     <div className="flex items-start gap-3">
-                      <Walk className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <Footprints className="h-5 w-5 text-blue-600 mt-0.5" />
                       <p><strong>{content.walking}:</strong> {content.estimatedTime}: {transportationInfo.walkingTravelTime} – {content.enjoyFreshAir}</p>
                     </div>
                     
