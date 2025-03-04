@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, MessageCircle, Phone, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { sendAppointmentConfirmation, sendAppointmentWhatsAppConfirmation, scheduleAppointmentReminder, scheduleAppointmentWhatsAppReminder } from "@/utils/twilioService";
+import { sendAppointmentConfirmation, scheduleAppointmentReminder } from "@/utils/firebaseMessagingService";
 import { toast } from "@/hooks/use-toast";
 import { SmsMessageList } from "@/components/SmsMessageList";
 import { WhatsAppMessageList } from "@/components/WhatsAppMessageList";
@@ -28,25 +27,21 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
   const [notificationType, setNotificationType] = useState<"sms" | "whatsapp">("sms");
 
   useEffect(() => {
-    // If we don't have appointment details, redirect back to appointment page
     if (!appointmentDetails.date || !appointmentDetails.time) {
       navigate("/appointment");
     }
 
-    // Check for phone number in session storage (from intake form)
     const storedPhone = sessionStorage.getItem("patientPhone") || "";
     setPhoneNumber(storedPhone);
 
-    // Send confirmation SMS if we have a phone number
     const sendConfirmation = async () => {
       if (storedPhone && appointmentDetails.date && appointmentDetails.time && !smsSent && notificationType === "sms") {
         setIsSending(true);
         setError(null);
         try {
-          await sendAppointmentConfirmation(storedPhone, appointmentDetails, language);
+          await sendAppointmentConfirmation(storedPhone, appointmentDetails, "sms", language);
           
-          // Schedule a reminder 24 hours before appointment
-          await scheduleAppointmentReminder(storedPhone, appointmentDetails, language);
+          await scheduleAppointmentReminder(storedPhone, appointmentDetails, "sms", language);
           
           setSmsSent(true);
         } catch (error) {
@@ -66,16 +61,14 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       }
     };
     
-    // Send confirmation WhatsApp if we have a phone number
     const sendWhatsAppConfirmation = async () => {
       if (storedPhone && appointmentDetails.date && appointmentDetails.time && !whatsAppSent && notificationType === "whatsapp") {
         setIsSending(true);
         setError(null);
         try {
-          await sendAppointmentWhatsAppConfirmation(storedPhone, appointmentDetails, language);
+          await sendAppointmentConfirmation(storedPhone, appointmentDetails, "whatsapp", language);
           
-          // Schedule a reminder 24 hours before appointment
-          await scheduleAppointmentWhatsAppReminder(storedPhone, appointmentDetails, language);
+          await scheduleAppointmentReminder(storedPhone, appointmentDetails, "whatsapp", language);
           
           setWhatsAppSent(true);
         } catch (error) {
@@ -110,7 +103,6 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
     }
   };
 
-  // If user enters a phone number manually
   const handleManualSend = async () => {
     if (!phoneNumber) {
       toast({
@@ -128,8 +120,8 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
       setError(null);
       try {
         if (notificationType === "sms") {
-          await sendAppointmentConfirmation(phoneNumber, appointmentDetails, language);
-          await scheduleAppointmentReminder(phoneNumber, appointmentDetails, language);
+          await sendAppointmentConfirmation(phoneNumber, appointmentDetails, "sms", language);
+          await scheduleAppointmentReminder(phoneNumber, appointmentDetails, "sms", language);
           setSmsSent(true);
           
           toast({
@@ -139,8 +131,8 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
               : "La confirmación por SMS se ha enviado con éxito",
           });
         } else {
-          await sendAppointmentWhatsAppConfirmation(phoneNumber, appointmentDetails, language);
-          await scheduleAppointmentWhatsAppReminder(phoneNumber, appointmentDetails, language);
+          await sendAppointmentConfirmation(phoneNumber, appointmentDetails, "whatsapp", language);
+          await scheduleAppointmentReminder(phoneNumber, appointmentDetails, "whatsapp", language);
           setWhatsAppSent(true);
           
           toast({
@@ -364,7 +356,6 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
         </CardFooter>
       </Card>
       
-      {/* Message Lists */}
       <div className="mt-4 space-y-4">
         <SmsMessageList />
         <WhatsAppMessageList />

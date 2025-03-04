@@ -5,6 +5,7 @@ import type { Auth } from "firebase/auth";
 import { getFirestore, setLogLevel } from "@/types/firebase";
 import { getAuth } from "@/types/firebase";
 import { toast } from "@/hooks/use-toast";
+import { getMessaging, isSupported } from "firebase/messaging";
 
 // Firebase configuration using environment variables from .env file
 const firebaseConfig = {
@@ -20,6 +21,7 @@ const firebaseConfig = {
 // Declare Firebase services
 let db: Firestore;
 let auth: Auth;
+let messaging: any = null;
 
 try {
   // Initialize Firebase with minimal logging in production
@@ -32,6 +34,22 @@ try {
 
   db = getFirestore(app);
   auth = getAuth(app);
+
+  // Initialize Firebase Cloud Messaging if supported
+  isSupported()
+    .then(supported => {
+      if (supported) {
+        messaging = getMessaging(app);
+        if (!isProduction) {
+          console.log("✅ Firebase Cloud Messaging initialized");
+        }
+      } else {
+        console.log("❌ Firebase Cloud Messaging not supported in this environment");
+      }
+    })
+    .catch(error => {
+      console.error("Error checking FCM support:", error);
+    });
 
   // Only enable debug logging in development
   if (!isProduction) {
@@ -55,4 +73,4 @@ try {
   auth = {} as Auth;
 }
 
-export { db, auth };
+export { db, auth, messaging };

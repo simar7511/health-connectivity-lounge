@@ -94,7 +94,7 @@ const Index = () => {
     }
   };
 
-  // Fix the TypeScript error by using a strict equality check
+  // Fix the TypeScript error with a strict equality check using triple equals
   const showNavigation = loginState !== "select";
 
   return (
