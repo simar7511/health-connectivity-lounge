@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, Send, User, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { Bot, Send, User, AlertCircle, Loader2, RefreshCw, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from "firebase/firestore";
-import { getFunctions, httpsCallable, HttpsCallableResult } from "firebase/functions";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface AIHealthAssistantProps {
@@ -29,6 +29,39 @@ interface Message {
   timestamp?: any;
 }
 
+// Sample response for offline mode or when service is unavailable
+const getSampleResponse = (query: string, language: "en" | "es"): string => {
+  // Sample health-related responses
+  const responses: Record<string, {en: string, es: string}> = {
+    "hypertension": {
+      en: "Hypertension, or high blood pressure, is a common condition where the long-term force of blood against your artery walls is high enough that it may eventually cause health problems. Blood pressure is determined by the amount of blood your heart pumps and the resistance to blood flow in your arteries. The more blood your heart pumps and the narrower your arteries, the higher your blood pressure.",
+      es: "La hipertensión, o presión arterial alta, es una condición común donde la fuerza a largo plazo de la sangre contra las paredes de las arterias es lo suficientemente alta como para eventualmente causar problemas de salud. La presión arterial está determinada por la cantidad de sangre que bombea el corazón y la resistencia al flujo sanguíneo en las arterias."
+    },
+    "diabetes": {
+      en: "Diabetes is a chronic health condition that affects how your body turns food into energy. Most of the food you eat is broken down into sugar (glucose) and released into your bloodstream. When your blood sugar goes up, it signals your pancreas to release insulin, which lets blood sugar into your body's cells for use as energy.",
+      es: "La diabetes es una condición de salud crónica que afecta cómo su cuerpo convierte los alimentos en energía. La mayoría de los alimentos que consume se descomponen en azúcar (glucosa) y se liberan en el torrente sanguíneo. Cuando su nivel de azúcar en la sangre sube, indica a su páncreas que libere insulina."
+    },
+    "covid": {
+      en: "COVID-19 is a respiratory illness caused by the SARS-CoV-2 virus. Common symptoms include fever, cough, and fatigue. If you're experiencing symptoms, please consider getting tested and consult with a healthcare professional.",
+      es: "COVID-19 es una enfermedad respiratoria causada por el virus SARS-CoV-2. Los síntomas comunes incluyen fiebre, tos y fatiga. Si está experimentando síntomas, considere hacerse una prueba y consulte con un profesional de la salud."
+    }
+  };
+
+  // Look for keywords in the query
+  const lowercaseQuery = query.toLowerCase();
+  
+  for (const [keyword, response] of Object.entries(responses)) {
+    if (lowercaseQuery.includes(keyword)) {
+      return response[language];
+    }
+  }
+
+  // Default response if no keywords match
+  return language === "en" 
+    ? "I'm in offline mode with limited capabilities. Please try again when online, or ask about common health topics like hypertension, diabetes, or COVID-19."
+    : "Estoy en modo sin conexión con capacidades limitadas. Por favor, inténtelo de nuevo cuando esté en línea, o pregunte sobre temas comunes de salud como hipertensión, diabetes o COVID-19.";
+};
+
 export const AIHealthAssistant = ({ 
   language, 
   onBack, 
@@ -44,6 +77,7 @@ export const AIHealthAssistant = ({
   const [error, setError] = useState<string | null>(null);
   const [showTroubleshootingDialog, setShowTroubleshootingDialog] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isUsingFallback, setIsUsingFallback] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const functions = getFunctions();
@@ -160,6 +194,30 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
+      // If offline or using fallback mode, use the local response generator
+      if (!isOnline || isUsingFallback) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+        
+        const aiResponse = getSampleResponse(userInput, language);
+        
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: aiResponse,
+          timestamp: serverTimestamp()
+        };
+        
+        setMessages((prev) => [...prev, assistantMessage]);
+        
+        if (patientId) {
+          await addDoc(collection(db, "aiChats"), {
+            patientId,
+            ...assistantMessage
+          });
+        }
+        
+        return;
+      }
+      
       let apiKey = "";
       
       if (provider === "openai") {
@@ -184,34 +242,52 @@ export const AIHealthAssistant = ({
       
       console.log(`Calling AI model: ${provider}/${model} with ${messageHistory.length} messages`);
       
-      const response = await aiChatFunction({
-        messages: messageHistory,
-        model: model,
-        provider: provider,
-        language: language,
-        apiKey: apiKey
-      });
-      
-      console.log("AI response received:", response.data);
-      
-      // @ts-ignore - handle the response data structure
-      const aiResponse = response.data?.response || (language === "en" 
-        ? "I'm sorry, I couldn't generate a response." 
-        : "Lo siento, no pude generar una respuesta.");
-      
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: aiResponse,
-        timestamp: serverTimestamp()
-      };
-      
-      setMessages((prev) => [...prev, assistantMessage]);
-      
-      if (patientId) {
-        await addDoc(collection(db, "aiChats"), {
-          patientId,
-          ...assistantMessage
+      try {
+        const response = await aiChatFunction({
+          messages: messageHistory,
+          model: model,
+          provider: provider,
+          language: language,
+          apiKey: apiKey
         });
+        
+        console.log("AI response received:", response.data);
+        
+        // @ts-ignore - handle the response data structure
+        const aiResponse = response.data?.response || (language === "en" 
+          ? "I'm sorry, I couldn't generate a response." 
+          : "Lo siento, no pude generar una respuesta.");
+        
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: aiResponse,
+          timestamp: serverTimestamp()
+        };
+        
+        setMessages((prev) => [...prev, assistantMessage]);
+        
+        if (patientId) {
+          await addDoc(collection(db, "aiChats"), {
+            patientId,
+            ...assistantMessage
+          });
+        }
+      } catch (functionError) {
+        console.error("Function error:", functionError);
+        // If the cloud function fails, fall back to local response
+        if (retryCount > 0) {
+          setIsUsingFallback(true);
+          toast({
+            title: language === "en" ? "Using offline mode" : "Usando modo sin conexión",
+            description: language === "en" 
+              ? "Switched to offline response mode due to service errors." 
+              : "Cambiado a modo de respuesta sin conexión debido a errores de servicio.",
+            variant: "default",
+          });
+          await handleAIRequest(userInput, conversationHistory);
+        } else {
+          throw functionError;
+        }
       }
     } catch (err: any) {
       console.error("Error in AI chat:", err);
@@ -267,9 +343,21 @@ export const AIHealthAssistant = ({
     }
   };
 
+  const handleUseFallbackMode = () => {
+    setIsUsingFallback(true);
+    toast({
+      title: language === "en" ? "Switched to Offline Mode" : "Cambiado a Modo Sin Conexión",
+      description: language === "en" 
+        ? "Using simulated AI responses for common health questions" 
+        : "Usando respuestas de IA simuladas para preguntas comunes de salud",
+      variant: "default",
+    });
+    setError(null);
+  };
+
   return (
     <div className="flex flex-col h-full">
-      {!isOnline && (
+      {(!isOnline || isUsingFallback) && (
         <Alert className="m-2 bg-amber-50 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertTitle>
@@ -277,8 +365,8 @@ export const AIHealthAssistant = ({
           </AlertTitle>
           <AlertDescription>
             {language === "en" 
-              ? "You're currently offline. Using local AI model with limited capabilities."
-              : "Actualmente estás sin conexión. Usando modelo de IA local con capacidades limitadas."}
+              ? "You're currently using simplified AI responses with limited capabilities."
+              : "Actualmente estás usando respuestas de IA simplificadas con capacidades limitadas."}
           </AlertDescription>
         </Alert>
       )}
@@ -301,6 +389,14 @@ export const AIHealthAssistant = ({
               >
                 <RefreshCw className="h-3 w-3 mr-1" />
                 {language === "en" ? "Retry" : "Reintentar"}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleUseFallbackMode}
+                className="h-7 text-xs"
+              >
+                {language === "en" ? "Use Offline Mode" : "Usar Modo Sin Conexión"}
               </Button>
               <Button 
                 variant="outline" 
@@ -365,9 +461,17 @@ export const AIHealthAssistant = ({
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          {language === "en" 
-            ? `Using ${provider === "openai" ? "OpenAI" : "Llama"} ${model} model`
-            : `Usando modelo ${provider === "openai" ? "OpenAI" : "Llama"} ${model}`}
+          {isUsingFallback ? (
+            <span>
+              {language === "en" ? "Using offline mode with simulated responses" : "Usando modo sin conexión con respuestas simuladas"}
+            </span>
+          ) : (
+            <span>
+              {language === "en" 
+                ? `Using ${provider === "openai" ? "OpenAI" : "Llama"} ${model} model`
+                : `Usando modelo ${provider === "openai" ? "OpenAI" : "Llama"} ${model}`}
+            </span>
+          )}
         </p>
       </div>
 
@@ -413,6 +517,12 @@ export const AIHealthAssistant = ({
             </ol>
           </div>
           <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={handleUseFallbackMode}
+            >
+              {language === "en" ? "Use Offline Mode" : "Usar Modo Sin Conexión"}
+            </Button>
             <Button onClick={() => setShowTroubleshootingDialog(false)}>
               {language === "en" ? "Close" : "Cerrar"}
             </Button>
@@ -422,3 +532,4 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
+

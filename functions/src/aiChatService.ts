@@ -44,6 +44,19 @@ export const aiChatHandler = async (data: RequestData, context: functions.https.
       throw error;
     }
     
+    // More specific error codes
+    if (error.message?.includes("API key")) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        error.message || "Invalid API key"
+      );
+    } else if (error.message?.includes("rate limit") || error.message?.includes("quota")) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        error.message || "API rate limit exceeded"
+      );
+    }
+    
     throw new functions.https.HttpsError(
       "internal",
       error.message || "An unknown error occurred"
@@ -57,49 +70,68 @@ async function handleOpenAIChat(data: RequestData) {
   
   const openaiEndpoint = "https://api.openai.com/v1/chat/completions";
   
-  const response = await fetch(openaiEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: messages,
-      temperature: 0.7,
-      max_tokens: 1000
-    })
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    console.error("OpenAI API error:", error);
+  try {
+    const response = await fetch(openaiEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 1000
+      }),
+      // Add timeout for better error handling
+      timeout: 30000
+    });
     
-    if (response.status === 401) {
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("OpenAI API error:", error);
+      
+      if (response.status === 401) {
+        throw new functions.https.HttpsError(
+          "unauthenticated",
+          "Invalid OpenAI API key"
+        );
+      } else if (response.status === 429) {
+        throw new functions.https.HttpsError(
+          "resource-exhausted",
+          "OpenAI API rate limit exceeded"
+        );
+      } else if (response.status === 500 || response.status === 503) {
+        throw new functions.https.HttpsError(
+          "unavailable",
+          "OpenAI service is currently unavailable"
+        );
+      }
+      
       throw new functions.https.HttpsError(
-        "unauthenticated",
-        "Invalid API key"
-      );
-    } else if (response.status === 429) {
-      throw new functions.https.HttpsError(
-        "resource-exhausted",
-        "OpenAI API rate limit exceeded"
+        "internal",
+        `OpenAI API error: ${error.error?.message || "Unknown error"}`
       );
     }
     
-    throw new functions.https.HttpsError(
-      "internal",
-      `OpenAI API error: ${error.error?.message || "Unknown error"}`
-    );
+    const result = await response.json();
+    
+    return {
+      response: result.choices[0].message.content,
+      model: model,
+      provider: "openai"
+    };
+  } catch (error: any) {
+    // Handle fetch errors (network issues, timeouts)
+    if (error.type === 'request-timeout') {
+      throw new functions.https.HttpsError(
+        "deadline-exceeded",
+        "Request to OpenAI timed out"
+      );
+    }
+    
+    throw error;
   }
-  
-  const result = await response.json();
-  
-  return {
-    response: result.choices[0].message.content,
-    model: model,
-    provider: "openai"
-  };
 }
 
 // Handle Llama model via Hugging Face API
@@ -111,58 +143,98 @@ async function handleLlamaChat(data: RequestData) {
   
   const huggingFaceEndpoint = `https://api-inference.huggingface.co/models/${getLlamaModelId(model)}`;
   
-  const response = await fetch(huggingFaceEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      inputs: prompt,
-      parameters: {
-        max_new_tokens: 500,
-        temperature: 0.7,
-        top_p: 0.9,
-        do_sample: true
-      }
-    })
-  });
-  
-  if (!response.ok) {
-    const error = await response.text();
-    console.error("Hugging Face API error:", error);
+  try {
+    const response = await fetch(huggingFaceEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 500,
+          temperature: 0.7,
+          top_p: 0.9,
+          do_sample: true
+        }
+      }),
+      // Add timeout for better error handling
+      timeout: 45000
+    });
     
-    if (response.status === 401) {
+    if (!response.ok) {
+      let errorText = '';
+      try {
+        errorText = await response.text();
+      } catch (e) {
+        errorText = 'Could not parse error response';
+      }
+      
+      console.error("Hugging Face API error:", errorText);
+      
+      if (response.status === 401) {
+        throw new functions.https.HttpsError(
+          "unauthenticated",
+          "Invalid Hugging Face token"
+        );
+      } else if (response.status === 429) {
+        throw new functions.https.HttpsError(
+          "resource-exhausted",
+          "Hugging Face API rate limit exceeded"
+        );
+      } else if (response.status === 503 || response.status === 500) {
+        throw new functions.https.HttpsError(
+          "unavailable",
+          "Hugging Face service is temporarily unavailable"
+        );
+      }
+      
       throw new functions.https.HttpsError(
-        "unauthenticated",
-        "Invalid Hugging Face token"
-      );
-    } else if (response.status === 429) {
-      throw new functions.https.HttpsError(
-        "resource-exhausted",
-        "Hugging Face API rate limit exceeded"
+        "internal",
+        `Hugging Face API error: ${errorText}`
       );
     }
     
-    throw new functions.https.HttpsError(
-      "internal",
-      `Hugging Face API error: ${error}`
-    );
+    let result;
+    try {
+      result = await response.json();
+    } catch (e) {
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to parse Hugging Face response"
+      );
+    }
+    
+    // Extract the generated text with better error handling
+    const generatedText = result[0]?.generated_text || result.generated_text;
+    
+    if (!generatedText) {
+      throw new functions.https.HttpsError(
+        "internal",
+        "No response generated from Hugging Face"
+      );
+    }
+    
+    // Clean up the response to extract only the assistant's reply
+    const cleanedResponse = extractLlamaResponse(generatedText, prompt);
+    
+    return {
+      response: cleanedResponse,
+      model: model,
+      provider: "llama"
+    };
+  } catch (error: any) {
+    // Handle fetch errors (network issues, timeouts)
+    if (error.type === 'request-timeout') {
+      throw new functions.https.HttpsError(
+        "deadline-exceeded",
+        "Request to Hugging Face timed out"
+      );
+    }
+    
+    throw error;
   }
-  
-  const result = await response.json();
-  
-  // Extract the generated text
-  const generatedText = result[0]?.generated_text || result.generated_text;
-  
-  // Clean up the response to extract only the assistant's reply
-  const cleanedResponse = extractLlamaResponse(generatedText, prompt);
-  
-  return {
-    response: cleanedResponse,
-    model: model,
-    provider: "llama"
-  };
 }
 
 // Format messages for Llama models
@@ -210,3 +282,4 @@ function getLlamaModelId(model: string): string {
   
   return modelMap[model] || "meta-llama/Llama-2-7b-chat";
 }
+
