@@ -1,6 +1,6 @@
 
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";  // Changed from react-swc to regular react plugin
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { fileURLToPath } from "url";
@@ -11,10 +11,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: "/",
   plugins: [
-    react({
-      // Reduce memory usage by disabling some features
-      plugins: []
-    }),
+    react(), // Using regular React plugin that's compatible with Vite 5
     componentTagger()
   ],
   server: {

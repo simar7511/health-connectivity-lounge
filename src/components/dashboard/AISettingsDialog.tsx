@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -20,6 +19,8 @@ interface AISettingsDialogProps {
   setProvider: (provider: string) => void;
   model: string;
   setModel: (model: string) => void;
+  offlineMode?: "simulated" | "localLLM" | "none";
+  setOfflineMode?: (mode: "simulated" | "localLLM" | "none") => void;
 }
 
 export const AISettingsDialog = ({ 
@@ -29,7 +30,9 @@ export const AISettingsDialog = ({
   provider,
   setProvider,
   model,
-  setModel
+  setModel,
+  offlineMode,
+  setOfflineMode
 }: AISettingsDialogProps) => {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState(() => {
@@ -67,6 +70,16 @@ export const AISettingsDialog = ({
       setModel(savedModel);
     }
   }, [provider, setModel]);
+
+  useEffect(() => {
+    localStorage.setItem("ai_provider", provider);
+    localStorage.setItem(`${provider}_model`, model);
+    
+    // Save offline mode if provided
+    if (offlineMode && setOfflineMode) {
+      localStorage.setItem("ai_offline_mode", offlineMode);
+    }
+  }, [provider, model, offlineMode, setOfflineMode]);
 
   const saveApiKey = () => {
     // Validate OpenAI API key
@@ -414,6 +427,27 @@ export const AISettingsDialog = ({
                 ? "You can get an API key from platform.openai.com. The key is stored locally in your browser."
                 : "Puede obtener una clave API en platform.openai.com. La clave se almacena localmente en su navegador."}
             </p>
+          )}
+          
+          {offlineMode && setOfflineMode && (
+            <div className="space-y-2 mt-4">
+              <label htmlFor="offlineMode" className="text-sm font-medium">
+                {language === "en" ? "Offline Mode" : "Modo Sin Conexión"}
+              </label>
+              <Select 
+                value={offlineMode} 
+                onValueChange={(value) => setOfflineMode(value as "simulated" | "localLLM" | "none")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={language === "en" ? "Select offline mode" : "Seleccionar modo sin conexión"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{language === "en" ? "No Offline Mode" : "Sin Modo Sin Conexión"}</SelectItem>
+                  <SelectItem value="simulated">{language === "en" ? "Simulated Responses" : "Respuestas Simuladas"}</SelectItem>
+                  <SelectItem value="localLLM">{language === "en" ? "Local LLM (Browser)" : "LLM Local (Navegador)"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
         <DialogFooter>

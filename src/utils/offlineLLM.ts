@@ -44,13 +44,15 @@ export const initOfflineModel = async (
     console.log(`Loading offline LLM model: ${modelConfig.modelName}...`);
 
     // Initialize the model using transformers.js
+    // Use supported parameters from the package
     offlineModel = await pipeline(
       "text-generation",
       modelConfig.modelName,
       { 
-        quantized: true, // Use quantized model for smaller size
-        progress_callback: (progress) => {
-          console.log(`Model loading progress: ${Math.round(progress * 100)}%`);
+        revision: "main",
+        progress_callback: (progress: any) => {
+          const percentage = typeof progress === 'number' ? progress : 0;
+          console.log(`Model loading progress: ${Math.round(percentage * 100)}%`);
         }
       }
     );
