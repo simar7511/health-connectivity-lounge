@@ -94,8 +94,8 @@ const Index = () => {
     }
   };
 
-  // Fix the TypeScript error by using the correct type comparison
-  const showNavigation = loginState !== "select";
+  // Fix the TypeScript error by using a type-safe comparison
+  const showNavigation = loginState !== "select" as LoginState;
 
   return (
     <div className="flex flex-col min-h-screen">
