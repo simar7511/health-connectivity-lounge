@@ -8,6 +8,7 @@ import SymptomCheckerPage from "@/pages/SymptomCheckerPage";
 import TransportationPage from "@/pages/TransportationPage";
 import PatientDashboard from "@/components/PatientDashboard";
 import ProviderDashboard from "@/components/ProviderDashboard";
+import { NavigationHeader } from "@/components/layout/NavigationHeader";
 
 // Define possible states
 type LoginState =
@@ -26,6 +27,30 @@ const Index = () => {
 
   const toggleLanguage = () => {
     setLanguage((prev) => (prev === "en" ? "es" : "en"));
+  };
+
+  // Get the title based on current state
+  const getTitle = () => {
+    switch (loginState) {
+      case "select":
+        return language === "en" ? "Health Connectivity" : "Conectividad de Salud";
+      case "patient":
+        return language === "en" ? "Patient Login" : "Inicio de Sesión del Paciente";
+      case "provider":
+        return language === "en" ? "Provider Login" : "Inicio de Sesión del Proveedor";
+      case "appointment":
+        return language === "en" ? "Schedule Appointment" : "Programar Cita";
+      case "symptoms":
+        return language === "en" ? "Symptom Checker" : "Verificador de Síntomas";
+      case "transportation":
+        return language === "en" ? "Transportation" : "Transporte";
+      case "patient-dashboard":
+        return language === "en" ? "Patient Dashboard" : "Panel del Paciente";
+      case "provider-dashboard":
+        return language === "en" ? "Provider Dashboard" : "Panel del Proveedor";
+      default:
+        return language === "en" ? "Health Connectivity" : "Conectividad de Salud";
+    }
   };
 
   // Function to render components based on login state
@@ -70,7 +95,24 @@ const Index = () => {
     }
   };
 
-  return <div>{renderComponent()}</div>;
+  // Don't show navigation header on the select screen
+  const showNavigation = loginState !== "select";
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {showNavigation && (
+        <NavigationHeader 
+          title={getTitle()} 
+          showBackButton={loginState !== "select"}
+          showBreadcrumbs={false}
+          language={language}
+        />
+      )}
+      <main className="flex-1">
+        {renderComponent()}
+      </main>
+    </div>
+  );
 };
 
 export default Index;

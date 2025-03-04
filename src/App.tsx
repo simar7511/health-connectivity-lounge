@@ -37,8 +37,13 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       {/* 🌐 Language Toggle Button */}
-      <div className="flex justify-end p-4">
-        <Button onClick={() => setLanguage((prev) => (prev === "en" ? "es" : "en"))}>
+      <div className="fixed top-4 right-4 z-50">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="bg-white/80 backdrop-blur-sm" 
+          onClick={() => setLanguage((prev) => (prev === "en" ? "es" : "en"))}
+        >
           {language === "en" ? "Switch to Spanish" : "Cambiar a Inglés"}
         </Button>
       </div>
@@ -70,7 +75,15 @@ const App: React.FC = () => {
         <Route path="/ai-chat/:patientId" element={<AIHealthChatPage />} />
 
         {/* 🚨 404 Error Page */}
-        <Route path="*" element={<h1 className="text-center text-red-500">404 - Page Not Found</h1>} />
+        <Route path="*" element={
+          <div className="flex flex-col items-center justify-center h-screen p-4">
+            <h1 className="text-3xl font-bold text-red-500 mb-4">404 - Page Not Found</h1>
+            <p className="text-gray-600 mb-6">The page you are looking for doesn't exist.</p>
+            <Button onClick={() => window.location.href = "/"}>
+              Return to Home
+            </Button>
+          </div>
+        } />
       </Routes>
     </BrowserRouter>
   );

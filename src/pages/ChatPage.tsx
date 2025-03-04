@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, UserCircle2 } from "lucide-react";
+import { Send, UserCircle2 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
+import { NavigationHeader } from "@/components/layout/NavigationHeader";
 
 interface Message {
   id: string;
@@ -33,6 +34,7 @@ export const ChatPage = () => {
   const location = useLocation();
   const state = location.state as LocationState;
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [language, setLanguage] = useState<"en" | "es">("en");
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -77,54 +79,46 @@ export const ChatPage = () => {
     }).format(date);
   };
 
+  const pageTitle = patientName 
+    ? patientName 
+    : language === "en" 
+      ? "Select Patient" 
+      : "Seleccionar Paciente";
+
   if (!patientName) {
     return (
-      <div className="flex flex-col h-screen bg-background p-4">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate(-1)}
-            className="hover:bg-primary/10"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="ml-4 text-xl font-semibold">Select Patient</h1>
-        </div>
-        <div className="grid gap-4">
-          {mockRecipients.map((recipient) => (
-            <Card
-              key={recipient.id}
-              className="p-4 cursor-pointer hover:bg-accent transition-colors animate-fade-in"
-              onClick={() => navigate(`/chat/${recipient.name}`)}
-            >
-              <div className="flex items-center gap-3">
-                <UserCircle2 className="h-8 w-8 text-primary" />
-                <p className="font-medium">{recipient.name}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
+      <div className="flex flex-col min-h-screen">
+        <NavigationHeader 
+          title={pageTitle}
+          language={language}
+        />
+        
+        <main className="flex-1 container mx-auto p-4">
+          <div className="grid gap-4 max-w-md mx-auto">
+            {mockRecipients.map((recipient) => (
+              <Card
+                key={recipient.id}
+                className="p-4 cursor-pointer hover:bg-accent transition-colors animate-fade-in"
+                onClick={() => navigate(`/chat/${recipient.name}`)}
+              >
+                <div className="flex items-center gap-3">
+                  <UserCircle2 className="h-8 w-8 text-primary" />
+                  <p className="font-medium">{recipient.name}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <div className="flex items-center p-4 border-b bg-primary/5">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => navigate(-1)}
-          className="hover:bg-primary/10"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="ml-4 flex items-center gap-3">
-          <UserCircle2 className="h-8 w-8 text-primary" />
-          <h1 className="text-xl font-semibold">{patientName}</h1>
-        </div>
-      </div>
+      <NavigationHeader 
+        title={pageTitle}
+        language={language}
+      />
 
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
