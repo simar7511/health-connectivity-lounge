@@ -6,6 +6,7 @@ import { AIHealthChatHeader } from "@/components/dashboard/AIHealthChatHeader";
 import { AISettingsDialog } from "@/components/dashboard/AISettingsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { initOfflineModel, getOfflineModelConfig } from "@/utils/offlineLLM";
 
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
@@ -16,6 +17,9 @@ export const AIHealthChatPage = () => {
     return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
   });
   const [showApiDialog, setShowApiDialog] = useState(false);
+  const [offlineMode, setOfflineMode] = useState<"simulated" | "localLLM" | "none">(() => {
+    return localStorage.getItem("ai_offline_mode") as "simulated" | "localLLM" | "none" || "simulated";
+  });
   
   // Auto-select model based on connectivity
   const [provider, setProvider] = useState(() => {
@@ -30,6 +34,34 @@ export const AIHealthChatPage = () => {
     }
     return isOnline ? "gpt-4o" : "llama-2-7b-chat";
   });
+  
+  // Initialize offline model if needed
+  useEffect(() => {
+    if (!isOnline && offlineMode === "localLLM") {
+      initOfflineModel().then(success => {
+        if (success) {
+          const config = getOfflineModelConfig();
+          toast({
+            title: language === "en" ? "Offline LLM Ready" : "LLM sin conexión listo",
+            description: language === "en" 
+              ? `Using ${config.modelName} for offline responses` 
+              : `Usando ${config.modelName} para respuestas sin conexión`,
+            variant: "default",
+          });
+        } else {
+          // Fall back to simulated responses if model fails to load
+          setOfflineMode("simulated");
+          toast({
+            title: language === "en" ? "Offline LLM Failed" : "Error en LLM sin conexión",
+            description: language === "en" 
+              ? "Falling back to simulated responses" 
+              : "Volviendo a respuestas simuladas",
+            variant: "destructive",
+          });
+        }
+      });
+    }
+  }, [isOnline, offlineMode, toast, language]);
   
   // Check if API keys are configured
   useEffect(() => {
@@ -108,7 +140,14 @@ export const AIHealthChatPage = () => {
   useEffect(() => {
     localStorage.setItem("ai_provider", provider);
     localStorage.setItem(`${provider}_model`, model);
-  }, [provider, model]);
+    localStorage.setItem("ai_offline_mode", offlineMode);
+  }, [provider, model, offlineMode]);
+
+  // Handle offline mode setting
+  const setOfflineModeType = (mode: "simulated" | "localLLM" | "none") => {
+    setOfflineMode(mode);
+    localStorage.setItem("ai_offline_mode", mode);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -127,6 +166,7 @@ export const AIHealthChatPage = () => {
           model={model}
           provider={provider}
           isOnline={isOnline}
+          offlineMode={offlineMode}
         />
       </div>
 
@@ -138,6 +178,8 @@ export const AIHealthChatPage = () => {
         setProvider={setProvider}
         model={model}
         setModel={setModel}
+        offlineMode={offlineMode}
+        setOfflineMode={setOfflineModeType}
       />
     </div>
   );
