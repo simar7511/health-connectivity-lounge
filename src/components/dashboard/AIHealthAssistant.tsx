@@ -239,7 +239,7 @@ export const AIHealthAssistant = ({
       console.log(`Calling AI model: ${provider}/${model} with ${messageHistory.length} messages`);
       
       try {
-        const response = await aiChatFunction({
+        const result = await aiChatFunction({
           messages: messageHistory,
           model: model,
           provider: provider,
@@ -247,9 +247,10 @@ export const AIHealthAssistant = ({
           apiKey: apiKey
         });
         
-        console.log("AI response received:", response.data);
+        const responseData = result.data as { response?: string };
+        console.log("AI response received:", responseData);
         
-        const aiResponse = response.data?.response || (language === "en" 
+        const aiResponse = responseData.response || (language === "en" 
           ? "I'm sorry, I couldn't generate a response." 
           : "Lo siento, no pude generar una respuesta.");
         
