@@ -1,6 +1,6 @@
 
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "@/types/firebase";
 import { toast } from "@/hooks/use-toast";
 
 interface MessageDetails {
@@ -49,7 +49,7 @@ export const sendMessage = async ({
     // This could be processed by a Firebase Function
     try {
       // If we're in development mode or Firestore isn't fully initialized, use localStorage
-      if (process.env.NODE_ENV !== 'production' || !db || !db.collection) {
+      if (process.env.NODE_ENV !== 'production' || !db || typeof db.collection !== 'function') {
         console.log("[FIREBASE MESSAGING] Using local storage for development:", messageData);
         
         const key = type === "sms" ? "sentSmsMessages" : "sentWhatsAppMessages";
