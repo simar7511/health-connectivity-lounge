@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { format, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, MessageCircle, Phone, AlertCircle, MapPin, Car, Bus, Footprints, Navigation, ArrowRight } from "lucide-react";
+import { CheckCircle, MessageCircle, Phone, AlertCircle, MapPin, Navigation, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { sendAppointmentConfirmation, scheduleAppointmentReminder } from "@/utils/firebaseMessagingService";
 import { toast } from "@/hooks/use-toast";
@@ -27,11 +27,6 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
   const [notificationType, setNotificationType] = useState<"sms" | "whatsapp">("sms");
 
   const transportationInfo = {
-    distance: "5.2",
-    carTravelTime: "15 minutes",
-    transitRoute: "Bus #42",
-    transitTravelTime: "25 minutes",
-    walkingTravelTime: "45 minutes",
     clinicAddress: "123 Healthcare Ave, Seattle, WA 98101",
     mapsUrl: "https://maps.google.com/?q=123+Healthcare+Ave+Seattle+WA+98101"
   };
@@ -296,41 +291,22 @@ const AppointmentConfirmationPage: React.FC<AppointmentConfirmationProps> = ({ l
               {appointmentDetails.appointmentType === "In-Person Visit" && (
                 <div className="mt-4 bg-blue-50 p-4 rounded-md border border-blue-200">
                   <h3 className="font-semibold text-xl text-blue-700">{content.inPersonVisitTitle}</h3>
-                  <p className="mt-2 mb-4">{content.inPersonVisitMessage}</p>
                   
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <MapPin className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <p><strong>{content.distance}:</strong> {transportationInfo.distance} {content.miles}</p>
-                    </div>
+                  <div className="mt-4 flex flex-col items-center">
+                    <p className="mb-3 text-center">
+                      <MapPin className="h-5 w-5 text-blue-600 inline mr-2" />
+                      <span>{transportationInfo.clinicAddress}</span>
+                    </p>
                     
-                    <div className="flex items-start gap-3">
-                      <Car className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <p><strong>{content.byCar}:</strong> {content.estimatedTime}: {transportationInfo.carTravelTime} – {content.parkingInfo}</p>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <Bus className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <p><strong>{content.byPublicTransit}:</strong> {content.take} {transportationInfo.transitRoute} – {content.estimatedTime}: {transportationInfo.transitTravelTime}</p>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <Footprints className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <p><strong>{content.walking}:</strong> {content.estimatedTime}: {transportationInfo.walkingTravelTime} – {content.enjoyFreshAir}</p>
-                    </div>
-                    
-                    <div className="mt-4">
-                      <p className="font-medium">{content.needDirections}</p>
-                      <Button 
-                        className="mt-2 bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-                        onClick={() => window.open(transportationInfo.mapsUrl, '_blank')}
-                      >
-                        <Navigation className="h-4 w-4" />
-                        <span>{content.openInMaps}</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                      <p className="mt-4 text-sm text-blue-700">{content.seeYouSoon}</p>
-                    </div>
+                    <Button 
+                      className="mt-2 bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                      onClick={() => window.open(transportationInfo.mapsUrl, '_blank')}
+                    >
+                      <Navigation className="h-4 w-4" />
+                      <span>{content.openInMaps}</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                    <p className="mt-4 text-sm text-blue-700 text-center">{content.seeYouSoon}</p>
                   </div>
                 </div>
               )}
