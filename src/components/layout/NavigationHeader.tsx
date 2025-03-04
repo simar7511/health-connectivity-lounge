@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft, Home, Bot } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -33,6 +33,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
       home: "Home",
       back: "Back",
       menu: "Menu",
+      aiHealth: "AI Health Assistant",
       switchToSpanish: "Switch to Spanish",
       switchToEnglish: "Switch to English"
     },
@@ -40,6 +41,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
       home: "Inicio",
       back: "Atrás",
       menu: "Menú",
+      aiHealth: "Asistente de Salud IA",
       switchToSpanish: "Cambiar a Español",
       switchToEnglish: "Cambiar a Inglés"
     },
@@ -92,8 +94,18 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
           </div>
         )}
 
-        {/* Desktop Language Switch */}
-        <div className="hidden md:flex items-center">
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/ai-chat")}
+            className={location.pathname === "/ai-chat" ? "bg-primary text-primary-foreground" : ""}
+          >
+            <Bot className="mr-1 h-4 w-4" />
+            {t.aiHealth}
+          </Button>
+          
           <Button
             variant="outline"
             size="sm"
@@ -113,6 +125,14 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
             </SheetTrigger>
             <SheetContent>
               <nav className="flex flex-col gap-4 mt-8">
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => navigate("/ai-chat")}
+                >
+                  <Bot className="mr-2 h-4 w-4" />
+                  {t.aiHealth}
+                </Button>
                 <Button
                   variant="outline"
                   className="justify-start"
