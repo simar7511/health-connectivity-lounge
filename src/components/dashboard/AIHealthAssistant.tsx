@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -199,30 +198,10 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      const shouldUseOfflineMode = !isOnline || isUsingFallback || offlineMode === "localLLM" || offlineMode === "simulated";
+      const shouldUseOfflineMode = !isOnline || isUsingFallback || offlineMode !== "none";
       
       if (shouldUseOfflineMode) {
         console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}, isUsingFallback: ${isUsingFallback}`);
-        
-        if (offlineMode === "localLLM" && isOfflineModelReady()) {
-          await handleLocalLLMResponse(userInput, conversationHistory);
-        } else {
-          await handleSimulatedResponse(userInput);
-        }
-        return;
-      }
-      
-      let apiKey = "";
-      
-      if (provider === "openai") {
-        apiKey = localStorage.getItem("openai_api_key") || "";
-      } else if (provider === "llama") {
-        apiKey = localStorage.getItem("huggingface_token") || "";
-      }
-      
-      if (!apiKey) {
-        console.log("API key not found, using offline mode");
-        setIsUsingFallback(true);
         
         if (offlineMode === "localLLM" && isOfflineModelReady()) {
           await handleLocalLLMResponse(userInput, conversationHistory);
@@ -247,7 +226,7 @@ export const AIHealthAssistant = ({
           model: model,
           provider: provider,
           language: language,
-          apiKey: apiKey
+          // No API key provided - will use server-side keys
         });
         
         const responseData = result.data as { response?: string };
@@ -301,8 +280,8 @@ export const AIHealthAssistant = ({
           : "El servicio de IA encontró un error interno. Esto podría deberse a una alta demanda o limitaciones del servicio.";
       } else if (err.code === 'functions/invalid-argument') {
         errorMessage = language === "en" 
-          ? "Invalid API key or model configuration. Please check your settings."
-          : "Clave API o configuración de modelo inválida. Por favor, verifica tus ajustes.";
+          ? "Invalid model configuration. Please check your settings."
+          : "Configuración de modelo inválida. Por favor, verifica tus ajustes.";
       } else if (err.code === 'functions/resource-exhausted') {
         errorMessage = language === "en"
           ? "API quota exceeded. Please try again later or use a different model."
@@ -313,8 +292,8 @@ export const AIHealthAssistant = ({
           : "El servicio de IA no está disponible temporalmente. Por favor, inténtalo más tarde.";
       } else if (err.code === 'functions/unauthenticated') {
         errorMessage = language === "en"
-          ? "Authentication error. Please check your API key in settings."
-          : "Error de autenticación. Por favor, verifica tu clave API en ajustes.";
+          ? "Authentication error with the AI service. Please try again later."
+          : "Error de autenticación con el servicio de IA. Por favor, inténtalo más tarde.";
       }
       
       setError(errorMessage);

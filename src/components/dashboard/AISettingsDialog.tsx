@@ -1,15 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, KeyRound, ShieldAlert } from "lucide-react";
+import { Sparkles, KeyRound, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-// Default API keys (empty - will prompt user to enter them)
-const DEFAULT_OPENAI_API_KEY = "";
-const DEFAULT_HUGGINGFACE_TOKEN = "";
 
 interface AISettingsDialogProps {
   open: boolean;
@@ -35,28 +31,10 @@ export const AISettingsDialog = ({
   setOfflineMode
 }: AISettingsDialogProps) => {
   const { toast } = useToast();
-  const [apiKey, setApiKey] = useState(() => {
-    const savedKey = localStorage.getItem("openai_api_key");
-    return savedKey ? "••••••••••••••••••••••••••" : "";
-  });
-  const [newApiKey, setNewApiKey] = useState("");
-  const [huggingFaceToken, setHuggingFaceToken] = useState(() => {
-    const savedToken = localStorage.getItem("huggingface_token");
-    return savedToken ? "••••••••••••••••••••••••••" : "";
-  });
-  const [newHuggingFaceToken, setNewHuggingFaceToken] = useState("");
   const [showResetKeySection, setShowResetKeySection] = useState(false);
 
-  // Update API key based on provider
+  // Update based on provider
   useEffect(() => {
-    if (provider === "openai") {
-      const savedKey = localStorage.getItem("openai_api_key");
-      setApiKey(savedKey ? "••••••••••••••••••••••••••" : "");
-    } else if (provider === "llama") {
-      const savedToken = localStorage.getItem("huggingface_token");
-      setHuggingFaceToken(savedToken ? "••••••••••••••••••••••••••" : "");
-    }
-    
     // Set default model based on provider
     if (provider === "openai" && !localStorage.getItem("openai_model")) {
       setModel("gpt-4o");
@@ -81,72 +59,13 @@ export const AISettingsDialog = ({
     }
   }, [provider, model, offlineMode, setOfflineMode]);
 
-  const saveApiKey = () => {
-    // Validate OpenAI API key
-    if (provider === "openai") {
-      if (newApiKey) {
-        if (!newApiKey.startsWith("sk-") && !newApiKey.startsWith("sk-proj-")) {
-          toast({
-            title: language === "en" ? "Invalid API Key" : "Clave API inválida",
-            description: language === "en" 
-              ? "OpenAI API keys should start with 'sk-' or 'sk-proj-'"
-              : "Las claves API de OpenAI deben comenzar con 'sk-' o 'sk-proj-'",
-            variant: "destructive",
-          });
-          return;
-        }
-        // Save new OpenAI key
-        localStorage.setItem("openai_api_key", newApiKey);
-        setApiKey("••••••••••••••••••••••••••");
-        setNewApiKey("");
-      } else if (!localStorage.getItem("openai_api_key")) {
-        toast({
-          title: language === "en" ? "Error" : "Error",
-          description: language === "en" 
-            ? "API key cannot be empty for OpenAI."
-            : "La clave API no puede estar vacía para OpenAI.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    // Validate Hugging Face token
-    if (provider === "llama") {
-      if (newHuggingFaceToken) {
-        if (!newHuggingFaceToken.startsWith("hf_")) {
-          toast({
-            title: language === "en" ? "Invalid Token" : "Token inválido",
-            description: language === "en" 
-              ? "Hugging Face tokens should start with 'hf_'"
-              : "Los tokens de Hugging Face deben comenzar con 'hf_'",
-            variant: "destructive",
-          });
-          return;
-        }
-        // Save new Hugging Face token
-        localStorage.setItem("huggingface_token", newHuggingFaceToken);
-        setHuggingFaceToken("••••••••••••••••••••••••••");
-        setNewHuggingFaceToken("");
-      } else if (!localStorage.getItem("huggingface_token")) {
-        toast({
-          title: language === "en" ? "Error" : "Error",
-          description: language === "en" 
-            ? "Hugging Face token cannot be empty for Llama 2 models."
-            : "El token de Hugging Face no puede estar vacío para los modelos Llama 2.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    
+  const saveSettings = () => {
     // Save model and provider preferences
     localStorage.setItem(`${provider}_model`, model);
     localStorage.setItem("ai_provider", provider);
     
     // Close dialog and notify user
     onOpenChange(false);
-    setShowResetKeySection(false);
     toast({
       title: language === "en" ? "Settings Saved" : "Configuración Guardada",
       description: language === "en" 
@@ -155,33 +74,12 @@ export const AISettingsDialog = ({
     });
   };
 
-  const resetApiKey = () => {
-    if (provider === "openai") {
-      localStorage.removeItem("openai_api_key");
-      setApiKey("");
-      setNewApiKey("");
-    } else if (provider === "llama") {
-      localStorage.removeItem("huggingface_token");
-      setHuggingFaceToken("");
-      setNewHuggingFaceToken("");
-    }
-    
-    toast({
-      title: language === "en" ? "API Key Reset" : "Clave API Reiniciada",
-      description: language === "en" 
-        ? "Your API key has been removed. Please enter a new one."
-        : "Tu clave API ha sido eliminada. Por favor, ingresa una nueva.",
-    });
-    
-    setShowResetKeySection(false);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {language === "en" ? "AI API Settings" : "Configuración API de IA"}
+            {language === "en" ? "AI Settings" : "Configuración de IA"}
           </DialogTitle>
           <DialogDescription>
             {language === "en" 
@@ -190,6 +88,15 @@ export const AISettingsDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
+          <Alert className="bg-primary/10 border-primary/20">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <AlertDescription>
+              {language === "en" 
+                ? "API keys are now managed by the system administrator. No need to enter them manually." 
+                : "Las claves API ahora son administradas por el administrador del sistema. No es necesario ingresarlas manualmente."}
+            </AlertDescription>
+          </Alert>
+          
           <div className="space-y-2">
             <label htmlFor="provider" className="text-sm font-medium">
               {language === "en" ? "AI Provider" : "Proveedor de IA"}
@@ -204,174 +111,6 @@ export const AISettingsDialog = ({
               </SelectContent>
             </Select>
           </div>
-          
-          {provider === "openai" && (
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label htmlFor="apiKey" className="text-sm font-medium">
-                  {language === "en" ? "OpenAI API Key" : "Clave API de OpenAI"}
-                </label>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setShowResetKeySection(!showResetKeySection)}
-                  className="h-7 text-xs"
-                >
-                  {language === "en" ? "Reset Key" : "Reiniciar Clave"}
-                </Button>
-              </div>
-              
-              {showResetKeySection && (
-                <Alert variant="destructive" className="mb-2">
-                  <ShieldAlert className="h-4 w-4" />
-                  <AlertDescription>
-                    {language === "en" 
-                      ? "This will delete your stored API key. Are you sure?" 
-                      : "Esto eliminará tu clave API almacenada. ¿Estás seguro?"}
-                    <div className="mt-2 flex gap-2">
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={resetApiKey}
-                        className="h-7 text-xs"
-                      >
-                        {language === "en" ? "Yes, Delete Key" : "Sí, Eliminar Clave"}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setShowResetKeySection(false)} 
-                        className="h-7 text-xs"
-                      >
-                        {language === "en" ? "Cancel" : "Cancelar"}
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {!showResetKeySection && (
-                <>
-                  {apiKey ? (
-                    <div className="space-y-2">
-                      <Input
-                        value={apiKey}
-                        readOnly
-                        className="bg-muted font-mono"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {language === "en" 
-                          ? "To change your API key, enter a new one below:" 
-                          : "Para cambiar tu clave API, ingresa una nueva a continuación:"}
-                      </p>
-                    </div>
-                  ) : (
-                    <Alert className="bg-primary/10 border-primary/20 mb-2">
-                      <KeyRound className="h-4 w-4 text-primary" />
-                      <AlertDescription>
-                        {language === "en" 
-                          ? "Please enter your OpenAI API key below to enable GPT-4o" 
-                          : "Por favor, ingresa tu clave API de OpenAI para habilitar GPT-4o"}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  <Input
-                    id="newApiKey"
-                    type="password"
-                    placeholder={language === "en" ? "Enter new API key (sk-...)" : "Ingresa nueva clave API (sk-...)"}
-                    value={newApiKey}
-                    onChange={(e) => setNewApiKey(e.target.value)}
-                    className="font-mono"
-                  />
-                </>
-              )}
-            </div>
-          )}
-          
-          {provider === "llama" && (
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label htmlFor="huggingFaceToken" className="text-sm font-medium">
-                  {language === "en" ? "Hugging Face API Token" : "Token de API de Hugging Face"}
-                </label>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setShowResetKeySection(!showResetKeySection)}
-                  className="h-7 text-xs"
-                >
-                  {language === "en" ? "Reset Token" : "Reiniciar Token"}
-                </Button>
-              </div>
-              
-              {showResetKeySection && (
-                <Alert variant="destructive" className="mb-2">
-                  <ShieldAlert className="h-4 w-4" />
-                  <AlertDescription>
-                    {language === "en" 
-                      ? "This will delete your stored token. Are you sure?" 
-                      : "Esto eliminará tu token almacenado. ¿Estás seguro?"}
-                    <div className="mt-2 flex gap-2">
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={resetApiKey}
-                        className="h-7 text-xs"
-                      >
-                        {language === "en" ? "Yes, Delete Token" : "Sí, Eliminar Token"}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setShowResetKeySection(false)} 
-                        className="h-7 text-xs"
-                      >
-                        {language === "en" ? "Cancel" : "Cancelar"}
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {!showResetKeySection && (
-                <>
-                  {huggingFaceToken ? (
-                    <div className="space-y-2">
-                      <Input
-                        value={huggingFaceToken}
-                        readOnly
-                        className="bg-muted font-mono"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {language === "en" 
-                          ? "To change your token, enter a new one below:" 
-                          : "Para cambiar tu token, ingresa uno nuevo a continuación:"}
-                      </p>
-                    </div>
-                  ) : (
-                    <Alert className="bg-primary/10 border-primary/20 mb-2">
-                      <KeyRound className="h-4 w-4 text-primary" />
-                      <AlertDescription>
-                        {language === "en" 
-                          ? "Please enter your Hugging Face token below to enable Llama 2" 
-                          : "Por favor, ingresa tu token de Hugging Face para habilitar Llama 2"}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  <Input
-                    id="newHuggingFaceToken"
-                    type="password"
-                    placeholder={language === "en" ? "Enter new token (hf_...)" : "Ingresa nuevo token (hf_...)"}
-                    value={newHuggingFaceToken}
-                    onChange={(e) => setNewHuggingFaceToken(e.target.value)}
-                    className="font-mono"
-                  />
-                </>
-              )}
-            </div>
-          )}
           
           {provider === "openai" && (
             <div className="space-y-2">
@@ -410,25 +149,6 @@ export const AISettingsDialog = ({
             </div>
           )}
           
-          {provider === "llama" && (
-            <Alert className="bg-primary/10 border-primary/20">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <AlertDescription>
-                {language === "en" 
-                  ? "Llama 2 models require a Hugging Face API token. You can get one for free at huggingface.co/settings/tokens." 
-                  : "Los modelos Llama 2 requieren un token de API de Hugging Face. Puede obtener uno gratis en huggingface.co/settings/tokens."}
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {provider === "openai" && (
-            <p className="text-xs text-muted-foreground mt-2">
-              {language === "en" 
-                ? "You can get an API key from platform.openai.com. The key is stored locally in your browser."
-                : "Puede obtener una clave API en platform.openai.com. La clave se almacena localmente en su navegador."}
-            </p>
-          )}
-          
           {offlineMode && setOfflineMode && (
             <div className="space-y-2 mt-4">
               <label htmlFor="offlineMode" className="text-sm font-medium">
@@ -453,14 +173,11 @@ export const AISettingsDialog = ({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={() => {
-              onOpenChange(false);
-              setShowResetKeySection(false);
-            }}
+            onClick={() => onOpenChange(false)}
           >
             {language === "en" ? "Cancel" : "Cancelar"}
           </Button>
-          <Button onClick={saveApiKey}>
+          <Button onClick={saveSettings}>
             {language === "en" ? "Save" : "Guardar"}
           </Button>
         </DialogFooter>

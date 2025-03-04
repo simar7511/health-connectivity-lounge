@@ -16,7 +16,7 @@ export const AIHealthChatPage = () => {
   const [language, setLanguage] = useState<"en" | "es">(() => {
     return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
   });
-  const [showApiDialog, setShowApiDialog] = useState(false);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [offlineMode, setOfflineMode] = useState<"simulated" | "localLLM" | "none">(() => {
     return localStorage.getItem("ai_offline_mode") as "simulated" | "localLLM" | "none" || "simulated";
   });
@@ -81,28 +81,6 @@ export const AIHealthChatPage = () => {
       initOfflineModel().catch(console.error);
     }
   }, [offlineMode, isUsingLocalModelAlready]);
-  
-  // Check if API keys are configured
-  useEffect(() => {
-    const openaiKey = localStorage.getItem("openai_api_key");
-    const huggingfaceToken = localStorage.getItem("huggingface_token");
-    
-    // If we're offline, don't show the API key dialog
-    if (!isOnline) return;
-    
-    // Show settings dialog if required API key is missing
-    if ((provider === "openai" && !openaiKey) || 
-        (provider === "llama" && !huggingfaceToken)) {
-      setShowApiDialog(true);
-      toast({
-        title: language === "en" ? "API Key Required" : "Se requiere clave API",
-        description: language === "en" 
-          ? "Please configure your API key to use the AI assistant."
-          : "Por favor, configura tu clave API para usar el asistente de IA.",
-        variant: "default",
-      });
-    }
-  }, [provider, language, toast, isOnline]);
 
   // Auto-switch between online and offline models
   useEffect(() => {
@@ -174,7 +152,7 @@ export const AIHealthChatPage = () => {
       <AIHealthChatHeader 
         language={language}
         toggleLanguage={toggleLanguage}
-        openSettings={() => setShowApiDialog(true)}
+        openSettings={() => setShowSettingsDialog(true)}
         isOnline={isOnline}
       />
       
@@ -191,8 +169,8 @@ export const AIHealthChatPage = () => {
       </div>
 
       <AISettingsDialog
-        open={showApiDialog}
-        onOpenChange={setShowApiDialog}
+        open={showSettingsDialog}
+        onOpenChange={setShowSettingsDialog}
         language={language}
         provider={provider}
         setProvider={setProvider}

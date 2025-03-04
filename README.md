@@ -1,69 +1,43 @@
-# Welcome to your Lovable project
+# Health Connectivity Platform
 
-## Project info
+## API Key Configuration
 
-**URL**: https://lovable.dev/projects/958bb7b1-eb32-49bb-9d2f-ce3e8224ab61
+This application now uses server-side API keys for AI services. To configure:
 
-## How can I edit this code?
+1. Edit the `functions/.env` file with your actual API keys:
+   - `OPENAI_API_KEY` for OpenAI services
+   - `HUGGING_FACE_TOKEN` for Hugging Face / Llama services
 
-There are several ways of editing your application.
+2. Deploy the updated Firebase Functions:
+   ```
+   cd functions
+   npm install
+   firebase deploy --only functions
+   ```
 
-**Use Lovable**
+3. No user-provided API keys are needed anymore - the application will use the server-side keys automatically.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/958bb7b1-eb32-49bb-9d2f-ce3e8224ab61) and start prompting.
+## Important Firebase Functions Changes
 
-Changes made via Lovable will be committed automatically to this repo.
+The `aiChatService.ts` function now reads API keys from environment variables instead of from client requests:
 
-**Use your preferred IDE**
+```typescript
+// Inside aiChatService.ts:
+// Replace:
+const apiKey = data.apiKey;
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+// With:
+const apiKey = process.env.OPENAI_API_KEY || process.env.HUGGING_FACE_TOKEN;
 ```
 
-**Edit a file directly in GitHub**
+## Development Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Configure your API keys in `functions/.env`
+4. Start the development server: `npm run dev`
 
-**Use GitHub Codespaces**
+## Production Deployment
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/958bb7b1-eb32-49bb-9d2f-ce3e8224ab61) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+1. Build the project: `npm run build`
+2. Deploy to Firebase: `firebase deploy`
