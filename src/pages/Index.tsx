@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -94,8 +95,8 @@ const Index = () => {
     }
   };
 
-  // Fix: The error was here - we need to explicitly check against the string "select"
-  const showNavigation = loginState !== "select";
+  // Fix the TypeScript error by using a type assertion or strict equality check
+  const showNavigation = loginState as string !== "select";
 
   return (
     <div className="flex flex-col min-h-screen">
