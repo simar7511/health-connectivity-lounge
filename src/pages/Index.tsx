@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -95,7 +94,7 @@ const Index = () => {
     }
   };
 
-  // Fix the TypeScript error by using strict equality check with the string value
+  // Fix the TypeScript error by using the correct type comparison
   const showNavigation = loginState !== "select";
 
   return (

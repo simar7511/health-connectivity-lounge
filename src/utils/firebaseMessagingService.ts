@@ -1,6 +1,6 @@
 
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "@/types/firebase";
+import { collection, addDoc, serverTimestamp, DocumentData } from "@/types/firebase";
 import { toast } from "@/hooks/use-toast";
 
 interface MessageDetails {
@@ -48,8 +48,8 @@ export const sendMessage = async ({
     // Store in Firestore outbound-messages collection
     // This could be processed by a Firebase Function
     try {
-      // If we're in development mode or Firestore isn't fully initialized, use localStorage
-      if (process.env.NODE_ENV !== 'production' || !db || typeof db.collection !== 'function') {
+      // Check if we're in development or if db is properly initialized
+      if (process.env.NODE_ENV !== 'production' || !db || typeof db === 'object' && !('collection' in db)) {
         console.log("[FIREBASE MESSAGING] Using local storage for development:", messageData);
         
         const key = type === "sms" ? "sentSmsMessages" : "sentWhatsAppMessages";
@@ -67,7 +67,7 @@ export const sendMessage = async ({
         });
       } else {
         // Store in Firestore if available
-        await addDoc(collection(db, "outbound-messages"), messageData);
+        await addDoc(collection(db as any, "outbound-messages"), messageData);
         console.log(`${type.toUpperCase()} message added to Firestore for processing`);
         
         toast({
