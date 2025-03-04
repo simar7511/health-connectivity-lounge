@@ -30,6 +30,7 @@ export const sendSMS = async ({ to, message }: SMSDetails): Promise<{ success: b
     
     // Log the attempt
     console.log(`Simulating SMS to ${formattedPhone}`);
+    console.log(`Message content: ${message}`);
 
     // Always use emulation mode 
     console.log("[FREE SMS SOLUTION] Capturing SMS:", { to: formattedPhone, message });
