@@ -36,16 +36,18 @@ const App: React.FC = () => {
 
   return (
     <BrowserRouter>
-      {/* 🌐 Language Toggle Button */}
+      {/* 🌐 Language Toggle Button - Only show on routes other than the home page */}
       <div className="fixed top-4 right-4 z-50">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-white/80 backdrop-blur-sm" 
-          onClick={() => setLanguage((prev) => (prev === "en" ? "es" : "en"))}
-        >
-          {language === "en" ? "Switch to Spanish" : "Cambiar a Inglés"}
-        </Button>
+        {window.location.pathname !== "/" && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="bg-white/80 backdrop-blur-sm" 
+            onClick={() => setLanguage((prev) => (prev === "en" ? "es" : "en"))}
+          >
+            {language === "en" ? "Switch to Spanish" : "Cambiar a Inglés"}
+          </Button>
+        )}
       </div>
 
       {/* 📌 Application Routes */}
