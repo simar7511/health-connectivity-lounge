@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,9 +32,7 @@ interface Message {
   timestamp?: any;
 }
 
-// Sample response for offline mode or when service is unavailable
 const getSampleResponse = (query: string, language: "en" | "es"): string => {
-  // Sample health-related responses
   const responses: Record<string, {en: string, es: string}> = {
     "hypertension": {
       en: "Hypertension, or high blood pressure, is a common condition where the long-term force of blood against your artery walls is high enough that it may eventually cause health problems. Blood pressure is determined by the amount of blood your heart pumps and the resistance to blood flow in your arteries. The more blood your heart pumps and the narrower your arteries, the higher your blood pressure.",
@@ -51,7 +48,6 @@ const getSampleResponse = (query: string, language: "en" | "es"): string => {
     }
   };
 
-  // Look for keywords in the query
   const lowercaseQuery = query.toLowerCase();
   
   for (const [keyword, response] of Object.entries(responses)) {
@@ -60,10 +56,9 @@ const getSampleResponse = (query: string, language: "en" | "es"): string => {
     }
   }
 
-  // Default response if no keywords match
   return language === "en" 
     ? "I'm in offline mode with limited capabilities. Please try again when online, or ask about common health topics like hypertension, diabetes, or COVID-19."
-    : "Estoy en modo sin conexión con capacidades limitadas. Por favor, inténtelo de nuevo cuando esté en línea, o pregunte sobre temas comunes de salud como hipertensión, diabetes o COVID-19.";
+    : "Estoy en modo sin conexión con capacidades limitadas. Por favor, inténtalo de nuevo cuando esté en línea, o pregunte sobre temas comunes de salud como hipertensión, diabetes o COVID-19.";
 };
 
 export const AIHealthAssistant = ({ 
@@ -151,18 +146,15 @@ export const AIHealthAssistant = ({
   const handleRetry = () => {
     setError(null);
     if (messages.length > 1) {
-      // Find the last user message to retry
       const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.role === "user");
       if (lastUserMessageIndex >= 0) {
         const actualIndex = messages.length - 1 - lastUserMessageIndex;
         const userMessage = messages[actualIndex];
         
-        // Remove any subsequent assistant messages
         const newMessages = messages.slice(0, actualIndex + 1);
         setMessages(newMessages);
         setRetryCount(prev => prev + 1);
         
-        // Call handleSend with the last user message
         handleAIRequest(userMessage.content, newMessages);
       }
     }
@@ -204,12 +196,12 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      // Determine if we should use offline mode
-      const useOfflineMode = !isOnline || isUsingFallback;
+      const shouldUseOfflineMode = !isOnline || isUsingFallback || offlineMode === "localLLM" || offlineMode === "simulated";
       
-      if (useOfflineMode) {
-        // Check what type of offline mode to use
-        if (offlineMode === "localLLM" && !isUsingFallback) {
+      if (shouldUseOfflineMode) {
+        console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}, isUsingFallback: ${isUsingFallback}`);
+        
+        if (offlineMode === "localLLM" && isOfflineModelReady()) {
           await handleLocalLLMResponse(userInput, conversationHistory);
         } else {
           await handleSimulatedResponse(userInput);
@@ -226,9 +218,15 @@ export const AIHealthAssistant = ({
       }
       
       if (!apiKey) {
-        throw new Error(language === "en" 
-          ? "API key not found. Please configure it in settings."
-          : "Clave API no encontrada. Por favor, configúrala en ajustes.");
+        console.log("API key not found, using offline mode");
+        setIsUsingFallback(true);
+        
+        if (offlineMode === "localLLM" && isOfflineModelReady()) {
+          await handleLocalLLMResponse(userInput, conversationHistory);
+        } else {
+          await handleSimulatedResponse(userInput);
+        }
+        return;
       }
       
       const messageHistory = conversationHistory.map(msg => ({
@@ -236,7 +234,6 @@ export const AIHealthAssistant = ({
         content: msg.content
       }));
       
-      // Use Firebase Cloud Functions instead of direct API call
       const aiChatFunction = httpsCallable(functions, 'aiChat');
       
       console.log(`Calling AI model: ${provider}/${model} with ${messageHistory.length} messages`);
@@ -252,7 +249,6 @@ export const AIHealthAssistant = ({
         
         console.log("AI response received:", response.data);
         
-        // @ts-ignore - handle the response data structure
         const aiResponse = response.data?.response || (language === "en" 
           ? "I'm sorry, I couldn't generate a response." 
           : "Lo siento, no pude generar una respuesta.");
@@ -273,19 +269,19 @@ export const AIHealthAssistant = ({
         }
       } catch (functionError) {
         console.error("Function error:", functionError);
-        // If the cloud function fails, fall back to local response
-        if (retryCount > 0) {
-          setIsUsingFallback(true);
-          toast({
-            title: language === "en" ? "Using offline mode" : "Usando modo sin conexión",
-            description: language === "en" 
-              ? "Switched to offline response mode due to service errors." 
-              : "Cambiado a modo de respuesta sin conexión debido a errores de servicio.",
-            variant: "default",
-          });
-          await handleAIRequest(userInput, conversationHistory);
+        setIsUsingFallback(true);
+        toast({
+          title: language === "en" ? "Using offline mode" : "Usando modo sin conexión",
+          description: language === "en" 
+            ? "Switched to offline response mode due to service errors." 
+            : "Cambiado a modo de respuesta sin conexión debido a errores de servicio.",
+          variant: "default",
+        });
+        
+        if (offlineMode === "localLLM" && isOfflineModelReady()) {
+          await handleLocalLLMResponse(userInput, conversationHistory);
         } else {
-          throw functionError;
+          await handleSimulatedResponse(userInput);
         }
       }
     } catch (err: any) {
@@ -295,7 +291,6 @@ export const AIHealthAssistant = ({
         ? "Failed to get response from AI. Please try again."
         : "Error al obtener respuesta de la IA. Por favor, inténtalo de nuevo.");
         
-      // Enhanced error handling with specific error messages
       if (err.code === 'functions/internal') {
         errorMessage = language === "en" 
           ? "The AI service encountered an internal error. This could be due to high demand or service limitations."
@@ -330,14 +325,15 @@ export const AIHealthAssistant = ({
           timestamp: serverTimestamp()
         }
       ]);
+      
+      setIsUsingFallback(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle simulated response using predefined answers
   const handleSimulatedResponse = async (userInput: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     const aiResponse = getSampleResponse(userInput, language);
     
@@ -357,14 +353,11 @@ export const AIHealthAssistant = ({
     }
   };
 
-  // Handle response using local LLM
   const handleLocalLLMResponse = async (userInput: string, conversationHistory: Message[]) => {
     try {
-      // Check if model is ready
       if (!isOfflineModelReady()) {
         setIsLoadingOfflineModel(true);
         
-        // Show loading toast
         toast({
           title: language === "en" ? "Loading Offline LLM" : "Cargando LLM sin conexión",
           description: language === "en" 
@@ -373,12 +366,10 @@ export const AIHealthAssistant = ({
           variant: "default",
         });
         
-        // Try to initialize the model
         const success = await initOfflineModel();
         setIsLoadingOfflineModel(false);
         
         if (!success) {
-          // Fall back to simulated mode
           toast({
             title: language === "en" ? "Offline LLM Failed" : "Error en LLM sin conexión",
             description: language === "en" 
@@ -392,7 +383,6 @@ export const AIHealthAssistant = ({
         }
       }
       
-      // Generate response with local LLM
       const aiResponse = await generateOfflineResponse(userInput, language);
       
       const assistantMessage: Message = {
@@ -411,7 +401,6 @@ export const AIHealthAssistant = ({
       }
     } catch (error) {
       console.error("Error using local LLM:", error);
-      // Fall back to simulated responses
       await handleSimulatedResponse(userInput);
     }
   };

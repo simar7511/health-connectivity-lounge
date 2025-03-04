@@ -23,21 +23,29 @@ export const AIHealthChatPage = () => {
   
   // Auto-select model based on connectivity
   const [provider, setProvider] = useState(() => {
-    return localStorage.getItem("ai_provider") || (isOnline ? "openai" : "llama");
+    // If we're offline, always default to local provider
+    if (!isOnline) return "llama";
+    
+    return localStorage.getItem("ai_provider") || "openai";
   });
   
   const [model, setModel] = useState(() => {
+    // If we're offline, always default to local model
+    if (!isOnline) return "llama-2-7b-chat";
+    
     const savedProvider = localStorage.getItem("ai_provider");
     if (savedProvider) {
       return localStorage.getItem(`${savedProvider}_model`) || 
         (savedProvider === "openai" ? "gpt-4o" : "llama-2-7b-chat");
     }
-    return isOnline ? "gpt-4o" : "llama-2-7b-chat";
+    return "gpt-4o";
   });
   
   // Initialize offline model if needed
   useEffect(() => {
-    if (!isOnline && offlineMode === "localLLM") {
+    // If we're offline or the user has selected localLLM mode, initialize the model
+    if ((!isOnline || offlineMode === "localLLM") && !isUsingLocalModelAlready) {
+      console.log("Initializing offline model");
       initOfflineModel().then(success => {
         if (success) {
           const config = getOfflineModelConfig();
@@ -62,11 +70,25 @@ export const AIHealthChatPage = () => {
       });
     }
   }, [isOnline, offlineMode, toast, language]);
+
+  // Track if we've tried to load the model
+  const [isUsingLocalModelAlready, setIsUsingLocalModelAlready] = useState(false);
+  
+  // When offline mode changes to localLLM, attempt to load the model
+  useEffect(() => {
+    if (offlineMode === "localLLM" && !isUsingLocalModelAlready) {
+      setIsUsingLocalModelAlready(true);
+      initOfflineModel().catch(console.error);
+    }
+  }, [offlineMode, isUsingLocalModelAlready]);
   
   // Check if API keys are configured
   useEffect(() => {
     const openaiKey = localStorage.getItem("openai_api_key");
     const huggingfaceToken = localStorage.getItem("huggingface_token");
+    
+    // If we're offline, don't show the API key dialog
+    if (!isOnline) return;
     
     // Show settings dialog if required API key is missing
     if ((provider === "openai" && !openaiKey) || 
@@ -80,49 +102,41 @@ export const AIHealthChatPage = () => {
         variant: "default",
       });
     }
-  }, [provider, language, toast]);
+  }, [provider, language, toast, isOnline]);
 
   // Auto-switch between online and offline models
   useEffect(() => {
-    const savedProvider = localStorage.getItem("ai_provider");
-    
-    // Only auto-switch if user hasn't manually set a preference
-    if (!savedProvider) {
-      const newProvider = isOnline ? "openai" : "llama";
-      
-      if (provider !== newProvider) {
-        setProvider(newProvider);
-        
-        const openaiKey = localStorage.getItem("openai_api_key");
-        const huggingfaceToken = localStorage.getItem("huggingface_token");
-        
-        // Only show toast for connectivity change if keys are configured
-        if ((newProvider === "openai" && openaiKey) || 
-            (newProvider === "llama" && huggingfaceToken)) {
-          // Show toast notification about connectivity change
-          const message = isOnline 
-            ? language === "en" 
-              ? "You're now online. Switched to GPT-4 model." 
-              : "Ahora estás en línea. Cambiado al modelo GPT-4."
-            : language === "en" 
-              ? "You're offline. Switched to local Llama model." 
-              : "Estás desconectado. Cambiado al modelo local Llama.";
-          
-          toast({
-            title: isOnline ? "Connected" : "Offline Mode",
-            description: message,
-            variant: "default",
-          });
-        }
+    // Update provider and model based on connectivity status
+    if (!isOnline) {
+      // Always switch to offline mode when offline
+      if (provider !== "llama") {
+        setProvider("llama");
+        toast({
+          title: language === "en" ? "Offline Mode" : "Modo Sin Conexión",
+          description: language === "en" 
+            ? "You're offline. Switched to offline mode."
+            : "Estás desconectado. Cambiado a modo sin conexión.",
+          variant: "default",
+        });
       }
       
-      // Update model based on provider
-      const newModel = isOnline ? "gpt-4o" : "llama-2-7b-chat";
-      if (model !== newModel) {
-        setModel(newModel);
+      // Make sure we have an appropriate offline mode set
+      if (offlineMode === "none") {
+        setOfflineMode("simulated");
+      }
+    } else {
+      // When back online, inform the user
+      if (provider === "llama" && !localStorage.getItem("ai_provider")) {
+        toast({
+          title: language === "en" ? "Connected" : "Conectado",
+          description: language === "en" 
+            ? "You're now online. You can switch to online AI providers in settings."
+            : "Ahora estás en línea. Puedes cambiar a proveedores de IA en línea en ajustes.",
+          variant: "default",
+        });
       }
     }
-  }, [isOnline, provider, model, toast, language]);
+  }, [isOnline, provider, language, toast, offlineMode]);
 
   const handleBack = () => {
     navigate(-1);
@@ -147,6 +161,12 @@ export const AIHealthChatPage = () => {
   const setOfflineModeType = (mode: "simulated" | "localLLM" | "none") => {
     setOfflineMode(mode);
     localStorage.setItem("ai_offline_mode", mode);
+    
+    // If changing to localLLM, initialize the model
+    if (mode === "localLLM" && !isUsingLocalModelAlready) {
+      setIsUsingLocalModelAlready(true);
+      initOfflineModel().catch(console.error);
+    }
   };
 
   return (

@@ -23,11 +23,14 @@ let modelConfig: OfflineModelConfig = {
 export const initOfflineModel = async (
   config: Partial<OfflineModelConfig> = {}
 ): Promise<boolean> => {
-  if (offlineModel && !config.modelName) {
-    return true; // Model already loaded
+  // If model is already loaded and we're not changing models, return true
+  if (offlineModel && !config.modelName && modelConfig.loaded) {
+    console.log("Offline model already loaded");
+    return true;
   }
 
   if (isModelLoading) {
+    console.log("Model is already loading");
     return false; // Already loading
   }
 
@@ -62,6 +65,8 @@ export const initOfflineModel = async (
     return true;
   } catch (error) {
     console.error("❌ Failed to load offline LLM model:", error);
+    modelConfig.loaded = false;
+    offlineModel = null;
     return false;
   } finally {
     isModelLoading = false;
@@ -76,6 +81,7 @@ export const generateOfflineResponse = async (
   language: "en" | "es" = "en"
 ): Promise<string> => {
   if (!offlineModel || !modelConfig.loaded) {
+    console.log("Offline model not loaded, returning fallback response");
     // Return fallback response if model is not loaded
     return language === "en" 
       ? "Offline LLM model is not loaded. Please try again later or check your settings."
