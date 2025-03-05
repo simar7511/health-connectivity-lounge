@@ -2,21 +2,20 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { aiChatHandler } from "./aiChatService";
-import { handleSMS, sendMessage } from "./smsService";
-import { createPatientRecordFromSMS, translateWithGoogle } from "./twilioFunctions";
 
+// Initialize Firebase Admin
 admin.initializeApp();
 
 // AI Health Assistant Functions
+// Using the v2 syntax for Cloud Functions
 export const aiChat = functions.https.onCall(aiChatHandler);
 
-// SMS Service Functions
-export const sendSMS = functions.https.onCall(sendMessage);
-export const receiveSMS = functions.https.onRequest(handleSMS);
-
-// Twilio Functions
-export const translateText = functions.https.onCall(translateWithGoogle);
-export const createPatientFromSMS = functions.firestore
-  .document("sms/{messageId}")
-  .onCreate(createPatientRecordFromSMS);
-
+// Placeholder for future SMS and Twilio functions
+// These will be implemented later as needed
+export const healthConnectivityStatus = functions.https.onCall(async (data, context) => {
+  return {
+    status: "online",
+    version: "1.0.0",
+    timestamp: new Date().toISOString()
+  };
+});

@@ -1,89 +1,67 @@
-
 import * as functions from "firebase-functions";
-import * as express from "express";
 import * as admin from "firebase-admin";
 
-// Initialize admin SDK
-if (!admin.apps.length) {
-  admin.initializeApp();
-}
-
-// For HTTP requests (Express)
-export const sendSMS = async (req: express.Request, res: express.Response) => {
+// Function to translate text using Google Translate
+export const translateWithGoogle = async (data: { text: string, targetLanguage: string }, context: functions.https.CallableContext) => {
   try {
-    const { to, message } = req.body;
+    // This is a placeholder implementation
+    // In production, you would integrate with Google Translate API
     
-    if (!to || !message) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Missing required parameters: to or message" 
-      });
-    }
+    const { text, targetLanguage } = data;
+    console.log(`Would translate "${text}" to ${targetLanguage}`);
     
-    // Free implementation: just log the SMS that would be sent
-    console.log(`Would send SMS to ${to}: ${message}`);
-    
-    return res.status(200).json({
+    // For now, just return a mock translation
+    return {
       success: true,
-      message: `SMS to ${to} would be sent with message: ${message}`
-    });
+      originalText: text,
+      translatedText: `[Translated to ${targetLanguage}]: ${text}`,
+      language: targetLanguage
+    };
   } catch (error) {
-    console.error("Error sending SMS:", error);
-    return res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : "Unknown error" 
-    });
+    console.error('Error in translation:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Translation failed',
+      error instanceof Error ? error : undefined
+    );
   }
 };
 
-// For direct calling from other functions or callable function
-export const sendSMSDirect = async (to: string, message: string) => {
+// Function to create a patient record from SMS data
+export const createPatientRecordFromSMS = async (snapshot: functions.firestore.QueryDocumentSnapshot) => {
   try {
-    if (!to || !message) {
-      throw new Error("Missing required parameters: to or message");
-    }
+    const smsData = snapshot.data();
     
-    // Free implementation: just log the SMS that would be sent
-    console.log(`Would send SMS to ${to}: ${message}`);
+    // This is a placeholder implementation
+    // In production, you would parse the SMS data and create a patient record
     
-    return {
-      success: true,
-      message: `SMS to ${to} would be sent with message: ${message}`
-    };
+    const patientRef = await admin.firestore().collection('patients').add({
+      name: smsData.name || 'Unknown',
+      phoneNumber: smsData.phoneNumber,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      source: 'SMS'
+    });
+    
+    console.log(`Created patient record ${patientRef.id} from SMS ${snapshot.id}`);
+    
+    // Update the SMS record with the patient ID
+    await snapshot.ref.update({
+      patientId: patientRef.id,
+      processed: true,
+      processedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
+    return patientRef;
   } catch (error) {
-    console.error("Error sending SMS directly:", error);
+    console.error('Error creating patient from SMS:', error);
+    
+    // Update the SMS record with the error
+    await snapshot.ref.update({
+      processed: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      processedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    
     throw error;
   }
 };
-
-// Define the data structure expected by the callable function
-interface TwilioSendSMSData {
-  to: string;
-  message: string;
-}
-
-export const twilioSendSMS = functions.https.onCall(async (request, context) => {
-  try {
-    // Extract the request data properly
-    const data = request.data as TwilioSendSMSData;
-    const { to, message } = data;
-
-    if (!to || !message) {
-      throw new functions.https.HttpsError("invalid-argument", "Missing required parameters: 'to' or 'message'.");
-    }
-
-    // Log instead of sending SMS (for free implementation)
-    console.log(`Would send SMS to ${to}: ${message}`);
-
-    return {
-      success: true,
-      message: `SMS to ${to} would be sent with message: ${message}`,
-    };
-  } catch (error) {
-    console.error("Error in twilioSendSMS:", error);
-    throw new functions.https.HttpsError(
-      "internal",
-      error instanceof Error ? error.message : "Unknown error"
-    );
-  }
-});

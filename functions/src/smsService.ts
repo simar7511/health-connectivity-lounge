@@ -1,70 +1,37 @@
-
 import * as functions from "firebase-functions";
-import twilio from "twilio";
-import cors from "cors";
-import express from "express";
+import * as admin from "firebase-admin";
 
-const corsHandler = cors({ origin: true });
-const app = express();
+export interface SMSMessage {
+  to: string;
+  body: string;
+}
 
-// Use CORS middleware
-app.use(corsHandler);
+// Send SMS message function
+export const sendSMS = async (data: SMSMessage, context: functions.https.CallableContext) => {
+  // This is a placeholder implementation
+  // In production, you would integrate with a service like Twilio
+  
+  console.log(`Would send SMS to ${data.to}: ${data.body}`);
+  
+  return {
+    success: true,
+    message: "SMS would be sent in production",
+    timestamp: admin.firestore.FieldValue.serverTimestamp()
+  };
+};
 
-// Initialize Twilio client with environment variables
-const accountSid = process.env.TWILIO_ACCOUNT_SID || "ACa7a76e6d230ef13e0631f01d8652702f";
-const authToken = process.env.TWILIO_AUTH_TOKEN || "b76ce2403f8aecc261288328088510a5";
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || "+12063837604";
-
-const client = twilio(accountSid, authToken);
-
-// Express route for SMS sending
-app.post("/send", async (request, response) => {
+// Create a record of the sent message
+export const recordSMSMessage = async (phoneNumber: string, message: string) => {
   try {
-    // Extract parameters from request body
-    const { to, message } = request.body;
-
-    if (!to || !message) {
-      response.status(400).send({ 
-        error: "Bad Request", 
-        message: "Both 'to' and 'message' parameters are required" 
-      });
-      return;
-    }
-
-    // Format the phone number if needed
-    let formattedPhone = to.startsWith("+") ? to : `+1${to}`;
-
-    // Log the SMS attempt
-    console.log(`Attempting to send SMS to ${formattedPhone}`);
-
-    // Send the SMS
-    const result = await client.messages.create({
-      body: message,
-      from: twilioPhoneNumber,
-      to: formattedPhone
+    await admin.firestore().collection('sms').add({
+      phoneNumber,
+      message,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      status: 'sent'
     });
-
-    // Log success and return message SID
-    console.log(`SMS sent successfully with SID: ${result.sid}`);
-    response.status(200).send({
-      success: true,
-      sid: result.sid,
-      status: result.status
-    });
+    return true;
   } catch (error) {
-    // Log and return error
-    console.error("Error sending SMS:", error);
-    response.status(500).send({
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred"
-    });
+    console.error('Error recording SMS message:', error);
+    return false;
   }
-});
-
-// Health check endpoint required by Cloud Run
-app.get("/", (req, res) => {
-  res.status(200).send("SMS Service is healthy and running!");
-});
-
-// Export the express app for Cloud Functions
-export const smsService = functions.https.onRequest(app);
+};
