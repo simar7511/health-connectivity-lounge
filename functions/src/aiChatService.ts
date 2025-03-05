@@ -1,5 +1,5 @@
 
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import fetch from "node-fetch";
 
@@ -14,13 +14,13 @@ export interface RequestData {
 
 // Function handler for AI chat
 export const aiChatHandler = async (
-  request: functions.https.CallableRequest<RequestData>
+  request: functions.CallableRequest<RequestData>
 ) => {
   try {
     const data = request.data;
     
     if (!data || !data.messages || !data.model || !data.provider) {
-      throw new functions.https.HttpsError(
+      throw new functions.HttpsError(
         'invalid-argument',
         'Missing required fields: messages, model, provider'
       );
@@ -32,14 +32,14 @@ export const aiChatHandler = async (
     } else if (data.provider === 'llama') {
       return await handleLlamaRequest(data);
     } else {
-      throw new functions.https.HttpsError(
+      throw new functions.HttpsError(
         'invalid-argument',
         `Unsupported provider: ${data.provider}`
       );
     }
   } catch (error: any) {
     console.error('Error in AI chat handler:', error);
-    throw new functions.https.HttpsError(
+    throw new functions.HttpsError(
       'internal',
       error.message || 'An unknown error occurred',
       error
@@ -76,7 +76,7 @@ async function handleOpenAIRequest(data: RequestData) {
       throw new Error(`OpenAI API error: ${response.status} ${error}`);
     }
     
-    const result = await response.json();
+    const result = await response.json() as any;
     return {
       response: result.choices[0].message.content,
       model: data.model,

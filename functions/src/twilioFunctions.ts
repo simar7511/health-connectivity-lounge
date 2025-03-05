@@ -1,67 +1,70 @@
-import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
 
-// Function to translate text using Google Translate
-export const translateWithGoogle = async (data: { text: string, targetLanguage: string }, context: functions.https.CallableContext) => {
+import * as functions from "firebase-functions/v2/https";
+import * as admin from "firebase-admin";
+import { Twilio } from "twilio";
+
+// Translation function
+export const translateWithGoogle = async (
+  request: functions.CallableRequest<{ text: string, targetLanguage: string }>
+) => {
   try {
-    // This is a placeholder implementation
-    // In production, you would integrate with Google Translate API
+    const data = request.data;
     
-    const { text, targetLanguage } = data;
-    console.log(`Would translate "${text}" to ${targetLanguage}`);
+    if (!data || !data.text || !data.targetLanguage) {
+      throw new functions.HttpsError(
+        'invalid-argument',
+        'Missing required fields: text, targetLanguage'
+      );
+    }
+
+    // Implement translation logic here
+    // This is a placeholder - you'll need to implement the actual translation
+    // using a service like Google Translate API
     
-    // For now, just return a mock translation
-    return {
-      success: true,
-      originalText: text,
-      translatedText: `[Translated to ${targetLanguage}]: ${text}`,
-      language: targetLanguage
-    };
-  } catch (error) {
+    const translatedText = `[Translated to ${data.targetLanguage}]: ${data.text}`;
+    
+    return { translatedText };
+  } catch (error: any) {
     console.error('Error in translation:', error);
-    throw new functions.https.HttpsError(
+    throw new functions.HttpsError(
       'internal',
-      'Translation failed',
-      error instanceof Error ? error : undefined
+      error.message || 'Translation failed',
+      error
     );
   }
 };
 
-// Function to create a patient record from SMS data
-export const createPatientRecordFromSMS = async (snapshot: functions.firestore.QueryDocumentSnapshot) => {
+// Function to create patient record from SMS
+export const createPatientRecordFromSMS = async (
+  request: functions.CallableRequest<{ phone: string, message: string }>
+) => {
   try {
-    const smsData = snapshot.data();
+    const data = request.data;
     
+    if (!data || !data.phone || !data.message) {
+      throw new functions.HttpsError(
+        'invalid-argument',
+        'Missing required fields: phone, message'
+      );
+    }
+
+    // Parse message and create patient record
     // This is a placeholder implementation
-    // In production, you would parse the SMS data and create a patient record
+    const patientData = {
+      phone: data.phone,
+      initialMessage: data.message,
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    };
     
-    const patientRef = await admin.firestore().collection('patients').add({
-      name: smsData.name || 'Unknown',
-      phoneNumber: smsData.phoneNumber,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      source: 'SMS'
-    });
+    const patientRef = await admin.firestore().collection('patients').add(patientData);
     
-    console.log(`Created patient record ${patientRef.id} from SMS ${snapshot.id}`);
-    
-    // Update the SMS record with the patient ID
-    await snapshot.ref.update({
-      patientId: patientRef.id,
-      processed: true,
-      processedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
-    return patientRef;
-  } catch (error) {
-    console.error('Error creating patient from SMS:', error);
-    
-    // Update the SMS record with the error
-    await snapshot.ref.update({
-      processed: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      processedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
-    throw error;
+    return { success: true, patientId: patientRef.id };
+  } catch (error: any) {
+    console.error('Error creating patient record:', error);
+    throw new functions.HttpsError(
+      'internal',
+      error.message || 'Failed to create patient record',
+      error
+    );
   }
 };

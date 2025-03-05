@@ -1,5 +1,5 @@
 
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v2/https";
 import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
@@ -113,4 +113,4 @@ app.get("/", (req, res) => {
 });
 
 // Export the Express app as a Cloud Function
-export const llamaProxy = functions.https.onRequest(app);
+export const llamaProxy = functions.onRequest(app);
