@@ -198,16 +198,16 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      const shouldUseOfflineMode = !isOnline || isUsingFallback || offlineMode !== "none";
+      const shouldUseOfflineMode = !isOnline || offlineMode === "localLLM";
       
       if (shouldUseOfflineMode) {
-        console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}, isUsingFallback: ${isUsingFallback}`);
+        console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
         
-        if (offlineMode === "localLLM" && isOfflineModelReady()) {
-          await handleLocalLLMResponse(userInput, conversationHistory);
-        } else {
-          await handleSimulatedResponse(userInput);
+        if ((!isOnline || offlineMode === "localLLM") && isOfflineModelReady()) {
+          return handleLocalLLMResponse(userInput, conversationHistory);
         }
+        
+        await handleSimulatedResponse(userInput);
         return;
       }
       

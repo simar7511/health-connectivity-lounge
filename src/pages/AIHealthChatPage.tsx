@@ -26,6 +26,7 @@ export const AIHealthChatPage = () => {
     // If we're offline, always default to local provider
     if (!isOnline) return "llama";
     
+    // Default to OpenAI if not set
     return localStorage.getItem("ai_provider") || "openai";
   });
   
@@ -38,6 +39,7 @@ export const AIHealthChatPage = () => {
       return localStorage.getItem(`${savedProvider}_model`) || 
         (savedProvider === "openai" ? "gpt-4o" : "llama-2-7b-chat");
     }
+    // Default to GPT-4o
     return "gpt-4o";
   });
   
@@ -103,13 +105,13 @@ export const AIHealthChatPage = () => {
         setOfflineMode("simulated");
       }
     } else {
-      // When back online, inform the user
-      if (provider === "llama" && !localStorage.getItem("ai_provider")) {
+      // When back online, inform the user if they were previously using Llama
+      if (provider === "llama" && localStorage.getItem("ai_provider") === "llama") {
         toast({
           title: language === "en" ? "Connected" : "Conectado",
           description: language === "en" 
-            ? "You're now online. You can switch to online AI providers in settings."
-            : "Ahora estás en línea. Puedes cambiar a proveedores de IA en línea en ajustes.",
+            ? "You're now online. You can switch to GPT-4o in settings for advanced AI capabilities."
+            : "Ahora estás en línea. Puedes cambiar a GPT-4o en ajustes para capacidades de IA avanzadas.",
           variant: "default",
         });
       }
