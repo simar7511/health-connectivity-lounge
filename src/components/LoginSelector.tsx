@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog } from "lucide-react";
+import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog, Bot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface LoginSelectorProps {
@@ -33,6 +33,9 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
       virtualDescription: "See a doctor from home – great for follow-ups & quick questions!",
       inPersonVisits: "In-Person Care",
       inPersonDescription: "Visit our clinic for check-ups, vaccines, and more.",
+      aiAssistant: "AI Health Assistant",
+      tryAiAssistant: "Try our AI Health Assistant",
+      aiAssistantDescription: "Get quick answers to common health questions"
     },
     es: {
       title: "Bienvenido a Safe Haven Pediatrics",
@@ -54,6 +57,9 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
       virtualDescription: "Consulte a un médico desde casa – ¡ideal para seguimientos y consultas rápidas!",
       inPersonVisits: "Atención en Persona",
       inPersonDescription: "Visite nuestra clínica para chequeos, vacunas y más.",
+      aiAssistant: "Asistente de Salud IA",
+      tryAiAssistant: "Pruebe nuestro Asistente de Salud IA",
+      aiAssistantDescription: "Obtenga respuestas rápidas a preguntas comunes de salud"
     },
   };
 
@@ -103,6 +109,19 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
           </div>
         </div>
 
+        {/* AI Health Assistant Button - Prominent position above the main card */}
+        <div className="flex justify-center mb-6">
+          <Button
+            onClick={() => navigate("/ai-chat")}
+            variant="gradient"
+            size="lg"
+            className="animate-pulse hover:animate-none group transition-all duration-300 drop-shadow-md hover:drop-shadow-xl"
+          >
+            <Bot className="w-6 h-6 mr-2 text-white group-hover:scale-110 transition-transform" />
+            {content[language].tryAiAssistant}
+          </Button>
+        </div>
+
         <Card className="p-8 bg-white/80 backdrop-blur shadow-lg">
           <div className="space-y-6">
             <div className="space-y-4">
@@ -116,7 +135,7 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4 my-8">
+            <div className="grid md:grid-cols-3 gap-4 my-8">
               <div className="text-center p-4 rounded-lg bg-primary/5">
                 <VideoIcon className="w-8 h-8 mx-auto text-primary mb-2" />
                 <p className="font-medium">{content[language].virtualVisits}</p>
@@ -126,6 +145,11 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
                 <Calendar className="w-8 h-8 mx-auto text-primary mb-2" />
                 <p className="font-medium">{content[language].inPersonVisits}</p>
                 <p className="text-sm mt-2 text-gray-600">🏥 {content[language].inPersonDescription}</p>
+              </div>
+              <div className="text-center p-4 rounded-lg bg-purple-100">
+                <Bot className="w-8 h-8 mx-auto text-purple-600 mb-2" />
+                <p className="font-medium">{content[language].aiAssistant}</p>
+                <p className="text-sm mt-2 text-gray-600">🤖 {content[language].aiAssistantDescription}</p>
               </div>
             </div>
 
@@ -147,3 +171,4 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
     </div>
   );
 };
+
