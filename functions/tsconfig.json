@@ -15,6 +15,7 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "noUnusedLocals": false,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "typeRoots": ["node_modules/@types"]
   }
 }
