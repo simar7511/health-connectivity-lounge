@@ -18,7 +18,7 @@ export const AIHealthChatPage = () => {
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [offlineMode, setOfflineMode] = useState<"simulated" | "localLLM" | "none">(() => {
-    return localStorage.getItem("ai_offline_mode") as "simulated" | "localLLM" | "none" || "simulated";
+    return (localStorage.getItem("ai_offline_mode") as "simulated" | "localLLM" | "none") || "simulated";
   });
   
   // Auto-select model based on connectivity
