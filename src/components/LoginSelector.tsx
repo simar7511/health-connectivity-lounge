@@ -109,13 +109,13 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
           </div>
         </div>
 
-        {/* AI Health Assistant Button - Prominent position above the main card */}
+        {/* AI Health Assistant Button - Removed pulse animation class */}
         <div className="flex justify-center mb-6">
           <Button
             onClick={() => navigate("/ai-chat")}
             variant="gradient"
             size="lg"
-            className="animate-pulse hover:animate-none group transition-all duration-300 drop-shadow-md hover:drop-shadow-xl"
+            className="group transition-all duration-300 drop-shadow-md hover:drop-shadow-xl"
           >
             <Bot className="w-6 h-6 mr-2 text-white group-hover:scale-110 transition-transform" />
             {content[language].tryAiAssistant}
@@ -171,4 +171,3 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
     </div>
   );
 };
-
