@@ -1,108 +1,106 @@
 
-import * as functions from "firebase-functions/v2/https";
-import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
 import fetch from "node-fetch";
+import * as dotenv from "dotenv";
 
-// Define the request data type
-export interface RequestData {
-  messages: Array<{role: string, content: string}>;
-  model: string;
-  provider: string;
-  language: string;
-  apiKey?: string;
-}
+// Initialize dotenv to load environment variables
+dotenv.config();
 
-// Function handler for AI chat
-export const aiChatHandler = async (
-  request: functions.CallableRequest<RequestData>
-) => {
+// Get the OpenAI API key from environment variables
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+/**
+ * Firebase Cloud Function that handles AI chat requests
+ */
+export const aiChat = functions.https.onCall(async (data, context) => {
   try {
-    const data = request.data;
-    
-    if (!data || !data.messages || !data.model || !data.provider) {
-      throw new functions.HttpsError(
-        'invalid-argument',
-        'Missing required fields: messages, model, provider'
+    // Validate authentication if user is not authenticated
+    if (!context.auth && !context.app) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated to use this feature."
       );
     }
 
-    // Choose the appropriate AI provider
-    if (data.provider === 'openai') {
-      return await handleOpenAIRequest(data);
-    } else if (data.provider === 'llama') {
-      return await handleLlamaRequest(data);
-    } else {
-      throw new functions.HttpsError(
-        'invalid-argument',
-        `Unsupported provider: ${data.provider}`
+    // Extract data from the request
+    const { messages, model = "gpt-4o", provider = "openai", language = "en" } = data;
+
+    // Validate required parameters
+    if (!messages || !Array.isArray(messages)) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Messages must be provided as an array."
       );
     }
-  } catch (error: any) {
-    console.error('Error in AI chat handler:', error);
-    throw new functions.HttpsError(
-      'internal',
-      error.message || 'An unknown error occurred',
-      error
+
+    let response;
+
+    if (provider === "openai") {
+      // Using OpenAI API
+      if (!OPENAI_API_KEY) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "OpenAI API key not configured."
+        );
+      }
+
+      // Prepare system prompt to guide AI behavior
+      const systemMessage = {
+        role: "system", 
+        content: language === "en" 
+          ? "You are an AI health assistant designed to provide clear, evidence-based health information. Your goal is to help users understand general health topics, symptoms, wellness tips, and lifestyle advice in a supportive and non-diagnostic manner. Always clarify that you are not a substitute for professional medical advice and encourage users to seek a healthcare provider for personalized concerns. Keep responses brief, user-friendly, and easy to understand, avoiding unnecessary medical jargon."
+          : "Eres un asistente de salud de IA diseñado para proporcionar información de salud clara y basada en evidencia. Tu objetivo es ayudar a los usuarios a comprender temas generales de salud, síntomas, consejos de bienestar y consejos de estilo de vida de manera solidaria y no diagnóstica. Siempre aclara que no eres un sustituto del consejo médico profesional y anima a los usuarios a buscar un proveedor de atención médica para consultas personalizadas. Mantén las respuestas breves, fáciles de usar y fáciles de entender, evitando la jerga médica innecesaria."
+      };
+
+      // Include the system message if not already present
+      const processedMessages = messages[0]?.role === "system" 
+        ? messages 
+        : [systemMessage, ...messages];
+
+      response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: processedMessages,
+          temperature: 0.7,
+          max_tokens: 1000
+        })
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.error) {
+        console.error("OpenAI API error:", responseData.error);
+        throw new functions.https.HttpsError(
+          "internal",
+          `OpenAI API error: ${responseData.error.message || "Unknown error"}`
+        );
+      }
+
+      return {
+        response: responseData.choices[0]?.message?.content || "No response generated."
+      };
+    } else if (provider === "llama") {
+      // Handle Llama model from local proxy or another service
+      throw new functions.https.HttpsError(
+        "unimplemented",
+        "Llama models are only available in offline mode."
+      );
+    } else {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        `Unsupported provider: ${provider}`
+      );
+    }
+  } catch (error) {
+    console.error("AI Chat error:", error);
+    throw new functions.https.HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error in AI Chat function"
     );
   }
-};
-
-// Handler for OpenAI requests
-async function handleOpenAIRequest(data: RequestData) {
-  try {
-    // Replace with actual OpenAI API endpoint
-    const apiKey = data.apiKey || process.env.OPENAI_API_KEY;
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API key is required');
-    }
-    
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: data.model,
-        messages: data.messages,
-        temperature: 0.7,
-        max_tokens: 1000
-      })
-    });
-    
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} ${error}`);
-    }
-    
-    const result = await response.json() as any;
-    return {
-      response: result.choices[0].message.content,
-      model: data.model,
-      provider: data.provider
-    };
-  } catch (error: any) {
-    console.error('Error in OpenAI request:', error);
-    throw error;
-  }
-}
-
-// Handler for Llama requests
-async function handleLlamaRequest(data: RequestData) {
-  try {
-    // For local development, use a simulated response
-    // In production, this would call your Llama model API
-    const simulatedResponse = `This is a simulated response from the ${data.model} model.`;
-    
-    // In a real implementation, you would make an API call to your Llama service
-    return {
-      response: simulatedResponse,
-      model: data.model,
-      provider: data.provider
-    };
-  } catch (error: any) {
-    console.error('Error in Llama request:', error);
-    throw error;
-  }
-}
+});
