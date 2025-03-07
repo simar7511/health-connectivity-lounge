@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ interface AIHealthAssistantProps {
   isOnline?: boolean;
   offlineMode?: OfflineModeType;
   aiService?: AIService;
+  quotaExceeded?: boolean;
 }
 
 export const AIHealthAssistant = ({ 
@@ -33,7 +35,8 @@ export const AIHealthAssistant = ({
   provider,
   isOnline = true,
   offlineMode = "simulated",
-  aiService
+  aiService,
+  quotaExceeded = false
 }: AIHealthAssistantProps) => {
   const { toast } = useToast();
   const [input, setInput] = useState("");
@@ -65,11 +68,15 @@ export const AIHealthAssistant = ({
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(`${provider}_api_key`) || "";
-    if (provider === "openai" && storedApiKey && (storedApiKey.startsWith("sk-") || storedApiKey.startsWith("sk-proj-"))) {
-      setUsingOpenAI(true);
+    const isValidKey = storedApiKey && (storedApiKey.startsWith("sk-") || storedApiKey.startsWith("sk-proj-"));
+    
+    // Track if we're using OpenAI
+    setUsingOpenAI(isValidKey && isOnline && !quotaExceeded);
+    
+    if (isValidKey) {
       localAiService.setApiKey(storedApiKey);
       
-      if (isOnline) {
+      if (isOnline && !quotaExceeded) {
         console.log("Using OpenAI API for responses");
         toast({
           title: detectedLanguage === "en" ? "Using OpenAI" : "Usando OpenAI",
@@ -77,14 +84,24 @@ export const AIHealthAssistant = ({
             ? "Using OpenAI for enhanced health assistant responses" 
             : "Usando OpenAI para respuestas mejoradas del asistente de salud",
         });
+      } else if (quotaExceeded) {
+        console.log("OpenAI API quota exceeded, using offline mode");
+        setIsUsingFallback(true);
       } else {
         console.log("OpenAI API key found but using offline mode due to connectivity");
       }
     } else {
-      setUsingOpenAI(false);
       console.log("Using simulated responses (no valid OpenAI API key)");
     }
-  }, [provider, isOnline, detectedLanguage, localAiService, toast]);
+  }, [provider, isOnline, detectedLanguage, localAiService, toast, quotaExceeded]);
+
+  useEffect(() => {
+    // Update when quota status changes
+    if (quotaExceeded) {
+      setIsUsingFallback(true);
+      setUsingOpenAI(false);
+    }
+  }, [quotaExceeded]);
 
   useEffect(() => {
     console.log(`Language preference changed to: ${language}`);
@@ -189,18 +206,44 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      console.log(`Using provider: ${provider}, model: ${model}, isOnline: ${isOnline}, detected language: ${detectedLanguage}`);
+      console.log(`Using provider: ${provider}, model: ${model}, isOnline: ${isOnline}, detected language: ${detectedLanguage}, quota exceeded: ${quotaExceeded}`);
       
       const apiKey = localStorage.getItem(`${provider}_api_key`);
-      if (provider === "openai" && apiKey && apiKey.startsWith("sk-") && isOnline) {
+      if (provider === "openai" && apiKey && (apiKey.startsWith("sk-") || apiKey.startsWith("sk-proj-")) && isOnline && !quotaExceeded) {
         localAiService.setApiKey(apiKey);
         console.log("Using OpenAI API for response");
       } else {
-        console.log("Using offline/simulated mode for response");
+        if (quotaExceeded) {
+          console.log("Using offline mode due to quota exceeded");
+        } else {
+          console.log("Using offline/simulated mode for response");
+        }
       }
       
       const aiResponse = await localAiService.sendMessage(userInput, conversationId, conversationHistory);
-      setMessages((prev) => [...prev, aiResponse]);
+      
+      // If we get a system message about quota, it should be displayed as is
+      if (aiResponse.role === "system" && aiResponse.content.includes("quota exceeded")) {
+        setMessages((prev) => [...prev, aiResponse]);
+        toast({
+          title: detectedLanguage === "en" ? "API Quota Exceeded" : "Cuota de API Excedida",
+          description: detectedLanguage === "en" 
+            ? "Using simulated responses. Please update your API key in settings." 
+            : "Usando respuestas simuladas. Por favor, actualiza tu clave API en configuración.",
+          variant: "destructive",
+        });
+      } else {
+        setMessages((prev) => [...prev, aiResponse]);
+      }
+      
+      // If this is a response from the API, check if it worked
+      if ('getApiStatus' in localAiService) {
+        const status = localAiService.getApiStatus();
+        if (status.quotaExceeded) {
+          setUsingOpenAI(false);
+          setIsUsingFallback(true);
+        }
+      }
     } catch (err: any) {
       console.error("Error in AI chat:", err);
       
@@ -258,7 +301,21 @@ export const AIHealthAssistant = ({
 
   return (
     <div className="flex flex-col h-full">
-      {(!isOnline || isUsingFallback) && (
+      {quotaExceeded && (
+        <Alert className="m-2 bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertTitle>
+            {detectedLanguage === "en" ? "API Quota Exceeded" : "Cuota de API Excedida"}
+          </AlertTitle>
+          <AlertDescription>
+            {detectedLanguage === "en" 
+              ? "Your OpenAI API quota has been exceeded. Using offline mode with simulated responses. Please update your API key in settings."
+              : "Tu cuota de API de OpenAI ha sido excedida. Usando modo sin conexión con respuestas simuladas. Por favor, actualiza tu clave API en configuración."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {(!isOnline || isUsingFallback) && !quotaExceeded && (
         <Alert className="m-2 bg-amber-50 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertTitle>
@@ -272,7 +329,7 @@ export const AIHealthAssistant = ({
         </Alert>
       )}
       
-      {usingOpenAI && isOnline && (
+      {usingOpenAI && isOnline && !quotaExceeded && (
         <Alert className="m-2 bg-green-50 border-green-200">
           <Check className="h-4 w-4 text-green-500" />
           <AlertTitle>
@@ -321,10 +378,16 @@ export const AIHealthAssistant = ({
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message, index) => (
-            <Card key={index} className={`max-w-[80%] ${message.role === "user" ? "ml-auto bg-primary text-primary-foreground" : "mr-auto"}`}>
+            <Card key={index} className={`max-w-[80%] ${
+              message.role === "user" 
+                ? "ml-auto bg-primary text-primary-foreground" 
+                : message.role === "system" && message.content.includes("quota exceeded")
+                  ? "mr-auto bg-destructive text-destructive-foreground"
+                  : "mr-auto"
+            }`}>
               <CardContent className="p-3">
                 <div className="flex items-start gap-3">
-                  {message.role === "assistant" ? (
+                  {message.role === "assistant" || message.role === "system" ? (
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-primary/10 text-primary">
                         <Bot className="h-4 w-4" />
@@ -355,12 +418,7 @@ export const AIHealthAssistant = ({
             placeholder={getInputPlaceholder()}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
+            onKeyDown={handleKeyDown}
             disabled={isLoading || isLoadingOfflineModel}
             className="flex-1"
           />

@@ -1,5 +1,7 @@
+
 import { AIMessage } from "./fakeAIService";
 import { OfflineModeType } from "@/utils/offlineHelpers";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * A service to handle AI interactions without Firebase dependency
@@ -10,6 +12,7 @@ export class AIService {
   private language: "en" | "es";
   private offlineMode: OfflineModeType;
   private isOnline: boolean;
+  private quotaExceeded: boolean = false;
   
   // In-memory storage for chat history
   private chatHistory: Record<string, AIMessage[]> = {};
@@ -48,7 +51,41 @@ export class AIService {
    * Validate OpenAI API key format
    */
   private isValidOpenAIKey(apiKey: string): boolean {
-    return apiKey.startsWith('sk-') && apiKey.length > 20;
+    return (apiKey.startsWith('sk-') || apiKey.startsWith('sk-proj-')) && apiKey.length > 20;
+  }
+
+  /**
+   * Check if quota is exceeded
+   */
+  isQuotaExceeded(): boolean {
+    return this.quotaExceeded;
+  }
+
+  /**
+   * Reset quota exceeded status - can be called after a new API key is set
+   */
+  resetQuotaStatus(): void {
+    this.quotaExceeded = false;
+    console.log('API quota status reset');
+  }
+  
+  /**
+   * Get current API status info
+   */
+  getApiStatus(): {
+    hasValidKey: boolean,
+    isOnline: boolean,
+    offlineMode: OfflineModeType,
+    quotaExceeded: boolean,
+    model: string
+  } {
+    return {
+      hasValidKey: this.isValidOpenAIKey(this.apiKey),
+      isOnline: this.isOnline,
+      offlineMode: this.offlineMode,
+      quotaExceeded: this.quotaExceeded,
+      model: this.model
+    };
   }
 
   /**
@@ -77,15 +114,34 @@ export class AIService {
     // Validate OpenAI key and online status
     const hasValidKey = this.isValidOpenAIKey(this.apiKey);
     
-    console.log(`API Status - Key valid: ${hasValidKey}, Online: ${this.isOnline}, Mode: ${this.offlineMode}`);
+    console.log(`API Status - Key valid: ${hasValidKey}, Online: ${this.isOnline}, Quota Exceeded: ${this.quotaExceeded}, Mode: ${this.offlineMode}`);
     
-    // Try OpenAI if we're online and have a valid key
-    if (this.isOnline && hasValidKey) {
+    // Try OpenAI if we're online and have a valid key and no quota issues
+    if (this.isOnline && hasValidKey && !this.quotaExceeded) {
       try {
         console.log('Attempting to use OpenAI API...');
         return await this.sendToOpenAI(message, chatId, fullConversation);
-      } catch (error) {
+      } catch (error: any) {
         console.error('OpenAI API Error:', error);
+        
+        // Check for quota exceeded error
+        if (error.message && error.message.includes('quota')) {
+          console.log('API quota exceeded, switching to offline mode');
+          this.quotaExceeded = true;
+          
+          // Create an error message to show to the user
+          const errorMessage: AIMessage = {
+            id: `error-${Date.now()}`,
+            role: "system",
+            content: this.language === "en"
+              ? "⚠️ OpenAI API quota exceeded. The health assistant will continue functioning using simulated responses. Please update your API key in settings."
+              : "⚠️ Cuota de API de OpenAI excedida. El asistente de salud continuará funcionando con respuestas simuladas. Por favor, actualice su clave API en configuración.",
+            timestamp: new Date()
+          };
+          
+          this.chatHistory[chatId].push(errorMessage);
+        }
+        
         return this.generateOfflineResponse(message, chatId);
       }
     } else {
@@ -94,6 +150,8 @@ export class AIService {
         console.log('Using offline mode: Invalid API key');
       } else if (!this.isOnline) {
         console.log('Using offline mode: Device offline');
+      } else if (this.quotaExceeded) {
+        console.log('Using offline mode: API quota exceeded');
       }
       
       return this.generateOfflineResponse(message, chatId);
@@ -150,6 +208,13 @@ export class AIService {
     if (!response.ok) {
       const errorData = await response.json();
       console.error("OpenAI API error response:", errorData);
+      
+      // Special handling for quota errors
+      if (errorData.error?.code === "insufficient_quota") {
+        this.quotaExceeded = true;
+        throw new Error(`OpenAI API quota exceeded: ${errorData.error?.message || "Insufficient quota"}`);
+      }
+      
       throw new Error(`OpenAI API error: ${errorData.error?.message || "Unknown error"}`);
     }
     
@@ -225,6 +290,12 @@ export class AIService {
    */
   setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
+    
+    // Reset quota exceeded flag when a new API key is set
+    if (apiKey !== localStorage.getItem("openai_api_key")) {
+      this.resetQuotaStatus();
+    }
+    
     console.log(`API key ${apiKey ? "set" : "cleared"}: ${apiKey ? apiKey.substring(0, 5) + "..." : ""}`);
   }
   

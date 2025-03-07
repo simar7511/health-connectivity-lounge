@@ -1,12 +1,15 @@
 
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, KeyRound, ShieldCheck, Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { AlertOctagon, Check, Globe, Key, Settings } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { OfflineModeType } from "@/utils/offlineHelpers";
 
 interface AISettingsDialogProps {
   open: boolean;
@@ -16,239 +19,202 @@ interface AISettingsDialogProps {
   setProvider: (provider: string) => void;
   model: string;
   setModel: (model: string) => void;
-  offlineMode?: "simulated" | "localLLM" | "none";
-  setOfflineMode?: (mode: "simulated" | "localLLM" | "none") => void;
+  offlineMode: OfflineModeType;
+  setOfflineMode: (mode: OfflineModeType) => void;
+  updateApiKey?: (key: string) => void;
+  quotaExceeded?: boolean;
 }
 
-export const AISettingsDialog = ({ 
-  open, 
-  onOpenChange, 
-  language, 
+export const AISettingsDialog = ({
+  open,
+  onOpenChange,
+  language,
   provider,
   setProvider,
   model,
   setModel,
   offlineMode,
-  setOfflineMode
+  setOfflineMode,
+  updateApiKey,
+  quotaExceeded = false
 }: AISettingsDialogProps) => {
-  const { toast } = useToast();
-  const [showResetKeySection, setShowResetKeySection] = useState(false);
-  const [apiKey, setApiKey] = useState(() => {
-    // Try to get API key from localStorage
-    return localStorage.getItem(`${provider}_api_key`) || "";
-  });
-  const [showApiKey, setShowApiKey] = useState(false);
+  const [activeTab, setActiveTab] = useState<"general" | "api">("general");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem(`${provider}_api_key`) || "");
 
-  // Update based on provider with OpenAI as default
-  useEffect(() => {
-    // Set default model based on provider
-    if (provider === "openai" && !localStorage.getItem("openai_model")) {
-      setModel("gpt-4o");
-    } else if (provider === "llama" && !localStorage.getItem("llama_model")) {
-      setModel("llama-2-7b-chat");
+  const handleSave = () => {
+    // Save API key if provided and different from stored
+    if (updateApiKey && apiKey !== localStorage.getItem(`${provider}_api_key`)) {
+      updateApiKey(apiKey);
     }
     
-    // Load model if saved
-    const savedModel = localStorage.getItem(`${provider}_model`);
-    if (savedModel) {
-      setModel(savedModel);
-    }
-    
-    // Load API key for the selected provider
-    const savedApiKey = localStorage.getItem(`${provider}_api_key`);
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
-    } else {
-      setApiKey("");
-    }
-  }, [provider, setModel]);
-
-  useEffect(() => {
-    localStorage.setItem("ai_provider", provider);
-    localStorage.setItem(`${provider}_model`, model);
-    
-    // Save offline mode if provided
-    if (offlineMode && setOfflineMode) {
-      localStorage.setItem("ai_offline_mode", offlineMode);
-    }
-  }, [provider, model, offlineMode, setOfflineMode]);
-
-  const saveSettings = () => {
-    // Save model and provider preferences
-    localStorage.setItem(`${provider}_model`, model);
-    localStorage.setItem("ai_provider", provider);
-    
-    // Save API key if provided
-    if (apiKey) {
-      localStorage.setItem(`${provider}_api_key`, apiKey);
-      
-      // Show special message for OpenAI
-      if (provider === "openai" && apiKey.startsWith("sk-")) {
-        toast({
-          title: language === "en" ? "OpenAI API Key Saved" : "Clave API de OpenAI Guardada",
-          description: language === "en" 
-            ? "Your OpenAI API key has been saved. The health assistant will now use OpenAI for better responses."
-            : "Tu clave API de OpenAI ha sido guardada. El asistente de salud ahora usará OpenAI para mejores respuestas.",
-        });
-      }
-    }
-    
-    // Close dialog and notify user
+    // Close dialog
     onOpenChange(false);
-    toast({
-      title: language === "en" ? "Settings Saved" : "Configuración Guardada",
-      description: language === "en" 
-        ? "Your AI settings have been updated successfully."
-        : "Tu configuración de IA ha sido actualizada con éxito.",
-    });
-  };
-
-  const toggleShowApiKey = () => {
-    setShowApiKey(!showApiKey);
-  };
-
-  const clearApiKey = () => {
-    setApiKey("");
-    localStorage.removeItem(`${provider}_api_key`);
-    toast({
-      title: language === "en" ? "API Key Cleared" : "Clave API Borrada",
-      description: language === "en" 
-        ? "Your API key has been removed. Using simulated responses now."
-        : "Tu clave API ha sido eliminada. Usando respuestas simuladas ahora.",
-    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {language === "en" ? "AI Settings" : "Configuración de IA"}
+            {language === "en" ? "AI Health Assistant Settings" : "Configuración del Asistente de Salud IA"}
           </DialogTitle>
           <DialogDescription>
             {language === "en" 
-              ? "Select an AI provider and configure model settings." 
-              : "Seleccione un proveedor de IA y configure los ajustes del modelo."}
+              ? "Configure how the AI Health Assistant functions" 
+              : "Configura cómo funciona el Asistente de Salud IA"}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="provider" className="text-sm font-medium">
-              {language === "en" ? "AI Provider" : "Proveedor de IA"}
-            </label>
-            <Select value={provider} onValueChange={setProvider}>
-              <SelectTrigger>
-                <SelectValue placeholder={language === "en" ? "Select provider" : "Seleccionar proveedor"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="openai">OpenAI (GPT-4o)</SelectItem>
-                <SelectItem value="offline">Simulated Responses</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {provider === "openai" && (
-            <>
-              <div className="space-y-2">
-                <label htmlFor="model" className="text-sm font-medium">
-                  {language === "en" ? "Model" : "Modelo"}
-                </label>
-                <Select value={model} onValueChange={setModel}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, less quota)</SelectItem>
-                    <SelectItem value="gpt-4o-mini">GPT-4o Mini (Balanced)</SelectItem>
-                    <SelectItem value="gpt-4o">GPT-4o (Advanced, more quota)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="apiKey" className="text-sm font-medium">
-                  {language === "en" ? "OpenAI API Key" : "Clave API de OpenAI"}
-                </label>
-                <div className="flex">
-                  <div className="relative flex-1">
-                    <Input
-                      id="apiKey"
-                      type={showApiKey ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder={language === "en" ? "Enter your OpenAI API key" : "Ingresa tu clave API de OpenAI"}
-                      className="pr-10"
-                    />
-                    <button 
-                      type="button"
-                      className="absolute inset-y-0 right-0 flex items-center pr-3"
-                      onClick={toggleShowApiKey}
-                    >
-                      {showApiKey ? (
-                        <EyeOff className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                  {apiKey && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={clearApiKey}
-                      className="ml-2"
-                    >
-                      {language === "en" ? "Clear" : "Borrar"}
-                    </Button>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {language === "en" 
-                    ? "Your API key is stored locally and not shared with our servers." 
-                    : "Tu clave API se almacena localmente y no se comparte con nuestros servidores."}
-                </p>
-              </div>
-              
-              <Alert className="bg-amber-50 border-amber-200">
-                <KeyRound className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-sm">
-                  {language === "en" 
-                    ? "You will need an OpenAI API key to use the enhanced AI features. You can get one from openai.com"
-                    : "Necesitarás una clave API de OpenAI para usar las funciones mejoradas de IA. Puedes obtener una en openai.com"}
-                </AlertDescription>
-              </Alert>
-            </>
-          )}
-          
-          {offlineMode !== undefined && setOfflineMode && (
-            <div className="space-y-2 mt-4">
-              <label htmlFor="offlineMode" className="text-sm font-medium">
-                {language === "en" ? "Offline Mode" : "Modo Sin Conexión"}
-              </label>
+        
+        <div className="my-2">
+          <ToggleGroup type="single" value={activeTab} onValueChange={(value) => setActiveTab(value as "general" | "api")}>
+            <ToggleGroupItem value="general">
+              <Settings className="h-4 w-4 mr-2" />
+              {language === "en" ? "General" : "General"}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="api">
+              <Key className="h-4 w-4 mr-2" />
+              {language === "en" ? "API" : "API"}
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        
+        {activeTab === "general" && (
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="model">
+                {language === "en" ? "AI Model" : "Modelo de IA"}
+              </Label>
               <Select 
-                value={offlineMode} 
-                onValueChange={(value) => setOfflineMode(value as "simulated" | "localLLM" | "none")}
+                value={model} 
+                onValueChange={setModel}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder={language === "en" ? "Select offline mode" : "Seleccionar modo sin conexión"} />
+                <SelectTrigger id="model">
+                  <SelectValue placeholder={language === "en" ? "Select model" : "Seleccionar modelo"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{language === "en" ? "No Offline Mode" : "Sin Modo Sin Conexión"}</SelectItem>
-                  <SelectItem value="simulated">{language === "en" ? "Simulated Responses" : "Respuestas Simuladas"}</SelectItem>
-                  <SelectItem value="localLLM">{language === "en" ? "Local LLM (Browser)" : "LLM Local (Navegador)"}</SelectItem>
+                  <SelectItem value="gpt-4o">OpenAI GPT-4o</SelectItem>
+                  <SelectItem value="gpt-4o-mini">OpenAI GPT-4o-mini</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                {language === "en" 
+                  ? "GPT-4o is more accurate but may be slower. GPT-4o-mini is faster but less accurate." 
+                  : "GPT-4o es más preciso pero puede ser más lento. GPT-4o-mini es más rápido pero menos preciso."}
+              </p>
+            </div>
+            
+            <div className="space-y-2 pt-4">
+              <Label>
+                {language === "en" ? "Offline Mode Behavior" : "Comportamiento del Modo Sin Conexión"}
+              </Label>
+              <RadioGroup 
+                value={offlineMode} 
+                onValueChange={(value) => setOfflineMode(value as OfflineModeType)}
+              >
+                <div className="flex items-center space-x-2 mb-2">
+                  <RadioGroupItem value="simulated" id="simulated" />
+                  <Label htmlFor="simulated" className="cursor-pointer font-medium">
+                    {language === "en" ? "Simulated Responses" : "Respuestas Simuladas"}
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6 mb-4">
+                  {language === "en" 
+                    ? "Uses pre-defined responses for common health questions. Fast and no download required."
+                    : "Utiliza respuestas predefinidas para preguntas comunes de salud. Rápido y sin necesidad de descarga."}
+                </p>
+                
+                <div className="flex items-center space-x-2 mb-2">
+                  <RadioGroupItem value="localLLM" id="localLLM" disabled />
+                  <Label htmlFor="localLLM" className="cursor-pointer font-medium text-muted-foreground">
+                    {language === "en" ? "Local AI Model (Coming Soon)" : "Modelo de IA Local (Próximamente)"}
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">
+                  {language === "en" 
+                    ? "This option will be available in a future update."
+                    : "Esta opción estará disponible en una actualización futura."}
+                </p>
+              </RadioGroup>
+            </div>
+          </div>
+        )}
+        
+        {activeTab === "api" && (
+          <div className="py-4 space-y-4">
+            {quotaExceeded && (
+              <Alert variant="destructive">
+                <AlertOctagon className="h-4 w-4" />
+                <AlertTitle>
+                  {language === "en" ? "API Quota Exceeded" : "Cuota de API Excedida"}
+                </AlertTitle>
+                <AlertDescription>
+                  {language === "en" 
+                    ? "Your OpenAI API quota has been exceeded. Please enter a new API key." 
+                    : "Tu cuota de API de OpenAI ha sido excedida. Por favor, ingresa una nueva clave API."}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="provider">
+                {language === "en" ? "AI Provider" : "Proveedor de IA"}
+              </Label>
+              <Select 
+                value={provider} 
+                onValueChange={setProvider}
+                disabled={true}
+              >
+                <SelectTrigger id="provider">
+                  <SelectValue placeholder={language === "en" ? "Select provider" : "Seleccionar proveedor"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="openai">OpenAI</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          )}
-        </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="apiKey">
+                {language === "en" ? "API Key" : "Clave API"}
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="apiKey"
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder={language === "en" ? "Enter your API key" : "Ingresa tu clave API"}
+                  className="flex-1"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {language === "en" 
+                  ? "Your API key is stored locally on your device and never sent to our servers." 
+                  : "Tu clave API se almacena localmente en tu dispositivo y nunca se envía a nuestros servidores."}
+              </p>
+            </div>
+            
+            <div className="space-y-2 pt-2">
+              <p className="text-sm">
+                {language === "en" 
+                  ? "To get an API key, visit OpenAI and sign up for an account." 
+                  : "Para obtener una clave API, visita OpenAI y regístrate para una cuenta."}
+              </p>
+              <Button variant="outline" size="sm" className="w-full" asChild>
+                <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">
+                  <Globe className="h-4 w-4 mr-2" />
+                  {language === "en" ? "Get API Key" : "Obtener Clave API"}
+                </a>
+              </Button>
+            </div>
+          </div>
+        )}
+        
         <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             {language === "en" ? "Cancel" : "Cancelar"}
           </Button>
-          <Button onClick={saveSettings}>
+          <Button onClick={handleSave}>
             {language === "en" ? "Save" : "Guardar"}
           </Button>
         </DialogFooter>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AIHealthAssistant } from "@/components/dashboard/AIHealthAssistant";
 import { useNavigate, useParams } from "react-router-dom";
@@ -7,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineModeType } from "@/utils/offlineHelpers";
 import { aiService } from "@/services/aiService";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
@@ -32,14 +35,24 @@ export const AIHealthChatPage = () => {
   // Default to GPT-4o model for OpenAI
   const [model, setModel] = useState("gpt-4o");
   
+  // Track API quota exceeded status
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+  
   useEffect(() => {
     // Initialize with the OpenAI key
-    const openaiKey = "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";
+    const openaiKey = localStorage.getItem("openai_api_key") || "";
     
-    // Set and save the API key
-    localStorage.setItem("openai_api_key", openaiKey);
-    aiService.setApiKey(openaiKey);
-    console.log("OpenAI API key set and validated");
+    if (!openaiKey) {
+      // If no key is found, try to set a default one
+      const defaultKey = "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";
+      localStorage.setItem("openai_api_key", defaultKey);
+      aiService.setApiKey(defaultKey);
+    } else {
+      // Set existing API key
+      aiService.setApiKey(openaiKey);
+    }
+    
+    console.log("OpenAI API key set");
     
     // Update the AI service with current settings
     aiService.setModel(model);
@@ -47,8 +60,12 @@ export const AIHealthChatPage = () => {
     aiService.setOnlineStatus(isOnline);
     aiService.setOfflineMode(offlineMode);
     
+    // Check API status
+    const apiStatus = aiService.getApiStatus();
+    setQuotaExceeded(apiStatus.quotaExceeded);
+    
     // Log current settings
-    console.log(`Settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Mode: ${offlineMode}`);
+    console.log(`Settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Mode: ${offlineMode}, Quota Exceeded: ${apiStatus.quotaExceeded}`);
   }, [provider, model, language, offlineMode, isOnline]);
 
   const handleBack = () => {
@@ -84,6 +101,26 @@ export const AIHealthChatPage = () => {
     aiService.setOfflineMode(mode);
   };
 
+  // Update API key and check quota status
+  const updateApiKey = (newKey: string) => {
+    if (newKey && newKey !== localStorage.getItem("openai_api_key")) {
+      localStorage.setItem("openai_api_key", newKey);
+      aiService.setApiKey(newKey);
+      aiService.resetQuotaStatus();
+      
+      // Update quota status
+      setQuotaExceeded(false);
+      
+      toast({
+        title: language === "en" ? "API Key Updated" : "Clave API Actualizada",
+        description: language === "en" 
+          ? "Your OpenAI API key has been updated" 
+          : "Tu clave API de OpenAI ha sido actualizada",
+        variant: "default",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       <AIHealthChatHeader 
@@ -92,6 +129,20 @@ export const AIHealthChatPage = () => {
         openSettings={() => setShowSettingsDialog(true)}
         isOnline={isOnline}
       />
+      
+      {quotaExceeded && (
+        <Alert variant="destructive" className="mx-2 mt-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>
+            {language === "en" ? "API Quota Exceeded" : "Cuota de API Excedida"}
+          </AlertTitle>
+          <AlertDescription>
+            {language === "en" 
+              ? "Your OpenAI API quota has been exceeded. The assistant will use offline responses. Please update your API key in settings."
+              : "Tu cuota de API de OpenAI ha sido excedida. El asistente usará respuestas sin conexión. Por favor, actualiza tu clave API en configuración."}
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="flex-1 overflow-hidden">
         <AIHealthAssistant 
@@ -103,6 +154,7 @@ export const AIHealthChatPage = () => {
           isOnline={isOnline}
           offlineMode={offlineMode}
           aiService={aiService}
+          quotaExceeded={quotaExceeded}
         />
       </div>
 
@@ -116,6 +168,8 @@ export const AIHealthChatPage = () => {
         setModel={setModel}
         offlineMode={offlineMode}
         setOfflineMode={setOfflineModeType}
+        updateApiKey={updateApiKey}
+        quotaExceeded={quotaExceeded}
       />
     </div>
   );
