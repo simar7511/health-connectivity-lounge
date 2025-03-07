@@ -25,17 +25,11 @@ export const AIHealthChatPage = () => {
   
   // Auto-select model based on connectivity
   const [provider, setProvider] = useState(() => {
-    // If we're offline, always default to local provider
-    if (!isOnline) return "llama";
-    
     // Use saved provider or default to OpenAI if not set
     return localStorage.getItem("ai_provider") || "openai";
   });
   
   const [model, setModel] = useState(() => {
-    // If we're offline, always default to local model
-    if (!isOnline) return "llama-2-7b-chat";
-    
     const savedProvider = localStorage.getItem("ai_provider");
     if (savedProvider) {
       return localStorage.getItem(`${savedProvider}_model`) || 
@@ -48,11 +42,7 @@ export const AIHealthChatPage = () => {
   // Track if we've tried to load the model
   const [isUsingLocalModelAlready, setIsUsingLocalModelAlready] = useState(false);
   
-  // Force online mode for testing
   useEffect(() => {
-    // Uncomment this line to force online mode for testing
-    localStorage.setItem("ai_offline_mode", "none");
-    
     // Log current settings to help with debugging
     console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}`);
   }, [provider, model, offlineMode, isOnline]);
@@ -94,49 +84,6 @@ export const AIHealthChatPage = () => {
       initOfflineModel().catch(console.error);
     }
   }, [offlineMode, isUsingLocalModelAlready]);
-
-  // Auto-switch between online and offline models
-  useEffect(() => {
-    // Update provider and model based on connectivity status
-    if (!isOnline) {
-      // Always switch to offline mode when offline
-      if (provider !== "llama") {
-        setProvider("llama");
-        toast({
-          title: language === "en" ? "Offline Mode" : "Modo Sin Conexión",
-          description: language === "en" 
-            ? "You're offline. Switched to offline mode."
-            : "Estás desconectado. Cambiado a modo sin conexión.",
-          variant: "default",
-        });
-      }
-      
-      // Make sure we have an appropriate offline mode set
-      if (offlineMode === "none") {
-        setOfflineMode("simulated");
-      }
-    } else {
-      // When back online, restore previous provider if it was saved
-      const savedProvider = localStorage.getItem("ai_provider");
-      if (savedProvider && savedProvider !== provider) {
-        setProvider(savedProvider);
-        
-        // Also restore the saved model for that provider
-        const savedModel = localStorage.getItem(`${savedProvider}_model`);
-        if (savedModel) {
-          setModel(savedModel);
-        }
-        
-        toast({
-          title: language === "en" ? "Connected" : "Conectado",
-          description: language === "en" 
-            ? "You're now online. Restored your preferred AI settings."
-            : "Ahora estás en línea. Se restauró tu configuración de IA preferida.",
-          variant: "default",
-        });
-      }
-    }
-  }, [isOnline, provider, language, toast, offlineMode]);
 
   const handleBack = () => {
     navigate(-1);

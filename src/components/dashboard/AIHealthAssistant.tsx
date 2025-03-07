@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,13 +8,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bot, Send, User, AlertCircle, Loader2, RefreshCw, ExternalLink, WifiOff, Cpu } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig, getSampleResponse, OfflineModeType } from "@/utils/offlineLLM";
+import { FakeAIService, AIMessage } from "@/services/fakeAIService";
 
 interface AIHealthAssistantProps {
   language: "en" | "es";
@@ -23,13 +22,6 @@ interface AIHealthAssistantProps {
   provider: string;
   isOnline?: boolean;
   offlineMode?: OfflineModeType;
-}
-
-interface Message {
-  id?: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  timestamp?: any;
 }
 
 export const AIHealthAssistant = ({ 
@@ -43,7 +35,7 @@ export const AIHealthAssistant = ({
 }: AIHealthAssistantProps) => {
   const { toast } = useToast();
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<AIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTroubleshootingDialog, setShowTroubleshootingDialog] = useState(false);
@@ -56,20 +48,29 @@ export const AIHealthAssistant = ({
   const [isLoadingOfflineModel, setIsLoadingOfflineModel] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const functions = getFunctions();
-  const isUsingLocalModelAlready = offlineMode === "localLLM";
+  const conversationId = `chat-${patientId || 'default'}`;
+  const aiService = new FakeAIService({ 
+    model, 
+    language,
+    apiKey: "health-ai-fake-key-12345" // Using a fake API key
+  });
 
   useEffect(() => {
-    const systemMessage: Message = {
+    const systemMessage: AIMessage = {
       role: "system",
       content: language === "en" 
         ? "Hello! I'm your AI health assistant. I provide clear, evidence-based health information and wellness tips. I'm not a substitute for professional medical advice - please consult a healthcare provider for personalized concerns. How can I help you today?"
         : "¡Hola! Soy tu asistente de salud con IA. Proporciono información clara y basada en evidencia sobre salud y consejos de bienestar. No soy un sustituto del consejo médico profesional - por favor consulta a un proveedor de salud para preocupaciones personalizadas. ¿Cómo puedo ayudarte hoy?",
-      timestamp: serverTimestamp()
+      timestamp: new Date()
     };
     
     setMessages([systemMessage]);
-  }, [language]);
+    
+    // Load chat history if a patientId is provided
+    if (patientId) {
+      loadChatHistory();
+    }
+  }, [language, patientId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -80,43 +81,7 @@ export const AIHealthAssistant = ({
   }, []);
 
   useEffect(() => {
-    if (!patientId) return;
-    
-    try {
-      const q = query(
-        collection(db, "aiChats"),
-        where("patientId", "==", patientId),
-        orderBy("timestamp", "asc")
-      );
-      
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const loadedMessages: Message[] = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          loadedMessages.push({
-            id: doc.id,
-            role: data.role,
-            content: data.content,
-            timestamp: data.timestamp
-          });
-        });
-        
-        if (loadedMessages.length > 0) {
-          setMessages(loadedMessages);
-        }
-      });
-      
-      return () => unsubscribe();
-    } catch (err) {
-      console.error("Error loading chat history:", err);
-      setError(language === "en" 
-        ? "Failed to load chat history. Please try again."
-        : "Error al cargar el historial de chat. Por favor, inténtalo de nuevo.");
-    }
-  }, [patientId, language]);
-
-  useEffect(() => {
-    if ((!isOnline || offlineMode === "localLLM") && !isUsingLocalModelAlready) {
+    if ((!isOnline || offlineMode === "localLLM") && offlineMode !== "none") {
       console.log("Initializing offline model");
       initOfflineModel().then(success => {
         if (success) {
@@ -140,7 +105,21 @@ export const AIHealthAssistant = ({
         }
       });
     }
-  }, [isOnline, offlineMode, toast, language, isUsingLocalModelAlready]);
+  }, [isOnline, offlineMode, toast, language]);
+
+  const loadChatHistory = async () => {
+    try {
+      const history = await aiService.getChatHistory(conversationId);
+      if (history.length > 0) {
+        setMessages(history);
+      }
+    } catch (err) {
+      console.error("Error loading chat history:", err);
+      setError(language === "en" 
+        ? "Failed to load chat history. Please try again."
+        : "Error al cargar el historial de chat. Por favor, inténtalo de nuevo.");
+    }
+  };
 
   const handleRetry = () => {
     setError(null);
@@ -162,10 +141,10 @@ export const AIHealthAssistant = ({
   const handleSend = async () => {
     if (!input.trim()) return;
     
-    const userMessage: Message = {
+    const userMessage: AIMessage = {
       role: "user",
       content: input,
-      timestamp: serverTimestamp()
+      timestamp: new Date()
     };
     
     setMessages((prev) => [...prev, userMessage]);
@@ -173,15 +152,7 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      if (patientId) {
-        await addDoc(collection(db, "aiChats"), {
-          patientId,
-          ...userMessage
-        });
-      }
-      
       await handleAIRequest(input, [...messages, userMessage]);
-      
     } catch (err: any) {
       console.error("Error in chat message handling:", err);
       setError(language === "en" 
@@ -190,7 +161,7 @@ export const AIHealthAssistant = ({
     }
   };
 
-  const handleAIRequest = async (userInput: string, conversationHistory: Message[]) => {
+  const handleAIRequest = async (userInput: string, conversationHistory: AIMessage[]) => {
     setIsLoading(true);
     setError(null);
     
@@ -210,47 +181,13 @@ export const AIHealthAssistant = ({
         return;
       }
       
-      const messageHistory = conversationHistory.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
-      
-      const aiChatFunction = httpsCallable(functions, 'aiChat');
-      
-      console.log(`Calling AI model: ${provider}/${model} with ${messageHistory.length} messages`);
-      
+      // Using the fake AI service instead of Firebase functions
       try {
-        const result = await aiChatFunction({
-          messages: messageHistory,
-          model: model,
-          provider: provider,
-          language: language,
-          // Server-side API key will be used
-        });
+        const aiResponse = await aiService.sendMessage(userInput, conversationId, conversationHistory);
         
-        const responseData = result.data as { response?: string };
-        console.log("AI response received:", responseData);
-        
-        const aiResponse = responseData.response || (language === "en" 
-          ? "I'm sorry, I couldn't generate a response." 
-          : "Lo siento, no pude generar una respuesta.");
-        
-        const assistantMessage: Message = {
-          role: "assistant",
-          content: aiResponse,
-          timestamp: serverTimestamp()
-        };
-        
-        setMessages((prev) => [...prev, assistantMessage]);
-        
-        if (patientId) {
-          await addDoc(collection(db, "aiChats"), {
-            patientId,
-            ...assistantMessage
-          });
-        }
-      } catch (functionError) {
-        console.error("Function error:", functionError);
+        setMessages((prev) => [...prev, aiResponse]);
+      } catch (error) {
+        console.error("Error with AI service:", error);
         setIsUsingFallback(true);
         toast({
           title: language === "en" ? "Using offline mode" : "Usando modo sin conexión",
@@ -273,28 +210,6 @@ export const AIHealthAssistant = ({
         ? "Failed to get response from AI. Please try again."
         : "Error al obtener respuesta de la IA. Por favor, inténtalo de nuevo.");
         
-      if (err.code === 'functions/internal') {
-        errorMessage = language === "en" 
-          ? "The AI service encountered an internal error. This could be due to high demand or service limitations."
-          : "El servicio de IA encontró un error interno. Esto podría deberse a una alta demanda o limitaciones del servicio.";
-      } else if (err.code === 'functions/invalid-argument') {
-        errorMessage = language === "en" 
-          ? "Invalid model configuration. Please check your settings."
-          : "Configuración de modelo inválida. Por favor, verifica tus ajustes.";
-      } else if (err.code === 'functions/resource-exhausted') {
-        errorMessage = language === "en"
-          ? "API quota exceeded. Please try again later or use a different model."
-          : "Cuota de API excedida. Por favor, intenta más tarde o usa un modelo diferente.";
-      } else if (err.code === 'functions/unavailable') {
-        errorMessage = language === "en"
-          ? "AI service is temporarily unavailable. Please try again later."
-          : "El servicio de IA no está disponible temporalmente. Por favor, inténtalo más tarde.";
-      } else if (err.code === 'functions/unauthenticated') {
-        errorMessage = language === "en"
-          ? "Authentication error with the AI service. Please try again later."
-          : "Error de autenticación con el servicio de IA. Por favor, inténtalo más tarde.";
-      }
-      
       setError(errorMessage);
       
       setMessages((prev) => [
@@ -304,7 +219,7 @@ export const AIHealthAssistant = ({
           content: language === "en"
             ? "I'm sorry, I encountered an error. Please try again or check your connection."
             : "Lo siento, encontré un error. Por favor, inténtalo de nuevo o verifica tu conexión.",
-          timestamp: serverTimestamp()
+          timestamp: new Date()
         }
       ]);
       
@@ -319,23 +234,16 @@ export const AIHealthAssistant = ({
     
     const aiResponse = getSampleResponse(userInput, language);
     
-    const assistantMessage: Message = {
+    const assistantMessage: AIMessage = {
       role: "assistant",
       content: aiResponse,
-      timestamp: serverTimestamp()
+      timestamp: new Date()
     };
     
     setMessages((prev) => [...prev, assistantMessage]);
-    
-    if (patientId) {
-      await addDoc(collection(db, "aiChats"), {
-        patientId,
-        ...assistantMessage
-      });
-    }
   };
 
-  const handleLocalLLMResponse = async (userInput: string, conversationHistory: Message[]) => {
+  const handleLocalLLMResponse = async (userInput: string, conversationHistory: AIMessage[]) => {
     try {
       if (!isOfflineModelReady()) {
         setIsLoadingOfflineModel(true);
@@ -367,20 +275,13 @@ export const AIHealthAssistant = ({
       
       const aiResponse = await generateOfflineResponse(userInput, language);
       
-      const assistantMessage: Message = {
+      const assistantMessage: AIMessage = {
         role: "assistant",
         content: aiResponse,
-        timestamp: serverTimestamp()
+        timestamp: new Date()
       };
       
       setMessages((prev) => [...prev, assistantMessage]);
-      
-      if (patientId) {
-        await addDoc(collection(db, "aiChats"), {
-          patientId,
-          ...assistantMessage
-        });
-      }
     } catch (error) {
       console.error("Error using local LLM:", error);
       await handleSimulatedResponse(userInput);
@@ -570,8 +471,8 @@ export const AIHealthAssistant = ({
           ) : (
             <span>
               {language === "en" 
-                ? `Using ${provider === "openai" ? "OpenAI" : "Llama"} ${model} model`
-                : `Usando modelo ${provider === "openai" ? "OpenAI" : "Llama"} ${model}`}
+                ? `Using ${provider === "openai" ? "OpenAI" : "Llama"} ${model} model (Simulated)`
+                : `Usando modelo ${provider === "openai" ? "OpenAI" : "Llama"} ${model} (Simulado)`}
             </span>
           )}
         </p>
@@ -608,13 +509,8 @@ export const AIHealthAssistant = ({
               </li>
               <li>
                 {language === "en" 
-                  ? "If using OpenAI, ensure your account has available credits"
-                  : "Si estás usando OpenAI, asegúrate de que tu cuenta tenga créditos disponibles"}
-              </li>
-              <li>
-                {language === "en" 
-                  ? "Try again later - the AI service might be experiencing high demand"
-                  : "Intenta más tarde - el servicio de IA podría estar experimentando alta demanda"}
+                  ? "If the issue persists, try using the offline mode"
+                  : "Si el problema persiste, intenta usar el modo sin conexión"}
               </li>
             </ol>
           </div>
