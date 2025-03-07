@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -11,7 +10,7 @@ import { ProviderFooter } from "./layout/ProviderFooter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase-config";
 import { 
   collection, 
   getDocs, 
@@ -81,7 +80,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const [currentLanguage, setCurrentLanguage] = useState(language);
   const [activeTab, setActiveTab] = useState("intake");
   const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
-  const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<Timestamp | null>(null);
+  const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<typeof Timestamp | null>(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {

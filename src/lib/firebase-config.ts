@@ -2,7 +2,7 @@
 // Firebase configuration and initialization with performance optimizations
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore as firebaseGetFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
 import { toast } from "@/hooks/use-toast";
@@ -31,7 +31,7 @@ if (!getApps().length) {
     console.time('Firebase Initialization');
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
-    db = getFirestore(app);
+    db = firebaseGetFirestore(app);
     storage = getStorage(app);
 
     // Use emulators when in development
@@ -78,7 +78,7 @@ if (!getApps().length) {
   // Reuse existing Firebase instances
   app = getApps()[0];
   auth = getAuth(app);
-  db = getFirestore(app);
+  db = firebaseGetFirestore(app);
   storage = getStorage(app);
   console.log("♻️ Reusing existing Firebase instances");
 }

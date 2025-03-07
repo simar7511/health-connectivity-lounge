@@ -44,6 +44,7 @@ export const serverTimestamp = importServerTimestamp;
 export const onSnapshot = importOnSnapshot;
 export const getFirestore = importGetFirestore;
 export const setLogLevel = importSetLogLevel;
+export const DocumentData = ImportDocumentData;
 
 // Auth exports
 export const getAuth = importGetAuth;
@@ -58,5 +59,5 @@ export const getToken = importGetToken;
 export const onMessage = importOnMessage;
 export const isSupported = importIsSupported;
 
-// Export types separately with 'export type'
-export type DocumentData = ImportDocumentData;
+// Export types separately
+export type { DocumentData } from 'firebase/firestore';

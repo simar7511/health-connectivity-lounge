@@ -2,13 +2,11 @@
 /// <reference types="vite/client" />
 
 // Firebase Timestamp
-declare module 'firebase/firestore' {
-  export interface Timestamp {
-    seconds: number;
-    nanoseconds: number;
-    toDate(): Date;
-    toMillis(): number;
-  }
+interface FirebaseTimestamp {
+  seconds: number;
+  nanoseconds: number;
+  toDate(): Date;
+  toMillis(): number;
 }
 
 // Web Speech API declarations
