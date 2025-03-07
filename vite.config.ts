@@ -71,6 +71,8 @@ export default defineConfig({
     exclude: ['firebase']
   },
   esbuild: {
-    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+    logOverride: { 'this-is-undefined-in-esm': 'silent' },
+    keepNames: true,
+    treeShaking: true
   }
 });

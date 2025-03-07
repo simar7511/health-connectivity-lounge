@@ -8,7 +8,7 @@ export interface OfflineModelConfig {
   loaded: boolean;
 }
 
-// Define the offline mode type explicitly
+// Define the offline mode type explicitly - ensure this matches exactly what's used in components
 export type OfflineModeType = "simulated" | "localLLM" | "none";
 
 // State of the offline model

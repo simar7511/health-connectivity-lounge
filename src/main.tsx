@@ -27,21 +27,33 @@ const mountApp = () => {
   const rootElement = document.getElementById("root");
 
   if (!rootElement) {
-    throw new Error("Root element not found. Ensure index.html has <div id='root'></div>");
+    console.error("Root element not found. Ensure index.html has <div id='root'></div>");
+    return;
   }
 
-  const root = createRoot(rootElement);
+  try {
+    const root = createRoot(rootElement);
 
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+    
+    console.log("App mounted successfully");
+  } catch (error) {
+    console.error("Error mounting app:", error);
+  }
 };
 
 // Check if document is fully loaded
 if (document.readyState === 'complete') {
-  mountApp();
+  console.log("Document already loaded, mounting app");
+  setTimeout(mountApp, 50); // Small delay for module initialization
 } else {
-  window.addEventListener('load', mountApp);
+  console.log("Document not yet loaded, waiting for load event");
+  window.addEventListener('load', () => {
+    console.log("Document loaded, mounting app");
+    setTimeout(mountApp, 50); // Small delay for module initialization
+  });
 }
