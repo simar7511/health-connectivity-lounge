@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ export const AIHealthAssistant = ({
     offlineMode === "localLLM" ? "localLLM" : "simulated"
   );
   const [isLoadingOfflineModel, setIsLoadingOfflineModel] = useState(false);
+  const [detectedLanguage, setDetectedLanguage] = useState<"en" | "es">(language);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const conversationId = `chat-${patientId || 'default'}`;
@@ -113,6 +115,14 @@ export const AIHealthAssistant = ({
   const handleSend = async () => {
     if (!input.trim()) return;
     
+    // Detect language for more responsive UI
+    const detectedInputLang = aiService.detectLanguage(input);
+    if (detectedInputLang !== detectedLanguage) {
+      setDetectedLanguage(detectedInputLang);
+      // Update service language to match input
+      aiService.setLanguage(detectedInputLang);
+    }
+    
     const userMessage: AIMessage = {
       role: "user",
       content: input,
@@ -127,7 +137,7 @@ export const AIHealthAssistant = ({
       await handleAIRequest(input, [...messages, userMessage]);
     } catch (err: any) {
       console.error("Error in chat message handling:", err);
-      setError(language === "en" 
+      setError(detectedLanguage === "en" 
         ? "Failed to send message. Please try again."
         : "Error al enviar el mensaje. Por favor, inténtalo de nuevo.");
     }
@@ -138,13 +148,13 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
+      console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}, detected language: ${detectedLanguage}`);
       
       await handleSimulatedResponse(userInput);
     } catch (err: any) {
       console.error("Error in AI chat:", err);
       
-      let errorMessage = err.message || (language === "en" 
+      let errorMessage = err.message || (detectedLanguage === "en" 
         ? "Failed to get response from AI. Please try again."
         : "Error al obtener respuesta de la IA. Por favor, inténtalo de nuevo.");
         
@@ -154,7 +164,7 @@ export const AIHealthAssistant = ({
         ...prev,
         {
           role: "assistant",
-          content: language === "en"
+          content: detectedLanguage === "en"
             ? "I'm sorry, I encountered an error. Please try again or check your connection."
             : "Lo siento, encontré un error. Por favor, inténtalo de nuevo o verifica tu conexión.",
           timestamp: new Date()
@@ -176,7 +186,7 @@ export const AIHealthAssistant = ({
       
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const aiResponse = getSampleResponse(userInput, language);
+      const aiResponse = getSampleResponse(userInput, detectedLanguage);
       
       const assistantMessage: AIMessage = {
         role: "assistant",
@@ -198,8 +208,8 @@ export const AIHealthAssistant = ({
   const handleUseFallbackMode = () => {
     setIsUsingFallback(true);
     toast({
-      title: language === "en" ? "Switched to Offline Mode" : "Cambiado a Modo Sin Conexión",
-      description: language === "en" 
+      title: detectedLanguage === "en" ? "Switched to Offline Mode" : "Cambiado a Modo Sin Conexión",
+      description: detectedLanguage === "en" 
         ? "Using simulated AI responses for common health questions" 
         : "Usando respuestas de IA simuladas para preguntas comunes de salud",
       variant: "default",
@@ -217,10 +227,10 @@ export const AIHealthAssistant = ({
         <Alert className="m-2 bg-amber-50 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertTitle>
-            {language === "en" ? "Health Assistant" : "Asistente de Salud"}
+            {detectedLanguage === "en" ? "Health Assistant" : "Asistente de Salud"}
           </AlertTitle>
           <AlertDescription>
-            {language === "en" 
+            {detectedLanguage === "en" 
               ? "I can provide general health information on various topics. For personal medical advice, please consult a healthcare professional."
               : "Puedo proporcionar información general de salud sobre varios temas. Para consejos médicos personales, consulte a un profesional de la salud."}
           </AlertDescription>
@@ -231,7 +241,7 @@ export const AIHealthAssistant = ({
         <Alert variant="destructive" className="m-2">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>
-            {language === "en" ? "Error" : "Error"}
+            {detectedLanguage === "en" ? "Error" : "Error"}
           </AlertTitle>
           <AlertDescription className="flex flex-col gap-2">
             <div>{error}</div>
@@ -244,7 +254,7 @@ export const AIHealthAssistant = ({
                 disabled={isLoading}
               >
                 <RefreshCw className="h-3 w-3 mr-1" />
-                {language === "en" ? "Retry" : "Reintentar"}
+                {detectedLanguage === "en" ? "Retry" : "Reintentar"}
               </Button>
               <Button 
                 variant="outline" 
@@ -252,7 +262,7 @@ export const AIHealthAssistant = ({
                 onClick={handleUseFallbackMode}
                 className="h-7 text-xs"
               >
-                {language === "en" ? "Use Offline Mode" : "Usar Modo Sin Conexión"}
+                {detectedLanguage === "en" ? "Use Offline Mode" : "Usar Modo Sin Conexión"}
               </Button>
               <Button 
                 variant="outline" 
@@ -260,7 +270,7 @@ export const AIHealthAssistant = ({
                 onClick={() => setShowTroubleshootingDialog(true)}
                 className="h-7 text-xs"
               >
-                {language === "en" ? "Troubleshooting" : "Solución de problemas"}
+                {detectedLanguage === "en" ? "Troubleshooting" : "Solución de problemas"}
               </Button>
             </div>
           </AlertDescription>
@@ -301,15 +311,10 @@ export const AIHealthAssistant = ({
         <div className="flex gap-2">
           <Input
             ref={inputRef}
-            placeholder={language === "en" ? "Ask a health question..." : "Haz una pregunta de salud..."}
+            placeholder={detectedLanguage === "en" ? "Ask a health question..." : "Haz una pregunta de salud..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (input.trim()) handleSend();
-              }
-            }}
+            onKeyDown={handleKeyDown}
             disabled={isLoading || isLoadingOfflineModel}
             className="flex-1"
           />
@@ -324,7 +329,7 @@ export const AIHealthAssistant = ({
         <p className="text-xs text-muted-foreground mt-2">
           <span className="flex items-center">
             <Bot className="h-3 w-3 mr-1" />
-            {language === "en" 
+            {detectedLanguage === "en" 
               ? "Health Assistant - For general health information only. Not a substitute for professional medical advice."
               : "Asistente de Salud - Solo para información general de salud. No sustituye el consejo médico profesional."}
           </span>
@@ -335,10 +340,10 @@ export const AIHealthAssistant = ({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === "en" ? "Troubleshooting" : "Solución de problemas"}
+              {detectedLanguage === "en" ? "Troubleshooting" : "Solución de problemas"}
             </DialogTitle>
             <DialogDescription>
-              {language === "en" 
+              {detectedLanguage === "en" 
                 ? "Try these steps to resolve the issue:" 
                 : "Intenta estos pasos para resolver el problema:"}
             </DialogDescription>
@@ -346,22 +351,22 @@ export const AIHealthAssistant = ({
           <div className="py-4 space-y-4">
             <ol className="list-decimal pl-5 space-y-2">
               <li>
-                {language === "en" 
+                {detectedLanguage === "en" 
                   ? "Check your API key in settings (make sure it's valid and has not expired)"
                   : "Verifica tu clave API en ajustes (asegúrate de que sea válida y no haya expirado)"}
               </li>
               <li>
-                {language === "en" 
+                {detectedLanguage === "en" 
                   ? "Check your internet connection"
                   : "Verifica tu conexión a internet"}
               </li>
               <li>
-                {language === "en" 
+                {detectedLanguage === "en" 
                   ? "Try switching to a different AI model"
                   : "Intenta cambiar a un modelo de IA diferente"}
               </li>
               <li>
-                {language === "en" 
+                {detectedLanguage === "en" 
                   ? "If the issue persists, try using the offline mode"
                   : "Si el problema persiste, intenta usar el modo sin conexión"}
               </li>
@@ -372,10 +377,10 @@ export const AIHealthAssistant = ({
               variant="outline" 
               onClick={handleUseFallbackMode}
             >
-              {language === "en" ? "Use Offline Mode" : "Usar Modo Sin Conexión"}
+              {detectedLanguage === "en" ? "Use Offline Mode" : "Usar Modo Sin Conexión"}
             </Button>
             <Button onClick={() => setShowTroubleshootingDialog(false)}>
-              {language === "en" ? "Close" : "Cerrar"}
+              {detectedLanguage === "en" ? "Close" : "Cerrar"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -385,10 +390,10 @@ export const AIHealthAssistant = ({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {language === "en" ? "Offline Mode Settings" : "Configuración del Modo Sin Conexión"}
+              {detectedLanguage === "en" ? "Offline Mode Settings" : "Configuración del Modo Sin Conexión"}
             </DialogTitle>
             <DialogDescription>
-              {language === "en" 
+              {detectedLanguage === "en" 
                 ? "Choose how the assistant should work when offline:" 
                 : "Elige cómo debe funcionar el asistente cuando esté sin conexión:"}
             </DialogDescription>
@@ -401,11 +406,11 @@ export const AIHealthAssistant = ({
               <div className="flex items-center space-x-2 mb-2">
                 <RadioGroupItem value="simulated" id="simulated" />
                 <Label htmlFor="simulated" className="cursor-pointer font-medium">
-                  {language === "en" ? "Simulated Responses" : "Respuestas Simuladas"}
+                  {detectedLanguage === "en" ? "Simulated Responses" : "Respuestas Simuladas"}
                 </Label>
               </div>
               <p className="text-sm text-muted-foreground ml-6 mb-4">
-                {language === "en" 
+                {detectedLanguage === "en" 
                   ? "Uses pre-defined responses for common health questions. Fast and no download required."
                   : "Utiliza respuestas predefinidas para preguntas comunes de salud. Rápido y sin necesidad de descarga."}
               </p>
@@ -413,11 +418,11 @@ export const AIHealthAssistant = ({
               <div className="flex items-center space-x-2 mb-2">
                 <RadioGroupItem value="localLLM" id="localLLM" />
                 <Label htmlFor="localLLM" className="cursor-pointer font-medium">
-                  {language === "en" ? "Local AI Model" : "Modelo de IA Local"}
+                  {detectedLanguage === "en" ? "Local AI Model" : "Modelo de IA Local"}
                 </Label>
               </div>
               <p className="text-sm text-muted-foreground ml-6">
-                {language === "en" 
+                {detectedLanguage === "en" 
                   ? "This option is currently unavailable in this version."
                   : "Esta opción no está disponible actualmente en esta versión."}
               </p>
@@ -425,10 +430,10 @@ export const AIHealthAssistant = ({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowOfflineModeDialog(false)}>
-              {language === "en" ? "Cancel" : "Cancelar"}
+              {detectedLanguage === "en" ? "Cancel" : "Cancelar"}
             </Button>
             <Button onClick={handleOfflineModeChange}>
-              {language === "en" ? "Save & Apply" : "Guardar y Aplicar"}
+              {detectedLanguage === "en" ? "Save & Apply" : "Guardar y Aplicar"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -70,8 +70,15 @@ export class FakeAIService {
     
     chatHistory[chatId].push(userMessage);
     
+    // Auto-detect language if possible
+    let responseLanguage = this.language;
+    const spanishPatterns = /[áéíóúüñ¿¡]|(\b(hola|como|qué|donde|cuando|por qué|gracias|salud)\b)/i;
+    if (spanishPatterns.test(message)) {
+      responseLanguage = "es";
+    }
+    
     // Generate AI response using the sample responses
-    const aiResponseContent = getSampleResponse(message, this.language);
+    const aiResponseContent = getSampleResponse(message, responseLanguage);
     
     // Create AI response message
     const aiResponse: AIMessage = {
@@ -122,6 +129,14 @@ export class FakeAIService {
    */
   setLanguage(language: "en" | "es"): void {
     this.language = language;
+  }
+  
+  /**
+   * Detect language of text
+   */
+  detectLanguage(text: string): "en" | "es" {
+    const spanishPatterns = /[áéíóúüñ¿¡]|(\b(hola|como|qué|donde|cuando|por qué|gracias|salud)\b)/i;
+    return spanishPatterns.test(text) ? "es" : "en";
   }
 }
 
