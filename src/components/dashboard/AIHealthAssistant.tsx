@@ -226,7 +226,9 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      const shouldUseOfflineMode = !isOnline || offlineMode === "localLLM" || offlineMode === "simulated";
+      const shouldUseOfflineMode = !isOnline || 
+                                  offlineMode === "localLLM" || 
+                                  offlineMode === "simulated";
       
       if (shouldUseOfflineMode) {
         console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
