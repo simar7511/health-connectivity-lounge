@@ -13,7 +13,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { generateOfflineResponse, isOfflineModelReady, initOfflineModel } from "@/utils/offlineLLM";
+import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig } from "@/utils/offlineLLM";
 
 export type OfflineModeType = "simulated" | "localLLM" | "none";
 
@@ -88,6 +88,7 @@ export const AIHealthAssistant = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const functions = getFunctions();
+  const isUsingLocalModelAlready = offlineMode === "localLLM";
 
   useEffect(() => {
     const systemMessage: Message = {
@@ -144,6 +145,35 @@ export const AIHealthAssistant = ({
         : "Error al cargar el historial de chat. Por favor, inténtalo de nuevo.");
     }
   }, [patientId, language]);
+
+  useEffect(() => {
+    // Initialize offline model if needed
+    if ((!isOnline || offlineMode === "localLLM") && !isUsingLocalModelAlready) {
+      console.log("Initializing offline model");
+      initOfflineModel().then(success => {
+        if (success) {
+          const config = getOfflineModelConfig();
+          toast({
+            title: language === "en" ? "Offline LLM Ready" : "LLM sin conexión listo",
+            description: language === "en" 
+              ? `Using ${config.modelName} for offline responses` 
+              : `Usando ${config.modelName} para respuestas sin conexión`,
+            variant: "default",
+          });
+        } else {
+          // Fall back to simulated responses if model fails to load
+          setOfflineMode("simulated");
+          toast({
+            title: language === "en" ? "Offline LLM Failed" : "Error en LLM sin conexión",
+            description: language === "en" 
+              ? "Falling back to simulated responses" 
+              : "Volviendo a respuestas simuladas",
+            variant: "destructive",
+          });
+        }
+      });
+    }
+  }, [isOnline, offlineMode, toast, language]);
 
   const handleRetry = () => {
     setError(null);
