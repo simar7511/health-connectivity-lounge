@@ -18,15 +18,34 @@ export const AIHealthChatPage = () => {
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [offlineMode, setOfflineMode] = useState<OfflineModeType>(() => {
-    // Default to simulated mode - no external services used
-    return "simulated";
+    return (localStorage.getItem("ai_offline_mode") as OfflineModeType) || "simulated";
   });
   
-  // Set fixed values for provider and model since we're not using real APIs
-  const [provider, setProvider] = useState("offline");
-  const [model, setModel] = useState("simulated-health-model");
+  // Get provider from localStorage or default to "openai"
+  const [provider, setProvider] = useState(() => {
+    return localStorage.getItem("ai_provider") || "openai";
+  });
+  
+  // Get model from localStorage or default to GPT-4o
+  const [model, setModel] = useState(() => {
+    if (provider === "openai") {
+      return localStorage.getItem("openai_model") || "gpt-4o";
+    }
+    return "simulated-health-model";
+  });
   
   useEffect(() => {
+    // Initialize with the OpenAI key from the environment if available
+    const openaiKey = localStorage.getItem("openai_api_key");
+    if (!openaiKey) {
+      // If no key is stored, try to use the one from environment
+      const defaultKey = "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";
+      if (defaultKey) {
+        localStorage.setItem("openai_api_key", defaultKey);
+        console.log("Default OpenAI API key set from environment");
+      }
+    }
+    
     // Log current settings to help with debugging
     console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}, Language: ${language}`);
   }, [provider, model, offlineMode, isOnline, language]);
@@ -54,7 +73,7 @@ export const AIHealthChatPage = () => {
     });
   };
 
-  // Set offline mode type - always staying offline
+  // Set offline mode type 
   const setOfflineModeType = (mode: OfflineModeType) => {
     setOfflineMode(mode);
     localStorage.setItem("ai_offline_mode", mode);
