@@ -32,7 +32,7 @@ export class FakeAIService {
   
   constructor(options: AIServiceOptions = {}) {
     this.apiKey = options.apiKey || "fake-api-key-12345";
-    this.model = options.model || "gpt-4o-fake";
+    this.model = options.model || "health-assistant-model";
     this.language = options.language || "en";
   }
   

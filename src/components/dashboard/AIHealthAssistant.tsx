@@ -59,8 +59,8 @@ export const AIHealthAssistant = ({
     const systemMessage: AIMessage = {
       role: "system",
       content: language === "en" 
-        ? "Hello! I'm your AI health assistant. I provide clear, evidence-based health information and wellness tips. I'm not a substitute for professional medical advice - please consult a healthcare provider for personalized concerns. How can I help you today?"
-        : "¡Hola! Soy tu asistente de salud con IA. Proporciono información clara y basada en evidencia sobre salud y consejos de bienestar. No soy un sustituto del consejo médico profesional - por favor consulta a un proveedor de salud para preocupaciones personalizadas. ¿Cómo puedo ayudarte hoy?",
+        ? "Welcome to your Health Assistant! I can provide information on various health topics such as nutrition, exercise, sleep, stress management, mental health, heart health, diabetes, and pain management. While I'm not a substitute for professional medical advice, I can offer general guidance based on current health guidelines. How can I assist with your health questions today?"
+        : "¡Bienvenido a tu Asistente de Salud! Puedo proporcionar información sobre varios temas de salud como nutrición, ejercicio, sueño, manejo del estrés, salud mental, salud del corazón, diabetes y manejo del dolor. Aunque no soy un sustituto del consejo médico profesional, puedo ofrecer orientación general basada en las pautas de salud actuales. ¿Cómo puedo ayudarte con tus preguntas de salud hoy?",
       timestamp: new Date()
     };
     
@@ -217,24 +217,12 @@ export const AIHealthAssistant = ({
         <Alert className="m-2 bg-amber-50 border-amber-200">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertTitle>
-            {language === "en" ? "Offline Mode" : "Modo Sin Conexión"}
+            {language === "en" ? "Health Assistant" : "Asistente de Salud"}
           </AlertTitle>
-          <AlertDescription className="flex flex-col gap-2">
-            <p>
-              {language === "en" 
-                ? `You're currently using simplified AI responses with limited capabilities.`
-                : `Actualmente estás usando respuestas de IA simplificadas con capacidades limitadas.`}
-            </p>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowOfflineModeDialog(true)}
-              className="self-start"
-            >
-              <WifiOff className="h-3 w-3 mr-1" />
-              {language === "en" ? "Change Offline Mode" : "Cambiar Modo Sin Conexión"}
-            </Button>
+          <AlertDescription>
+            {language === "en" 
+              ? "I can provide general health information on various topics. For personal medical advice, please consult a healthcare professional."
+              : "Puedo proporcionar información general de salud sobre varios temas. Para consejos médicos personales, consulte a un profesional de la salud."}
           </AlertDescription>
         </Alert>
       )}
@@ -313,10 +301,15 @@ export const AIHealthAssistant = ({
         <div className="flex gap-2">
           <Input
             ref={inputRef}
-            placeholder={language === "en" ? "Type your message..." : "Escribe tu mensaje..."}
+            placeholder={language === "en" ? "Ask a health question..." : "Haz una pregunta de salud..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (input.trim()) handleSend();
+              }
+            }}
             disabled={isLoading || isLoadingOfflineModel}
             className="flex-1"
           />
@@ -329,18 +322,12 @@ export const AIHealthAssistant = ({
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          {isUsingFallback || !isOnline ? (
-            <span className="flex items-center">
-              <WifiOff className="h-3 w-3 mr-1" />
-              {language === "en" ? "Using simulated responses in offline mode" : "Usando respuestas simuladas en modo sin conexión"}
-            </span>
-          ) : (
-            <span>
-              {language === "en" 
-                ? `Using ${provider === "openai" ? "OpenAI" : "Llama"} ${model} model (Simulated)`
-                : `Usando modelo ${provider === "openai" ? "OpenAI" : "Llama"} ${model} (Simulado)`}
-            </span>
-          )}
+          <span className="flex items-center">
+            <Bot className="h-3 w-3 mr-1" />
+            {language === "en" 
+              ? "Health Assistant - For general health information only. Not a substitute for professional medical advice."
+              : "Asistente de Salud - Solo para información general de salud. No sustituye el consejo médico profesional."}
+          </span>
         </p>
       </div>
 
