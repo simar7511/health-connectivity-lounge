@@ -1,8 +1,8 @@
 
 // Firebase configuration and initialization with performance optimizations
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth as importGetAuth, connectAuthEmulator as importConnectAuthEmulator } from "firebase/auth";
-import { getFirestore as importGetFirestore, connectFirestoreEmulator as importConnectFirestoreEmulator } from "firebase/firestore";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
 import { toast } from "@/hooks/use-toast";
@@ -30,15 +30,15 @@ if (!getApps().length) {
   try {
     console.time('Firebase Initialization');
     app = initializeApp(firebaseConfig);
-    auth = importGetAuth(app);
-    db = importGetFirestore(app);
+    auth = getAuth(app);
+    db = getFirestore(app);
     storage = getStorage(app);
 
     // Use emulators when in development
     if (import.meta.env.DEV) {
       // Uncomment these lines if you want to use Firebase emulators
-      // importConnectAuthEmulator(auth, 'http://localhost:9099');
-      // importConnectFirestoreEmulator(db, 'localhost', 9000);
+      // connectAuthEmulator(auth, 'http://localhost:9099');
+      // connectFirestoreEmulator(db, 'localhost', 9000);
       // connectStorageEmulator(storage, 'localhost', 9199);
     }
 
@@ -77,22 +77,12 @@ if (!getApps().length) {
 } else {
   // Reuse existing Firebase instances
   app = getApps()[0];
-  auth = importGetAuth(app);
-  db = importGetFirestore(app);
+  auth = getAuth(app);
+  db = getFirestore(app);
   storage = getStorage(app);
   console.log("♻️ Reusing existing Firebase instances");
 }
 
-// Explicitly declare window as having a webkitSpeechRecognition property
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
-
-if (typeof window !== 'undefined') {
-  window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-}
+// Speech recognition is now declared in vite-env.d.ts
 
 export { app, auth, db, storage, messaging, firebaseConfig };

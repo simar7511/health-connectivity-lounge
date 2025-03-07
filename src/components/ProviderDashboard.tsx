@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -80,7 +81,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const [currentLanguage, setCurrentLanguage] = useState(language);
   const [activeTab, setActiveTab] = useState("intake");
   const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
-  const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<Timestamp | null>(null);
+  const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<typeof Timestamp | null>(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
