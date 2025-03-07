@@ -83,4 +83,9 @@ if (!getApps().length) {
   console.log("♻️ Reusing existing Firebase instances");
 }
 
+// Explicitly declare window as having a webkitSpeechRecognition property
+if (typeof window !== 'undefined') {
+  window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+}
+
 export { app, auth, db, storage, messaging, firebaseConfig };
