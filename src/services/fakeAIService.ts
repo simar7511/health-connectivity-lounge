@@ -1,5 +1,5 @@
 
-import { getSampleResponse } from "@/utils/offlineLLM";
+import { getSampleResponse } from "@/utils/offlineHelpers";
 
 // Types
 export interface AIMessage {
