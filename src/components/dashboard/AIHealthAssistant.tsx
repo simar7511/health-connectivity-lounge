@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig, getSampleResponse, OfflineModeType } from "@/utils/offlineHelpers";
 import { FakeAIService, AIMessage } from "@/services/fakeAIService";
+import { AIService } from "@/services/aiService";
 
 interface AIHealthAssistantProps {
   language: "en" | "es";
@@ -21,6 +23,7 @@ interface AIHealthAssistantProps {
   provider: string;
   isOnline?: boolean;
   offlineMode?: OfflineModeType;
+  aiService?: AIService; // Added aiService as an optional prop
 }
 
 export const AIHealthAssistant = ({ 
@@ -30,7 +33,8 @@ export const AIHealthAssistant = ({
   model,
   provider,
   isOnline = true,
-  offlineMode = "simulated"
+  offlineMode = "simulated",
+  aiService // Add the aiService prop to the destructuring
 }: AIHealthAssistantProps) => {
   const { toast } = useToast();
   const [input, setInput] = useState("");
@@ -52,17 +56,20 @@ export const AIHealthAssistant = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const conversationId = `chat-${patientId || 'default'}`;
   
-  const aiService = new FakeAIService({ 
-    model, 
-    language,
-    apiKey: localStorage.getItem(`${provider}_api_key`) || ""
-  });
+  // Create a local AI service instance if none is provided
+  const localAiService = useRef(
+    aiService || new FakeAIService({ 
+      model, 
+      language,
+      apiKey: localStorage.getItem(`${provider}_api_key`) || ""
+    })
+  ).current;
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(`${provider}_api_key`) || "";
     if (provider === "openai" && storedApiKey && storedApiKey.startsWith("sk-")) {
       setUsingOpenAI(true);
-      aiService.setApiKey(storedApiKey);
+      localAiService.setApiKey(storedApiKey);
       
       if (isOnline) {
         console.log("Using OpenAI API for responses");
@@ -83,12 +90,12 @@ export const AIHealthAssistant = ({
 
   useEffect(() => {
     console.log(`Language preference changed to: ${language}`);
-    aiService.setLanguage(language);
+    localAiService.setLanguage(language);
     setDetectedLanguage(language);
   }, [language]);
 
   useEffect(() => {
-    aiService.setModel(model);
+    localAiService.setModel(model);
   }, [model]);
 
   useEffect(() => {
@@ -119,7 +126,7 @@ export const AIHealthAssistant = ({
 
   const loadChatHistory = async () => {
     try {
-      const history = await aiService.getChatHistory(conversationId);
+      const history = await localAiService.getChatHistory(conversationId);
       if (history.length > 0) {
         setMessages(history);
       }
@@ -151,7 +158,10 @@ export const AIHealthAssistant = ({
   const handleSend = async () => {
     if (!input.trim()) return;
     
-    const inputDetectedLang = aiService.detectLanguage(input);
+    const inputDetectedLang = localAiService.detectLanguage ? 
+      localAiService.detectLanguage(input) : 
+      language;
+    
     setDetectedLanguage(inputDetectedLang);
     
     const userMessage: AIMessage = {
@@ -183,13 +193,13 @@ export const AIHealthAssistant = ({
       
       const apiKey = localStorage.getItem(`${provider}_api_key`);
       if (provider === "openai" && apiKey && apiKey.startsWith("sk-") && isOnline) {
-        aiService.setApiKey(apiKey);
+        localAiService.setApiKey(apiKey);
         console.log("Using OpenAI API for response");
       } else {
         console.log("Using offline/simulated mode for response");
       }
       
-      const aiResponse = await aiService.sendMessage(userInput, conversationId, conversationHistory);
+      const aiResponse = await localAiService.sendMessage(userInput, conversationId, conversationHistory);
       setMessages((prev) => [...prev, aiResponse]);
     } catch (err: any) {
       console.error("Error in AI chat:", err);
@@ -471,3 +481,4 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
+
