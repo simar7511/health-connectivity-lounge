@@ -5,6 +5,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
+import { toast } from "@/hooks/use-toast";
 
 // Use environment variables with fallbacks to hardcoded values as a last resort
 const firebaseConfig = {
@@ -18,27 +19,41 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-// Initialize Firebase Cloud Messaging if supported
+let app;
+let auth;
+let db;
+let storage;
 let messaging = null;
-isSupported()
-  .then(supported => {
-    if (supported) {
-      messaging = getMessaging(app);
-      console.log("✅ Firebase Cloud Messaging initialized");
-    } else {
-      console.log("ℹ️ Firebase Cloud Messaging not supported in this environment");
-    }
-  })
-  .catch(error => {
-    console.error("Error checking FCM support:", error);
-  });
 
-// Log successful Firebase initialization for debugging
-console.log("✅ Firebase initialized successfully");
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+
+  // Initialize Firebase Cloud Messaging if supported
+  isSupported()
+    .then(supported => {
+      if (supported) {
+        messaging = getMessaging(app);
+        console.log("✅ Firebase Cloud Messaging initialized");
+      } else {
+        console.log("ℹ️ Firebase Cloud Messaging not supported in this environment");
+      }
+    })
+    .catch(error => {
+      console.error("Error checking FCM support:", error);
+    });
+
+  // Log successful Firebase initialization for debugging
+  console.log("✅ Firebase initialized successfully");
+} catch (error) {
+  console.error("❌ Firebase initialization error:", error);
+  toast({
+    variant: "destructive",
+    title: "Firebase Error",
+    description: `Failed to initialize Firebase: ${error instanceof Error ? error.message : String(error)}`,
+  });
+}
 
 export { app, auth, db, storage, messaging, firebaseConfig };
