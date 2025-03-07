@@ -147,7 +147,6 @@ export const AIHealthAssistant = ({
   }, [patientId, language]);
 
   useEffect(() => {
-    // Initialize offline model if needed
     if ((!isOnline || offlineMode === "localLLM") && !isUsingLocalModelAlready) {
       console.log("Initializing offline model");
       initOfflineModel().then(success => {
@@ -161,8 +160,7 @@ export const AIHealthAssistant = ({
             variant: "default",
           });
         } else {
-          // Fall back to simulated responses if model fails to load
-          setOfflineMode("simulated");
+          setOfflineModeChoice("simulated");
           toast({
             title: language === "en" ? "Offline LLM Failed" : "Error en LLM sin conexión",
             description: language === "en" 
@@ -173,7 +171,7 @@ export const AIHealthAssistant = ({
         }
       });
     }
-  }, [isOnline, offlineMode, toast, language]);
+  }, [isOnline, offlineMode, toast, language, isUsingLocalModelAlready]);
 
   const handleRetry = () => {
     setError(null);
