@@ -18,7 +18,9 @@ export const AIHealthChatPage = () => {
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [offlineMode, setOfflineMode] = useState<"simulated" | "localLLM" | "none">(() => {
-    return (localStorage.getItem("ai_offline_mode") as "simulated" | "localLLM" | "none") || "simulated";
+    const savedMode = localStorage.getItem("ai_offline_mode") as "simulated" | "localLLM" | "none";
+    // Default to "none" if online and no setting, otherwise "simulated"
+    return savedMode || (isOnline ? "none" : "simulated");
   });
   
   // Auto-select model based on connectivity
@@ -26,7 +28,7 @@ export const AIHealthChatPage = () => {
     // If we're offline, always default to local provider
     if (!isOnline) return "llama";
     
-    // Default to OpenAI if not set
+    // Use saved provider or default to OpenAI if not set
     return localStorage.getItem("ai_provider") || "openai";
   });
   
@@ -42,6 +44,9 @@ export const AIHealthChatPage = () => {
     // Default to GPT-4o
     return "gpt-4o";
   });
+  
+  // Track if we've tried to load the model
+  const [isUsingLocalModelAlready, setIsUsingLocalModelAlready] = useState(false);
   
   // Initialize offline model if needed
   useEffect(() => {
@@ -71,11 +76,8 @@ export const AIHealthChatPage = () => {
         }
       });
     }
-  }, [isOnline, offlineMode, toast, language]);
+  }, [isOnline, offlineMode, toast, language, isUsingLocalModelAlready]);
 
-  // Track if we've tried to load the model
-  const [isUsingLocalModelAlready, setIsUsingLocalModelAlready] = useState(false);
-  
   // When offline mode changes to localLLM, attempt to load the model
   useEffect(() => {
     if (offlineMode === "localLLM" && !isUsingLocalModelAlready) {
@@ -105,13 +107,22 @@ export const AIHealthChatPage = () => {
         setOfflineMode("simulated");
       }
     } else {
-      // When back online, inform the user if they were previously using Llama
-      if (provider === "llama" && localStorage.getItem("ai_provider") === "llama") {
+      // When back online, restore previous provider if it was saved
+      const savedProvider = localStorage.getItem("ai_provider");
+      if (savedProvider && savedProvider !== provider) {
+        setProvider(savedProvider);
+        
+        // Also restore the saved model for that provider
+        const savedModel = localStorage.getItem(`${savedProvider}_model`);
+        if (savedModel) {
+          setModel(savedModel);
+        }
+        
         toast({
           title: language === "en" ? "Connected" : "Conectado",
           description: language === "en" 
-            ? "You're now online. You can switch to GPT-4o in settings for advanced AI capabilities."
-            : "Ahora estás en línea. Puedes cambiar a GPT-4o en ajustes para capacidades de IA avanzadas.",
+            ? "You're now online. Restored your preferred AI settings."
+            : "Ahora estás en línea. Se restauró tu configuración de IA preferida.",
           variant: "default",
         });
       }

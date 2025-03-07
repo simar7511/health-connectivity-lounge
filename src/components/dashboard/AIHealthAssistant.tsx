@@ -226,12 +226,12 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      const shouldUseOfflineMode = !isOnline || offlineMode === "localLLM";
+      const shouldUseOfflineMode = !isOnline || offlineMode === "localLLM" || offlineMode === "simulated";
       
       if (shouldUseOfflineMode) {
         console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
         
-        if ((!isOnline || (offlineMode as OfflineModeType) === "localLLM") && isOfflineModelReady()) {
+        if ((!isOnline || offlineMode === "localLLM") && isOfflineModelReady()) {
           return handleLocalLLMResponse(userInput, conversationHistory);
         }
         
@@ -719,7 +719,3 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
-
-
-
-
