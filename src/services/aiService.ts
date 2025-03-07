@@ -1,3 +1,4 @@
+
 import { AIMessage } from "./fakeAIService";
 import { OfflineModeType } from "@/utils/offlineHelpers";
 
@@ -56,30 +57,36 @@ export class AIService {
     
     this.chatHistory[chatId].push(userMessage);
     
-    // When offline or in simulated mode, generate offline response
-    if (!this.isOnline || this.offlineMode === "simulated") {
-      console.log("Using offline mode due to network status or user preference");
-      return this.generateOfflineResponse(message, chatId);
-    }
+    // Only use offline mode when explicitly set to "simulated" or when offline
+    const shouldUseOfflineMode = !this.isOnline || this.offlineMode === "simulated";
     
-    // Check if we have a valid OpenAI API key (starts with "sk-")
+    // Check if we have a valid OpenAI API key (starts with "sk-" or "sk-proj-")
     const isValidOpenAIKey = this.apiKey && (this.apiKey.startsWith("sk-") || this.apiKey.startsWith("sk-proj-"));
     
-    if (isValidOpenAIKey) {
+    console.log(`Decision factors - Online: ${this.isOnline}, OfflineMode: ${this.offlineMode}, Valid API key: ${isValidOpenAIKey ? "Yes" : "No"}`);
+    
+    if (isValidOpenAIKey && !shouldUseOfflineMode) {
       try {
         // Log attempt to use OpenAI API
-        console.log(`Attempting to use OpenAI API with model: ${this.model}`);
+        console.log(`Using OpenAI API with model: ${this.model}`);
         // Attempt to use OpenAI API
         return await this.sendToOpenAI(message, chatId, fullConversation);
       } catch (error) {
         console.error("Error with OpenAI API:", error);
         // Fallback to offline mode if OpenAI API fails
+        console.log("Falling back to offline mode due to API error");
         return this.generateOfflineResponse(message, chatId);
       }
     } else {
-      // Log missing or invalid API key
-      console.log("No valid OpenAI API key found, using offline mode");
-      // Use offline mode if no valid API key
+      // Log reason for using offline mode
+      if (!isValidOpenAIKey) {
+        console.log("Using offline mode: No valid OpenAI API key found");
+      } else if (!this.isOnline) {
+        console.log("Using offline mode: Device is offline");
+      } else {
+        console.log("Using offline mode: User preference set to simulated mode");
+      }
+      // Use offline mode
       return this.generateOfflineResponse(message, chatId);
     }
   }

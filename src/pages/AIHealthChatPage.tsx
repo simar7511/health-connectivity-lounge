@@ -18,9 +18,13 @@ export const AIHealthChatPage = () => {
     return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-  // Update to ensure "none" is a valid OfflineModeType by using type casting
+  
+  // Initialize offlineMode with stored preference or default to "simulated"
   const [offlineMode, setOfflineMode] = useState<OfflineModeType>(() => {
-    return localStorage.getItem("ai_offline_mode") as OfflineModeType || "simulated";
+    const storedMode = localStorage.getItem("ai_offline_mode") as OfflineModeType;
+    return storedMode && (storedMode === "simulated" || storedMode === "localLLM") 
+      ? storedMode 
+      : "simulated";
   });
   
   // Always default to "openai" provider
