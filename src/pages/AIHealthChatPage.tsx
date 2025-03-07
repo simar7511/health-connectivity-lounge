@@ -22,7 +22,7 @@ export const AIHealthChatPage = () => {
     return (localStorage.getItem("ai_offline_mode") as OfflineModeType) || "simulated";
   });
   
-  // Get provider from localStorage or default to "openai"
+  // Get provider from localStorage or default to "openai" (changed default from "offline" to "openai")
   const [provider, setProvider] = useState(() => {
     return localStorage.getItem("ai_provider") || "openai";
   });

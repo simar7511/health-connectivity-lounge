@@ -59,14 +59,17 @@ export class AIService {
     
     // When offline or in simulated mode, generate offline response
     if (!this.isOnline || this.offlineMode === "simulated") {
+      console.log("Using offline mode due to network status or user preference");
       return this.generateOfflineResponse(message, chatId);
     }
     
     // Check if we have a valid OpenAI API key (starts with "sk-")
-    const isValidOpenAIKey = this.apiKey && this.apiKey.startsWith("sk-");
+    const isValidOpenAIKey = this.apiKey && (this.apiKey.startsWith("sk-") || this.apiKey.startsWith("sk-proj-"));
     
     if (isValidOpenAIKey) {
       try {
+        // Log attempt to use OpenAI API
+        console.log(`Attempting to use OpenAI API with model: ${this.model}`);
         // Attempt to use OpenAI API
         return await this.sendToOpenAI(message, chatId, fullConversation);
       } catch (error) {
@@ -75,6 +78,8 @@ export class AIService {
         return this.generateOfflineResponse(message, chatId);
       }
     } else {
+      // Log missing or invalid API key
+      console.log("No valid OpenAI API key found, using offline mode");
       // Use offline mode if no valid API key
       return this.generateOfflineResponse(message, chatId);
     }
@@ -109,6 +114,8 @@ export class AIService {
       { role: "user", content: message }
     ];
     
+    console.log(`Sending request to OpenAI with API key: ${this.apiKey.substring(0, 7)}... and model: ${this.model}`);
+    
     // Call OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -127,11 +134,13 @@ export class AIService {
     // Check for API errors
     if (!response.ok) {
       const errorData = await response.json();
+      console.error("OpenAI API error response:", errorData);
       throw new Error(`OpenAI API error: ${errorData.error?.message || "Unknown error"}`);
     }
     
     // Parse API response
     const responseData = await response.json();
+    console.log("Received successful response from OpenAI");
     const aiContent = responseData.choices[0]?.message?.content || "No response generated.";
     
     // Create AI response message
