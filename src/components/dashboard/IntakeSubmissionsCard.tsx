@@ -1,10 +1,9 @@
-
-import { Timestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { Calendar, Clock3, MessageSquare, UserCircle } from "lucide-react";
 import { IntakeFormSubmission } from "./IntakeSubmissionsTypes";
+import { Timestamp as FirestoreTimestamp } from "firebase/firestore";
 
 interface IntakeSubmissionsCardProps {
   submission: IntakeFormSubmission;
@@ -58,7 +57,7 @@ export const renderUrgencyBadge = (urgency: "low" | "medium" | "high", language:
   }
 };
 
-export const formatDate = (timestamp: Timestamp, language: "en" | "es") => {
+export const formatDate = (timestamp: FirestoreTimestamp, language: "en" | "es") => {
   const date = timestamp.toDate();
   return date.toLocaleString(language === "en" ? "en-US" : "es-ES", {
     year: "numeric",

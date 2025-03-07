@@ -1,9 +1,7 @@
 
 import { initializeApp } from "firebase/app";
-import type { Firestore } from "firebase/firestore";
-import type { Auth } from "firebase/auth";
-import { getFirestore, setLogLevel } from "@/types/firebase";
-import { getAuth } from "@/types/firebase";
+import { Firestore as FirestoreType, getFirestore, setLogLevel } from "firebase/firestore";
+import { Auth as AuthType, getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { getMessaging, isSupported } from "firebase/messaging";
 
@@ -19,8 +17,8 @@ const firebaseConfig = {
 };
 
 // Declare Firebase services
-let db: Firestore;
-let auth: Auth;
+let db: FirestoreType;
+let auth: AuthType;
 let messaging: any = null;
 
 try {
@@ -69,8 +67,8 @@ try {
   });
 
   // Fallback: Create empty objects to prevent runtime errors
-  db = {} as Firestore;
-  auth = {} as Auth;
+  db = {} as FirestoreType;
+  auth = {} as AuthType;
 }
 
 export { db, auth, messaging };
