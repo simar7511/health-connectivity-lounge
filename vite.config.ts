@@ -22,7 +22,7 @@ export default defineConfig({
     hmr: {
       overlay: true,
     },
-    allowedHosts: "all" // Accept connections from any host for development
+    allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com", "all"] // Add specific host to allowed hosts
   },
   resolve: {
     alias: {
