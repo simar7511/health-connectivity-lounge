@@ -11,10 +11,7 @@ const __dirname = path.dirname(__filename);
 // Optimized configuration for faster development updates
 export default defineConfig({
   base: "/",
-  plugins: [react({
-    // Fast Refresh optimizations
-    fastRefresh: true,
-  })],
+  plugins: [react()], // Remove the fastRefresh option since it's not recognized
   server: {
     port: 8080,
     host: true,
