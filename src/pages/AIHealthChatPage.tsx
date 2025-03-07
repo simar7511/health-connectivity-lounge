@@ -7,6 +7,7 @@ import { AISettingsDialog } from "@/components/dashboard/AISettingsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineModeType } from "@/utils/offlineHelpers";
+import { aiService } from "@/services/aiService";
 
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
@@ -46,6 +47,13 @@ export const AIHealthChatPage = () => {
       }
     }
     
+    // Update the AI service with current settings
+    aiService.setApiKey(openaiKey || "");
+    aiService.setModel(model);
+    aiService.setLanguage(language);
+    aiService.setOnlineStatus(isOnline);
+    aiService.setOfflineMode(offlineMode);
+    
     // Log current settings to help with debugging
     console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}, Language: ${language}`);
   }, [provider, model, offlineMode, isOnline, language]);
@@ -59,6 +67,9 @@ export const AIHealthChatPage = () => {
       const newLang = prev === "en" ? "es" : "en";
       console.log(`Language toggled from ${prev} to ${newLang}`);
       sessionStorage.setItem("preferredLanguage", newLang);
+      
+      // Update AI service language
+      aiService.setLanguage(newLang);
       
       // Show a toast to confirm language change
       toast({
@@ -77,6 +88,7 @@ export const AIHealthChatPage = () => {
   const setOfflineModeType = (mode: OfflineModeType) => {
     setOfflineMode(mode);
     localStorage.setItem("ai_offline_mode", mode);
+    aiService.setOfflineMode(mode);
   };
 
   return (
@@ -97,6 +109,7 @@ export const AIHealthChatPage = () => {
           provider={provider}
           isOnline={isOnline}
           offlineMode={offlineMode}
+          aiService={aiService}
         />
       </div>
 
