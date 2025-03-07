@@ -15,6 +15,13 @@ export default defineConfig({
   server: {
     port: 8080,
     host: true,
+    strictPort: true,
+    watch: {
+      usePolling: true,
+    },
+    hmr: {
+      overlay: true,
+    },
     allowedHosts: [
       "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com",
       "localhost"
