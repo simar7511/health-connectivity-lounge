@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
+import { toast } from "@/hooks/use-toast";
 
 // Import Pages & Components
 import Index from "./pages/Index";
@@ -36,6 +37,13 @@ const App: React.FC = () => {
     // Check if Firebase auth is initialized
     if (auth) {
       console.log("Firebase auth initialized successfully");
+    } else {
+      console.error("Firebase auth initialization failed");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to initialize Firebase authentication",
+      });
     }
   }, [language]);
 
