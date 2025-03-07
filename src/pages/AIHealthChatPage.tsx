@@ -28,8 +28,8 @@ export const AIHealthChatPage = () => {
   
   useEffect(() => {
     // Log current settings to help with debugging
-    console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}`);
-  }, [provider, model, offlineMode, isOnline]);
+    console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}, Language: ${language}`);
+  }, [provider, model, offlineMode, isOnline, language]);
 
   const handleBack = () => {
     navigate(-1);
@@ -38,7 +38,18 @@ export const AIHealthChatPage = () => {
   const toggleLanguage = () => {
     setLanguage(prev => {
       const newLang = prev === "en" ? "es" : "en";
+      console.log(`Language toggled from ${prev} to ${newLang}`);
       sessionStorage.setItem("preferredLanguage", newLang);
+      
+      // Show a toast to confirm language change
+      toast({
+        title: newLang === "en" ? "Switched to English" : "Cambiado a Español",
+        description: newLang === "en" 
+          ? "The Health Assistant will now respond in English" 
+          : "El Asistente de Salud ahora responderá en Español",
+        variant: "default",
+      });
+      
       return newLang;
     });
   };

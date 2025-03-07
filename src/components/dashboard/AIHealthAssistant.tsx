@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,11 +57,19 @@ export const AIHealthAssistant = ({
   });
 
   useEffect(() => {
+    console.log(`Language preference changed to: ${language}`);
+    aiService.setLanguage(language);
+    setDetectedLanguage(language);
+  }, [language]);
+
+  useEffect(() => {
+    const welcomeMessage = language === "en" 
+      ? "Welcome to your Health Assistant! I can provide information on various health topics such as nutrition, exercise, sleep, stress management, mental health, heart health, diabetes, and pain management. While I'm not a substitute for professional medical advice, I can offer general guidance based on current health guidelines. How can I assist with your health questions today?"
+      : "¡Bienvenido a tu Asistente de Salud! Puedo proporcionar información sobre varios temas de salud como nutrición, ejercicio, sueño, manejo del estrés, salud mental, salud del corazón, diabetes y manejo del dolor. Aunque no soy un sustituto del consejo médico profesional, puedo ofrecer orientación general basada en las pautas de salud actuales. ¿Cómo puedo ayudarte con tus preguntas de salud hoy?";
+    
     const systemMessage: AIMessage = {
       role: "system",
-      content: language === "en" 
-        ? "Welcome to your Health Assistant! I can provide information on various health topics such as nutrition, exercise, sleep, stress management, mental health, heart health, diabetes, and pain management. While I'm not a substitute for professional medical advice, I can offer general guidance based on current health guidelines. How can I assist with your health questions today?"
-        : "¡Bienvenido a tu Asistente de Salud! Puedo proporcionar información sobre varios temas de salud como nutrición, ejercicio, sueño, manejo del estrés, salud mental, salud del corazón, diabetes y manejo del dolor. Aunque no soy un sustituto del consejo médico profesional, puedo ofrecer orientación general basada en las pautas de salud actuales. ¿Cómo puedo ayudarte con tus preguntas de salud hoy?",
+      content: welcomeMessage,
       timestamp: new Date()
     };
     
@@ -89,7 +96,7 @@ export const AIHealthAssistant = ({
       }
     } catch (err) {
       console.error("Error loading chat history:", err);
-      setError(language === "en" 
+      setError(detectedLanguage === "en" 
         ? "Failed to load chat history. Please try again."
         : "Error al cargar el historial de chat. Por favor, inténtalo de nuevo.");
     }
@@ -115,13 +122,8 @@ export const AIHealthAssistant = ({
   const handleSend = async () => {
     if (!input.trim()) return;
     
-    // Detect language for more responsive UI
-    const detectedInputLang = aiService.detectLanguage(input);
-    if (detectedInputLang !== detectedLanguage) {
-      setDetectedLanguage(detectedInputLang);
-      // Update service language to match input
-      aiService.setLanguage(detectedInputLang);
-    }
+    const inputDetectedLang = aiService.detectLanguage(input);
+    setDetectedLanguage(inputDetectedLang);
     
     const userMessage: AIMessage = {
       role: "user",
@@ -179,6 +181,9 @@ export const AIHealthAssistant = ({
 
   const handleSimulatedResponse = async (userInput: string) => {
     try {
+      const inputLanguage = aiService.detectLanguage(userInput);
+      aiService.setLanguage(inputLanguage);
+      
       const aiResponse = await aiService.sendMessage(userInput, conversationId);
       setMessages((prev) => [...prev, aiResponse]);
     } catch (error) {
@@ -186,7 +191,8 @@ export const AIHealthAssistant = ({
       
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const aiResponse = getSampleResponse(userInput, detectedLanguage);
+      const inputLanguage = aiService.detectLanguage(userInput);
+      const aiResponse = getSampleResponse(userInput, inputLanguage);
       
       const assistantMessage: AIMessage = {
         role: "assistant",
@@ -219,6 +225,12 @@ export const AIHealthAssistant = ({
 
   const handleOfflineModeChange = async () => {
     setShowOfflineModeDialog(false);
+  };
+
+  const getInputPlaceholder = () => {
+    return detectedLanguage === "en" 
+      ? "Ask a health question..." 
+      : "Haz una pregunta de salud...";
   };
 
   return (
@@ -311,7 +323,7 @@ export const AIHealthAssistant = ({
         <div className="flex gap-2">
           <Input
             ref={inputRef}
-            placeholder={detectedLanguage === "en" ? "Ask a health question..." : "Haz una pregunta de salud..."}
+            placeholder={getInputPlaceholder()}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

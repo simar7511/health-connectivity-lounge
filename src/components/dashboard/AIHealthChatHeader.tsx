@@ -34,8 +34,13 @@ export const AIHealthChatHeader = ({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={toggleLanguage}>
-          <Globe className="h-5 w-5" />
+        <Button 
+          variant="outline" 
+          onClick={toggleLanguage} 
+          className="text-xs px-2 py-1 h-8"
+        >
+          <Globe className="h-4 w-4 mr-1" />
+          {language === "en" ? "Switch to Spanish" : "Cambiar a Inglés"}
         </Button>
         <Button variant="ghost" size="icon" onClick={openSettings}>
           <Settings className="h-5 w-5" />

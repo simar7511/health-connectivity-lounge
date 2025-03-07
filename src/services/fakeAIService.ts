@@ -55,6 +55,9 @@ export class FakeAIService {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, API_DELAY));
     
+    // Auto-detect language from message
+    const detectedLanguage = this.detectLanguage(message);
+    
     // Create user message
     const userMessage: AIMessage = {
       id: `user-${Date.now()}`,
@@ -70,12 +73,9 @@ export class FakeAIService {
     
     chatHistory[chatId].push(userMessage);
     
-    // Auto-detect language if possible
-    let responseLanguage = this.language;
-    const spanishPatterns = /[áéíóúüñ¿¡]|(\b(hola|como|qué|donde|cuando|por qué|gracias|salud)\b)/i;
-    if (spanishPatterns.test(message)) {
-      responseLanguage = "es";
-    }
+    // Use detected language for the response
+    const responseLanguage = detectedLanguage;
+    console.log(`Detected language: ${responseLanguage} for message: "${message}"`);
     
     // Generate AI response using the sample responses
     const aiResponseContent = getSampleResponse(message, responseLanguage);
@@ -129,14 +129,21 @@ export class FakeAIService {
    */
   setLanguage(language: "en" | "es"): void {
     this.language = language;
+    console.log(`Language set to: ${language}`);
   }
   
   /**
    * Detect language of text
+   * Uses simple pattern matching for Spanish characters and common Spanish words
    */
   detectLanguage(text: string): "en" | "es" {
-    const spanishPatterns = /[áéíóúüñ¿¡]|(\b(hola|como|qué|donde|cuando|por qué|gracias|salud)\b)/i;
-    return spanishPatterns.test(text) ? "es" : "en";
+    // Spanish patterns: accented characters and common Spanish words
+    const spanishPatterns = /[áéíóúüñ¿¡]|(\b(hola|como|qué|donde|cuando|por qué|gracias|salud|español|si|no|ayuda|dia|bien|quien)\b)/i;
+    
+    const isSpanish = spanishPatterns.test(text);
+    console.log(`Language detection for "${text.substring(0, 20)}...": ${isSpanish ? "Spanish" : "English"}`);
+    
+    return isSpanish ? "es" : "en";
   }
 }
 
