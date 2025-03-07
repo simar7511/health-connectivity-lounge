@@ -3,16 +3,19 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { fileURLToPath } from "url";
-import { componentTagger } from "lovable-tagger";
 
 // Basic setup for dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Minimal configuration with hard-coded values instead of env variables
+// Simplified configuration with proper server settings
 export default defineConfig({
   base: "/",
   plugins: [react()],
+  server: {
+    port: 8080,
+    host: true
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src")
