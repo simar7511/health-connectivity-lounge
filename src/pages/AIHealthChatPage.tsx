@@ -19,43 +19,44 @@ export const AIHealthChatPage = () => {
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [offlineMode, setOfflineMode] = useState<OfflineModeType>(() => {
-    return (localStorage.getItem("ai_offline_mode") as OfflineModeType) || "simulated";
+    return (localStorage.getItem("ai_offline_mode") as OfflineModeType) || "none";
   });
   
-  // Get provider from localStorage or default to "openai" (changed default from "offline" to "openai")
-  const [provider, setProvider] = useState(() => {
-    return localStorage.getItem("ai_provider") || "openai";
-  });
+  // Always default to "openai" provider
+  const [provider, setProvider] = useState("openai");
   
-  // Get model from localStorage or default to GPT-4o
-  const [model, setModel] = useState(() => {
-    if (provider === "openai") {
-      return localStorage.getItem("openai_model") || "gpt-4o";
-    }
-    return "simulated-health-model";
-  });
+  // Default to GPT-4o model for OpenAI
+  const [model, setModel] = useState("gpt-4o");
   
   useEffect(() => {
-    // Initialize with the OpenAI key from the environment if available
+    // Initialize with the OpenAI key if available
     const openaiKey = localStorage.getItem("openai_api_key");
     if (!openaiKey) {
-      // If no key is stored, try to use the one from environment
-      const defaultKey = "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";
-      if (defaultKey) {
-        localStorage.setItem("openai_api_key", defaultKey);
-        console.log("Default OpenAI API key set from environment");
-      }
+      // Set and save the provided API key
+      const apiKey = "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";
+      localStorage.setItem("openai_api_key", apiKey);
+      aiService.setApiKey(apiKey);
+      console.log("OpenAI API key set from environment");
+      
+      // Show confirmation toast
+      toast({
+        title: language === "en" ? "OpenAI Connected" : "OpenAI Conectado",
+        description: language === "en" 
+          ? "Using OpenAI for enhanced responses" 
+          : "Usando OpenAI para respuestas mejoradas"
+      });
+    } else {
+      aiService.setApiKey(openaiKey);
     }
     
     // Update the AI service with current settings
-    aiService.setApiKey(openaiKey || "");
     aiService.setModel(model);
     aiService.setLanguage(language);
     aiService.setOnlineStatus(isOnline);
     aiService.setOfflineMode(offlineMode);
     
     // Log current settings to help with debugging
-    console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}, Language: ${language}`);
+    console.log(`Current settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Offline Mode: ${offlineMode}`);
   }, [provider, model, offlineMode, isOnline, language]);
 
   const handleBack = () => {
