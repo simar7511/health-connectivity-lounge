@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,8 +95,8 @@ export const AIHealthAssistant = ({
     const systemMessage: Message = {
       role: "system",
       content: language === "en" 
-        ? "Hello! I'm your AI health assistant. How can I help you today?"
-        : "¡Hola! Soy tu asistente de salud con IA. ¿Cómo puedo ayudarte hoy?",
+        ? "Hello! I'm your AI health assistant. I provide clear, evidence-based health information and wellness tips. I'm not a substitute for professional medical advice - please consult a healthcare provider for personalized concerns. How can I help you today?"
+        : "¡Hola! Soy tu asistente de salud con IA. Proporciono información clara y basada en evidencia sobre salud y consejos de bienestar. No soy un sustituto del consejo médico profesional - por favor consulta a un proveedor de salud para preocupaciones personalizadas. ¿Cómo puedo ayudarte hoy?",
       timestamp: serverTimestamp()
     };
     
@@ -226,6 +227,7 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
+      // Fix the type comparison issue by using a boolean variable
       const shouldUseOfflineMode = !isOnline || offlineMode === "localLLM";
       
       if (shouldUseOfflineMode) {
@@ -254,7 +256,7 @@ export const AIHealthAssistant = ({
           model: model,
           provider: provider,
           language: language,
-          // No API key provided - will use server-side keys
+          // Server-side API key will be used
         });
         
         const responseData = result.data as { response?: string };
