@@ -46,18 +46,30 @@ export const AIHealthChatPage = () => {
   const [appCrashed, setAppCrashed] = useState(false);
   
   useEffect(() => {
-    // Initialize with the OpenAI key
-    const openaiKey = localStorage.getItem("openai_api_key") || "";
+    // Update the API key with new key if quota was exceeded
+    const currentKey = localStorage.getItem("openai_api_key") || "";
+    const newApiKey = "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";
     
     try {
-      if (!openaiKey) {
-        // If no key is found, try to set a default one
-        const defaultKey = "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";
-        localStorage.setItem("openai_api_key", defaultKey);
-        aiService.setApiKey(defaultKey);
+      // Only update the key if there was a quota issue or no key exists
+      if (quotaExceeded || !currentKey) {
+        console.log("Updating API key due to quota exceeded or missing key");
+        localStorage.setItem("openai_api_key", newApiKey);
+        aiService.setApiKey(newApiKey);
+        aiService.resetQuotaStatus();
+        setQuotaExceeded(false);
+        
+        // Show notification about API key update
+        toast({
+          title: language === "en" ? "API Key Updated" : "Clave API Actualizada",
+          description: language === "en" 
+            ? "Your OpenAI API key has been updated" 
+            : "Tu clave API de OpenAI ha sido actualizada",
+          variant: "default",
+        });
       } else {
-        // Set existing API key
-        aiService.setApiKey(openaiKey);
+        // Set the existing API key
+        aiService.setApiKey(currentKey);
       }
       
       console.log("OpenAI API key set");
@@ -84,7 +96,7 @@ export const AIHealthChatPage = () => {
         ? "An error occurred while initializing the AI assistant. Please try refreshing the page."
         : "Ocurrió un error al inicializar el asistente de IA. Intente actualizar la página.");
     }
-  }, [provider, model, language, offlineMode, isOnline]);
+  }, [provider, model, language, offlineMode, isOnline, quotaExceeded, toast]);
 
   // Add error boundary effect to recover from crashes
   useEffect(() => {
