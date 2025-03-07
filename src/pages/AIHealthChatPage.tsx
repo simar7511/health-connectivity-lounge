@@ -48,6 +48,15 @@ export const AIHealthChatPage = () => {
   // Track if we've tried to load the model
   const [isUsingLocalModelAlready, setIsUsingLocalModelAlready] = useState(false);
   
+  // Force online mode for testing
+  useEffect(() => {
+    // Comment out this line if needed for testing
+    // localStorage.setItem("ai_offline_mode", "none");
+    
+    // Log current settings to help with debugging
+    console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}`);
+  }, [provider, model, offlineMode, isOnline]);
+  
   // Initialize offline model if needed
   useEffect(() => {
     // If we're offline or the user has selected localLLM mode, initialize the model
