@@ -5,43 +5,18 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { componentTagger } from "lovable-tagger";
 
+// Basic setup for dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Extremely simplified Vite configuration for maximum stability
+// Minimal configuration with hard-coded values instead of env variables
 export default defineConfig({
   base: "/",
-  plugins: [
-    react(),
-    componentTagger()
-  ],
-  server: {
-    host: true,
-    port: 8080,
-    cors: true,
-    strictPort: true,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-    hmr: {
-      host: "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"
-    },
-    allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com"],
-    fs: {
-      allow: ["..", "./"],
-      strict: false
-    }
-  },
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src")
     }
-  },
-  build: {
-    outDir: "dist",
-    sourcemap: true,
-    emptyOutDir: true,
-    minify: "esbuild"
   },
   define: {
     'process.env.VITE_FIREBASE_API_KEY': JSON.stringify("AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw"),
@@ -52,10 +27,5 @@ export default defineConfig({
     'process.env.VITE_FIREBASE_APP_ID': JSON.stringify("1:429069343294:web:943a1998a83e63353c0f6f"),
     'process.env.VITE_FIREBASE_MEASUREMENT_ID': JSON.stringify("G-3BVWXWV69Q"),
     'process.env.FAKE_AI_KEY': JSON.stringify("health-ai-fake-key-12345")
-  },
-  esbuild: {
-    logOverride: { 
-      'this-is-undefined-in-esm': 'silent'
-    }
   }
 });
