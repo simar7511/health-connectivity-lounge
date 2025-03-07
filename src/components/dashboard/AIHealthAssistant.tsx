@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -227,23 +226,19 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      // Check if we should operate in offline mode
       const shouldUseOfflineMode = !isOnline || offlineMode === "localLLM" || offlineMode === "simulated";
       
       if (shouldUseOfflineMode) {
         console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
         
-        // Use the local LLM model if available and appropriate
         if ((!isOnline || offlineMode === "localLLM") && isOfflineModelReady()) {
           return handleLocalLLMResponse(userInput, conversationHistory);
         }
         
-        // Fall back to simulated responses
         await handleSimulatedResponse(userInput);
         return;
       }
       
-      // If we're online and not in offline mode, use the cloud AI service
       const messageHistory = conversationHistory.map(msg => ({
         role: msg.role,
         content: msg.content

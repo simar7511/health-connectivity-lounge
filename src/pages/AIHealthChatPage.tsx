@@ -50,8 +50,8 @@ export const AIHealthChatPage = () => {
   
   // Force online mode for testing
   useEffect(() => {
-    // Comment out this line if needed for testing
-    // localStorage.setItem("ai_offline_mode", "none");
+    // Uncomment this line to force online mode for testing
+    localStorage.setItem("ai_offline_mode", "none");
     
     // Log current settings to help with debugging
     console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}`);
