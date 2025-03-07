@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AIHealthAssistant } from "@/components/dashboard/AIHealthAssistant";
 import { useNavigate, useParams } from "react-router-dom";
@@ -17,12 +16,12 @@ export const AIHealthChatPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isOnline = useOnlineStatus();
+  
   const [language, setLanguage] = useState<"en" | "es">(() => {
     return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   
-  // Initialize offlineMode with stored preference or default to "simulated"
   const [offlineMode, setOfflineMode] = useState<OfflineModeType>(() => {
     const storedMode = localStorage.getItem("ai_offline_mode") as OfflineModeType;
     return storedMode && (storedMode === "simulated" || storedMode === "localLLM") 
@@ -30,28 +29,21 @@ export const AIHealthChatPage = () => {
       : "simulated";
   });
   
-  // Always default to "openai" provider
   const [provider, setProvider] = useState("openai");
   
-  // Default to GPT-4o model for OpenAI
   const [model, setModel] = useState("gpt-4o");
   
-  // Track API quota exceeded status
   const [quotaExceeded, setQuotaExceeded] = useState(false);
 
-  // Track application error state
   const [applicationError, setApplicationError] = useState<string | null>(null);
   
-  // Track if the app is in a fatal error state and needs a reload
   const [appCrashed, setAppCrashed] = useState(false);
   
   useEffect(() => {
-    // Update the API key with new key if quota was exceeded
     const currentKey = localStorage.getItem("openai_api_key") || "";
     const newApiKey = "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";
     
     try {
-      // Only update the key if there was a quota issue or no key exists
       if (quotaExceeded || !currentKey) {
         console.log("Updating API key due to quota exceeded or missing key");
         localStorage.setItem("openai_api_key", newApiKey);
@@ -59,7 +51,6 @@ export const AIHealthChatPage = () => {
         aiService.resetQuotaStatus();
         setQuotaExceeded(false);
         
-        // Show notification about API key update
         toast({
           title: language === "en" ? "API Key Updated" : "Clave API Actualizada",
           description: language === "en" 
@@ -68,27 +59,22 @@ export const AIHealthChatPage = () => {
           variant: "default",
         });
       } else {
-        // Set the existing API key
         aiService.setApiKey(currentKey);
       }
       
       console.log("OpenAI API key set");
       
-      // Update the AI service with current settings
       aiService.setModel(model);
       aiService.setLanguage(language);
       aiService.setOnlineStatus(isOnline);
       aiService.setOfflineMode(offlineMode);
       
-      // Check API status
       const apiStatus = aiService.getApiStatus();
       setQuotaExceeded(apiStatus.quotaExceeded);
       
-      // Reset application error if any
       setApplicationError(null);
       setAppCrashed(false);
       
-      // Log current settings
       console.log(`Settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Mode: ${offlineMode}, Quota Exceeded: ${apiStatus.quotaExceeded}`);
     } catch (error: any) {
       console.error("Error initializing AI service:", error);
@@ -98,7 +84,6 @@ export const AIHealthChatPage = () => {
     }
   }, [provider, model, language, offlineMode, isOnline, quotaExceeded, toast]);
 
-  // Add error boundary effect to recover from crashes
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
       console.error("Unhandled error caught:", event.error);
@@ -125,10 +110,8 @@ export const AIHealthChatPage = () => {
       console.log(`Language toggled from ${prev} to ${newLang}`);
       sessionStorage.setItem("preferredLanguage", newLang);
       
-      // Update AI service language
       aiService.setLanguage(newLang);
       
-      // Show a toast to confirm language change
       toast({
         title: newLang === "en" ? "Switched to English" : "Cambiado a Español",
         description: newLang === "en" 
@@ -141,14 +124,12 @@ export const AIHealthChatPage = () => {
     });
   };
 
-  // Set offline mode type 
   const setOfflineModeType = (mode: OfflineModeType) => {
     setOfflineMode(mode);
     localStorage.setItem("ai_offline_mode", mode);
     aiService.setOfflineMode(mode);
   };
 
-  // Update API key and check quota status
   const updateApiKey = (newKey: string) => {
     try {
       if (newKey && newKey !== localStorage.getItem("openai_api_key")) {
@@ -156,7 +137,6 @@ export const AIHealthChatPage = () => {
         aiService.setApiKey(newKey);
         aiService.resetQuotaStatus();
         
-        // Update quota status
         setQuotaExceeded(false);
         
         toast({
@@ -179,7 +159,6 @@ export const AIHealthChatPage = () => {
     }
   };
 
-  // Handle application recovery
   const handleRetryApplication = () => {
     window.location.reload();
   };
