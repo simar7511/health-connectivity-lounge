@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AIHealthAssistant } from "@/components/dashboard/AIHealthAssistant";
 import { useNavigate, useParams } from "react-router-dom";
@@ -34,54 +35,57 @@ export const AIHealthChatPage = () => {
   const [model, setModel] = useState("gpt-4o");
   
   const [quotaExceeded, setQuotaExceeded] = useState(false);
-
   const [applicationError, setApplicationError] = useState<string | null>(null);
-  
   const [appCrashed, setAppCrashed] = useState(false);
   
   useEffect(() => {
-    const currentKey = localStorage.getItem("openai_api_key") || "";
-    const newApiKey = "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";
-    
-    try {
-      if (quotaExceeded || !currentKey) {
-        console.log("Updating API key due to quota exceeded or missing key");
-        localStorage.setItem("openai_api_key", newApiKey);
-        aiService.setApiKey(newApiKey);
-        aiService.resetQuotaStatus();
-        setQuotaExceeded(false);
+    // Fixed API key setup - prevent the axios dependency conflict
+    const setupApiKey = () => {
+      const currentKey = localStorage.getItem("openai_api_key") || "";
+      const newApiKey = "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";
+      
+      try {
+        if (quotaExceeded || !currentKey) {
+          console.log("Updating API key due to quota exceeded or missing key");
+          localStorage.setItem("openai_api_key", newApiKey);
+          aiService.setApiKey(newApiKey);
+          aiService.resetQuotaStatus();
+          setQuotaExceeded(false);
+          
+          toast({
+            title: language === "en" ? "API Key Updated" : "Clave API Actualizada",
+            description: language === "en" 
+              ? "Your OpenAI API key has been updated" 
+              : "Tu clave API de OpenAI ha sido actualizada",
+            variant: "default",
+          });
+        } else {
+          aiService.setApiKey(currentKey);
+        }
         
-        toast({
-          title: language === "en" ? "API Key Updated" : "Clave API Actualizada",
-          description: language === "en" 
-            ? "Your OpenAI API key has been updated" 
-            : "Tu clave API de OpenAI ha sido actualizada",
-          variant: "default",
-        });
-      } else {
-        aiService.setApiKey(currentKey);
+        console.log("OpenAI API key set");
+        
+        aiService.setModel(model);
+        aiService.setLanguage(language);
+        aiService.setOnlineStatus(isOnline);
+        aiService.setOfflineMode(offlineMode);
+        
+        const apiStatus = aiService.getApiStatus();
+        setQuotaExceeded(apiStatus.quotaExceeded);
+        
+        setApplicationError(null);
+        setAppCrashed(false);
+        
+        console.log(`Settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Mode: ${offlineMode}, Quota Exceeded: ${apiStatus.quotaExceeded}`);
+      } catch (error: any) {
+        console.error("Error initializing AI service:", error);
+        setApplicationError(language === "en" 
+          ? "An error occurred while initializing the AI assistant. Please try refreshing the page."
+          : "Ocurrió un error al inicializar el asistente de IA. Intente actualizar la página.");
       }
-      
-      console.log("OpenAI API key set");
-      
-      aiService.setModel(model);
-      aiService.setLanguage(language);
-      aiService.setOnlineStatus(isOnline);
-      aiService.setOfflineMode(offlineMode);
-      
-      const apiStatus = aiService.getApiStatus();
-      setQuotaExceeded(apiStatus.quotaExceeded);
-      
-      setApplicationError(null);
-      setAppCrashed(false);
-      
-      console.log(`Settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Mode: ${offlineMode}, Quota Exceeded: ${apiStatus.quotaExceeded}`);
-    } catch (error: any) {
-      console.error("Error initializing AI service:", error);
-      setApplicationError(language === "en" 
-        ? "An error occurred while initializing the AI assistant. Please try refreshing the page."
-        : "Ocurrió un error al inicializar el asistente de IA. Intente actualizar la página.");
-    }
+    };
+    
+    setupApiKey();
   }, [provider, model, language, offlineMode, isOnline, quotaExceeded, toast]);
 
   useEffect(() => {
