@@ -18,27 +18,13 @@ export const AIHealthChatPage = () => {
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [offlineMode, setOfflineMode] = useState<OfflineModeType>(() => {
-    // Get from localStorage or default based on online status
-    const savedMode = localStorage.getItem("ai_offline_mode") as OfflineModeType | null;
-    // Default to "none" if online and no setting, otherwise "simulated"
-    return savedMode || (isOnline ? "none" : "simulated");
+    // Default to simulated mode - no external services used
+    return "simulated";
   });
   
-  // Auto-select model based on connectivity
-  const [provider, setProvider] = useState(() => {
-    // Use saved provider or default to OpenAI if not set
-    return localStorage.getItem("ai_provider") || "openai";
-  });
-  
-  const [model, setModel] = useState(() => {
-    const savedProvider = localStorage.getItem("ai_provider");
-    if (savedProvider) {
-      return localStorage.getItem(`${savedProvider}_model`) || 
-        (savedProvider === "openai" ? "gpt-4o" : "llama-2-7b-chat");
-    }
-    // Default to GPT-4o
-    return "gpt-4o";
-  });
+  // Set fixed values for provider and model since we're not using real APIs
+  const [provider, setProvider] = useState("offline");
+  const [model, setModel] = useState("simulated-health-model");
   
   useEffect(() => {
     // Log current settings to help with debugging
@@ -57,14 +43,7 @@ export const AIHealthChatPage = () => {
     });
   };
 
-  // Handle saving provider/model preferences
-  useEffect(() => {
-    localStorage.setItem("ai_provider", provider);
-    localStorage.setItem(`${provider}_model`, model);
-    localStorage.setItem("ai_offline_mode", offlineMode);
-  }, [provider, model, offlineMode]);
-
-  // Handle offline mode setting
+  // Set offline mode type - always staying offline
   const setOfflineModeType = (mode: OfflineModeType) => {
     setOfflineMode(mode);
     localStorage.setItem("ai_offline_mode", mode);

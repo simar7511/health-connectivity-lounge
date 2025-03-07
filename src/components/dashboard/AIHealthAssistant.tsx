@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,10 +48,11 @@ export const AIHealthAssistant = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const conversationId = `chat-${patientId || 'default'}`;
+  
   const aiService = new FakeAIService({ 
     model, 
     language,
-    apiKey: process.env.FAKE_AI_KEY || "health-ai-fake-key-12345" // Using a fake API key
+    apiKey: "health-ai-fake-key-12345"
   });
 
   useEffect(() => {
@@ -138,35 +138,9 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      const shouldUseOfflineMode = !isOnline || 
-                                  offlineMode === "localLLM" || 
-                                  offlineMode === "simulated";
+      console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
       
-      if (shouldUseOfflineMode) {
-        console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
-        
-        // Always use simulated responses in our simplified version
-        await handleSimulatedResponse(userInput);
-        return;
-      }
-      
-      try {
-        const aiResponse = await aiService.sendMessage(userInput, conversationId, conversationHistory);
-        
-        setMessages((prev) => [...prev, aiResponse]);
-      } catch (error) {
-        console.error("Error with AI service:", error);
-        setIsUsingFallback(true);
-        toast({
-          title: language === "en" ? "Using offline mode" : "Usando modo sin conexión",
-          description: language === "en" 
-            ? "Switched to offline response mode due to service errors." 
-            : "Cambiado a modo de respuesta sin conexión debido a errores de servicio.",
-          variant: "default",
-        });
-        
-        await handleSimulatedResponse(userInput);
-      }
+      await handleSimulatedResponse(userInput);
     } catch (err: any) {
       console.error("Error in AI chat:", err);
       
@@ -194,17 +168,24 @@ export const AIHealthAssistant = ({
   };
 
   const handleSimulatedResponse = async (userInput: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const aiResponse = getSampleResponse(userInput, language);
-    
-    const assistantMessage: AIMessage = {
-      role: "assistant",
-      content: aiResponse,
-      timestamp: new Date()
-    };
-    
-    setMessages((prev) => [...prev, assistantMessage]);
+    try {
+      const aiResponse = await aiService.sendMessage(userInput, conversationId);
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.error("Error with simulated AI response:", error);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const aiResponse = getSampleResponse(userInput, language);
+      
+      const assistantMessage: AIMessage = {
+        role: "assistant",
+        content: aiResponse,
+        timestamp: new Date()
+      };
+      
+      setMessages((prev) => [...prev, assistantMessage]);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -227,7 +208,6 @@ export const AIHealthAssistant = ({
   };
 
   const handleOfflineModeChange = async () => {
-    // In our simplified version, just update the choice
     setShowOfflineModeDialog(false);
   };
 

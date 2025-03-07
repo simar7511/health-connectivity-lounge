@@ -18,11 +18,12 @@ interface AIServiceOptions {
 // Simulated delay for API calls (ms)
 const API_DELAY = 1000;
 
-// Simple in-memory storage for chat history
+// Simple in-memory storage for chat history (no Firebase)
 const chatHistory: Record<string, AIMessage[]> = {};
 
 /**
- * Simulated AI service that doesn't require Firebase
+ * Fully offline AI service with no external dependencies
+ * This service operates completely offline with no Firebase or external API calls
  */
 export class FakeAIService {
   private apiKey: string;
@@ -36,7 +37,8 @@ export class FakeAIService {
   }
   
   /**
-   * Simulate sending a message to the AI and getting a response
+   * Offline simulation of sending a message to an AI and getting a response
+   * No external calls are made - all processing happens locally
    */
   async sendMessage(
     message: string, 
@@ -61,7 +63,7 @@ export class FakeAIService {
       timestamp: new Date()
     };
     
-    // Store in chat history
+    // Store in local chat history (no Firebase)
     if (!chatHistory[chatId]) {
       chatHistory[chatId] = [];
     }
@@ -79,14 +81,14 @@ export class FakeAIService {
       timestamp: new Date()
     };
     
-    // Store AI response in history
+    // Store AI response in local history
     chatHistory[chatId].push(aiResponse);
     
     return aiResponse;
   }
   
   /**
-   * Get the chat history for a conversation
+   * Get the chat history from local memory (no Firebase)
    */
   async getChatHistory(conversationId: string): Promise<AIMessage[]> {
     await new Promise(resolve => setTimeout(resolve, API_DELAY / 2));
@@ -94,7 +96,7 @@ export class FakeAIService {
   }
   
   /**
-   * Clear chat history
+   * Clear local chat history
    */
   async clearChat(conversationId: string): Promise<void> {
     await new Promise(resolve => setTimeout(resolve, API_DELAY / 2));
@@ -123,5 +125,5 @@ export class FakeAIService {
   }
 }
 
-// Create and export a singleton instance
+// Create and export a singleton instance with no dependencies on Firebase
 export const fakeAIService = new FakeAIService();
