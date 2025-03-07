@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,7 @@ interface AIHealthAssistantProps {
   provider: string;
   isOnline?: boolean;
   offlineMode?: OfflineModeType;
-  aiService?: AIService; // Added aiService as an optional prop
+  aiService?: AIService;
 }
 
 export const AIHealthAssistant = ({ 
@@ -34,7 +33,7 @@ export const AIHealthAssistant = ({
   provider,
   isOnline = true,
   offlineMode = "simulated",
-  aiService // Add the aiService prop to the destructuring
+  aiService
 }: AIHealthAssistantProps) => {
   const { toast } = useToast();
   const [input, setInput] = useState("");
@@ -56,7 +55,6 @@ export const AIHealthAssistant = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const conversationId = `chat-${patientId || 'default'}`;
   
-  // Create a local AI service instance if none is provided
   const localAiService = useRef(
     aiService || new FakeAIService({ 
       model, 
@@ -158,11 +156,9 @@ export const AIHealthAssistant = ({
   const handleSend = async () => {
     if (!input.trim()) return;
     
-    // Handle language detection with proper type checking
     let inputDetectedLang: "en" | "es" = language;
     
-    // Use detectLanguage only if the service is FakeAIService which has this method
-    if (localAiService instanceof FakeAIService && localAiService.detectLanguage) {
+    if ('detectLanguage' in localAiService) {
       inputDetectedLang = localAiService.detectLanguage(input);
     }
     

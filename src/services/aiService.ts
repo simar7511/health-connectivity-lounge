@@ -1,4 +1,3 @@
-
 import { AIMessage } from "./fakeAIService";
 import { OfflineModeType } from "@/utils/offlineHelpers";
 
@@ -32,6 +31,20 @@ export class AIService {
   }
 
   /**
+   * Detect language of text
+   * Uses simple pattern matching for Spanish characters and common Spanish words
+   */
+  detectLanguage(text: string): "en" | "es" {
+    // Spanish patterns: accented characters and common Spanish words
+    const spanishPatterns = /[áéíóúüñ¿¡]|(\b(hola|como|qué|donde|cuando|por qué|gracias|salud|español|si|no|ayuda|dia|bien|quien)\b)/i;
+    
+    const isSpanish = spanishPatterns.test(text);
+    console.log(`Language detection for "${text.substring(0, 20)}...": ${isSpanish ? "Spanish" : "English"}`);
+    
+    return isSpanish ? "es" : "en";
+  }
+
+  /**
    * Send a message to the AI and get a response
    */
   async sendMessage(
@@ -57,15 +70,16 @@ export class AIService {
     
     this.chatHistory[chatId].push(userMessage);
     
-    // Only use offline mode when explicitly set to "simulated" or when offline
-    const shouldUseOfflineMode = !this.isOnline || this.offlineMode === "simulated";
-    
     // Check if we have a valid OpenAI API key (starts with "sk-" or "sk-proj-")
     const isValidOpenAIKey = this.apiKey && (this.apiKey.startsWith("sk-") || this.apiKey.startsWith("sk-proj-"));
     
+    // IMPORTANT: By default, use OpenAI when online with valid key
+    // Only use offline mode when explicitly requested or when offline
+    const shouldUseOpenAI = this.isOnline && isValidOpenAIKey;
+    
     console.log(`Decision factors - Online: ${this.isOnline}, OfflineMode: ${this.offlineMode}, Valid API key: ${isValidOpenAIKey ? "Yes" : "No"}`);
     
-    if (isValidOpenAIKey && !shouldUseOfflineMode) {
+    if (shouldUseOpenAI) {
       try {
         // Log attempt to use OpenAI API
         console.log(`Using OpenAI API with model: ${this.model}`);
@@ -84,25 +98,11 @@ export class AIService {
       } else if (!this.isOnline) {
         console.log("Using offline mode: Device is offline");
       } else {
-        console.log("Using offline mode: User preference set to simulated mode");
+        console.log("Using offline mode: Unknown reason");
       }
       // Use offline mode
       return this.generateOfflineResponse(message, chatId);
     }
-  }
-  
-  /**
-   * Detect language of text
-   * Uses simple pattern matching for Spanish characters and common Spanish words
-   */
-  detectLanguage(text: string): "en" | "es" {
-    // Spanish patterns: accented characters and common Spanish words
-    const spanishPatterns = /[áéíóúüñ¿¡]|(\b(hola|como|qué|donde|cuando|por qué|gracias|salud|español|si|no|ayuda|dia|bien|quien)\b)/i;
-    
-    const isSpanish = spanishPatterns.test(text);
-    console.log(`Language detection for "${text.substring(0, 20)}...": ${isSpanish ? "Spanish" : "English"}`);
-    
-    return isSpanish ? "es" : "en";
   }
   
   /**
