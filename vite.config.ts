@@ -14,7 +14,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 8080,
-    host: true
+    host: true,
+    allowedHosts: [
+      "958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com",
+      "localhost"
+    ]
   },
   resolve: {
     alias: {
