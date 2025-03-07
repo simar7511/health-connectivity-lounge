@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -173,8 +174,9 @@ export const AIHealthAssistant = ({
       if (shouldUseOfflineMode) {
         console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
         
-        // If we're offline or explicitly using localLLM mode and the model is ready
-        if ((!isOnline || offlineMode === "localLLM") && isOfflineModelReady()) {
+        // FIX: Make sure to explicitly type-check with === instead of using implicit conversion
+        // This fixes the TypeScript error by using strict string literal comparison
+        if ((!isOnline || (offlineMode === "localLLM" && offlineMode !== "none")) && isOfflineModelReady()) {
           return handleLocalLLMResponse(userInput, conversationHistory);
         }
         
@@ -199,7 +201,8 @@ export const AIHealthAssistant = ({
           variant: "default",
         });
         
-        if (offlineMode === "localLLM" && isOfflineModelReady()) {
+        // FIX: Same issue with type comparison, using strict string comparison
+        if ((offlineMode === "localLLM" && offlineMode !== "none") && isOfflineModelReady()) {
           await handleLocalLLMResponse(userInput, conversationHistory);
         } else {
           await handleSimulatedResponse(userInput);

@@ -29,49 +29,72 @@ const recoverFromESBuildCrash = () => {
   // Force refresh the page if we detect specific issues
   if (!window.React || !window.ReactDOM) {
     console.warn("React modules not properly loaded, refreshing page...");
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
     return false;
   }
   
   return true;
 };
 
-// Add a small delay before mounting to ensure all modules are properly loaded
+// Add a recovery mechanism with multiple attempts
+let mountAttempts = 0;
+const MAX_MOUNT_ATTEMPTS = 3;
+
 const mountApp = () => {
-  // First check if we can recover from any esbuild issues
-  if (!recoverFromESBuildCrash()) {
-    return;
-  }
-  
-  const rootElement = document.getElementById("root");
-
-  if (!rootElement) {
-    console.error("Root element not found. Ensure index.html has <div id='root'></div>");
-    return;
-  }
-
   try {
-    const root = createRoot(rootElement);
-
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
+    mountAttempts++;
+    console.log(`Mount attempt ${mountAttempts}/${MAX_MOUNT_ATTEMPTS}`);
     
-    console.log("App mounted successfully");
-  } catch (error) {
-    console.error("Error mounting app:", error);
-    // Try one more time after a delay if there was an error
-    setTimeout(() => {
-      try {
-        const root = createRoot(rootElement);
-        root.render(<App />);
-        console.log("App mounted successfully on second attempt");
-      } catch (retryError) {
-        console.error("Failed to mount app even after retry:", retryError);
+    // First check if we can recover from any esbuild issues
+    if (!recoverFromESBuildCrash()) {
+      if (mountAttempts < MAX_MOUNT_ATTEMPTS) {
+        console.log(`Scheduling retry ${mountAttempts + 1}/${MAX_MOUNT_ATTEMPTS}`);
+        setTimeout(mountApp, 1000);
       }
-    }, 1000);
+      return;
+    }
+    
+    const rootElement = document.getElementById("root");
+
+    if (!rootElement) {
+      console.error("Root element not found. Ensure index.html has <div id='root'></div>");
+      return;
+    }
+
+    try {
+      const root = createRoot(rootElement);
+
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+      
+      console.log("App mounted successfully");
+      mountAttempts = 0; // Reset counter on success
+    } catch (error) {
+      console.error("Error mounting app:", error);
+      
+      // Try one more time after a delay if there was an error
+      if (mountAttempts < MAX_MOUNT_ATTEMPTS) {
+        console.log(`Mount failed. Scheduling retry ${mountAttempts + 1}/${MAX_MOUNT_ATTEMPTS}`);
+        setTimeout(mountApp, 1000);
+      } else {
+        // Last resort: try mounting without StrictMode
+        try {
+          console.log("Final attempt: mounting without StrictMode");
+          const root = createRoot(rootElement);
+          root.render(<App />);
+          console.log("App mounted successfully without StrictMode");
+        } catch (finalError) {
+          console.error("All mounting attempts failed:", finalError);
+        }
+      }
+    }
+  } catch (outerError) {
+    console.error("Critical error in mount process:", outerError);
   }
 };
 

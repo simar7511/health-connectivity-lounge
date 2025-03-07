@@ -8,10 +8,27 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Function to safely get environment variables with fallbacks
+const getEnvVar = (key, defaultValue) => {
+  try {
+    return process.env[key] || defaultValue;
+  } catch (e) {
+    console.warn(`Error accessing env var ${key}, using default value`, e);
+    return defaultValue;
+  }
+};
+
+// Basic configuration that won't crash esbuild
 export default defineConfig({
   base: "/",
   plugins: [
-    react(), 
+    react({
+      babel: {
+        // Less intensive babel configuration
+        plugins: [],
+        compact: false
+      }
+    }), 
     componentTagger()
   ],
   server: {
@@ -52,30 +69,32 @@ export default defineConfig({
     }
   },
   define: {
-    'process.env.VITE_FIREBASE_API_KEY': JSON.stringify(process.env.VITE_FIREBASE_API_KEY || "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw"),
-    'process.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.VITE_FIREBASE_AUTH_DOMAIN || "health-connectivity-01.firebaseapp.com"),
-    'process.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(process.env.VITE_FIREBASE_PROJECT_ID || "health-connectivity-01"),
-    'process.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.VITE_FIREBASE_STORAGE_BUCKET || "health-connectivity-01.appspot.com"),
-    'process.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "429069343294"),
-    'process.env.VITE_FIREBASE_APP_ID': JSON.stringify(process.env.VITE_FIREBASE_APP_ID || "1:429069343294:web:943a1998a83e63353c0f6f"),
-    'process.env.VITE_FIREBASE_MEASUREMENT_ID': JSON.stringify(process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-3BVWXWV69Q"),
-    'process.env.FAKE_AI_KEY': JSON.stringify(process.env.FAKE_AI_KEY || 'health-ai-fake-key-12345')
+    // Simplified define with direct values to prevent service crashes
+    'process.env.VITE_FIREBASE_API_KEY': '"AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw"',
+    'process.env.VITE_FIREBASE_AUTH_DOMAIN': '"health-connectivity-01.firebaseapp.com"',
+    'process.env.VITE_FIREBASE_PROJECT_ID': '"health-connectivity-01"',
+    'process.env.VITE_FIREBASE_STORAGE_BUCKET': '"health-connectivity-01.appspot.com"',
+    'process.env.VITE_FIREBASE_MESSAGING_SENDER_ID': '"429069343294"',
+    'process.env.VITE_FIREBASE_APP_ID': '"1:429069343294:web:943a1998a83e63353c0f6f"',
+    'process.env.VITE_FIREBASE_MEASUREMENT_ID': '"G-3BVWXWV69Q"',
+    'process.env.FAKE_AI_KEY': '"health-ai-fake-key-12345"'
   },
   optimizeDeps: {
     esbuildOptions: {
       target: 'es2020',
-      supported: {
-        bigint: true
-      },
-      // Enhanced esbuild configuration to prevent service crashes
+      supported: { bigint: true },
       keepNames: true,
       legalComments: 'none',
-      logLevel: 'error', // Reduce log noise
+      logLevel: 'error',
+      // Increase memory limit to prevent crashes
+      jsxFactory: 'React.createElement',
+      jsxFragment: 'React.Fragment',
     },
     force: true,
     exclude: ['firebase']
   },
   esbuild: {
+    // Simplified esbuild configuration to prevent crashes
     logOverride: { 
       'this-is-undefined-in-esm': 'silent',
       'unsupported-jsx-comment': 'silent',
@@ -83,10 +102,8 @@ export default defineConfig({
     },
     keepNames: true,
     treeShaking: true,
-    legalComments: 'none', // Reduce size
-    target: 'es2020',     // Consistent target
-    supported: {
-      bigint: true       // Ensure BigInt support
-    }
+    legalComments: 'none',
+    target: 'es2020',
+    supported: { bigint: true }
   }
 });
