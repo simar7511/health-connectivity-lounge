@@ -64,8 +64,8 @@ export const AIHealthAssistant = ({
 
   useEffect(() => {
     const welcomeMessage = language === "en" 
-      ? "Welcome to your Health Assistant! I can provide information on various health topics such as nutrition, exercise, sleep, stress management, mental health, heart health, diabetes, and pain management. While I'm not a substitute for professional medical advice, I can offer general guidance based on current health guidelines. How can I assist with your health questions today?"
-      : "¡Bienvenido a tu Asistente de Salud! Puedo proporcionar información sobre varios temas de salud como nutrición, ejercicio, sueño, manejo del estrés, salud mental, salud del corazón, diabetes y manejo del dolor. Aunque no soy un sustituto del consejo médico profesional, puedo ofrecer orientación general basada en las pautas de salud actuales. ¿Cómo puedo ayudarte con tus preguntas de salud hoy?";
+      ? "Welcome to your Health Assistant! I can provide information on various health topics including pediatric health such as child development, infant feeding, childhood vaccinations, common childhood illnesses, children's sleep, nutrition, and behavioral issues. While I'm not a substitute for professional medical advice, I can offer general guidance based on current health guidelines. How can I assist with your health questions today?"
+      : "¡Bienvenido a tu Asistente de Salud! Puedo proporcionar información sobre varios temas de salud incluyendo salud pediátrica como desarrollo infantil, alimentación de bebés, vacunas infantiles, enfermedades infantiles comunes, sueño de los niños, nutrición y problemas de comportamiento. Aunque no soy un sustituto del consejo médico profesional, puedo ofrecer orientación general basada en las pautas de salud actuales. ¿Cómo puedo ayudarte con tus preguntas de salud hoy?";
     
     const systemMessage: AIMessage = {
       role: "system",
@@ -243,8 +243,8 @@ export const AIHealthAssistant = ({
           </AlertTitle>
           <AlertDescription>
             {detectedLanguage === "en" 
-              ? "I can provide general health information on various topics. For personal medical advice, please consult a healthcare professional."
-              : "Puedo proporcionar información general de salud sobre varios temas. Para consejos médicos personales, consulte a un profesional de la salud."}
+              ? "I can provide general health information on various topics, including pediatric health. For personal medical advice, please consult a healthcare professional."
+              : "Puedo proporcionar información general de salud sobre varios temas, incluyendo salud pediátrica. Para consejos médicos personales, consulte a un profesional de la salud."}
           </AlertDescription>
         </Alert>
       )}

@@ -1,127 +1,211 @@
-
 // This is a simplified implementation of offline capabilities for the health assistant
 
 // Define the OfflineModeType as a proper TypeScript type with literal types
-export type OfflineModeType = "localLLM" | "simulated" | "none";
+export type OfflineModeType = "simulated" | "localLLM";
 
 /**
- * Gets a sample response for common health queries
- * @param query - The user's query
- * @param language - The language to respond in
- * @returns string - A sample response
+ * Simple function to check if an offline model is ready - this is just a stub
+ * In a real implementation, this would check if the model is loaded
  */
-export const getSampleResponse = (
-  query: string,
-  language: "en" | "es" = "en"
-): string => {
-  const lowerQuery = query.toLowerCase();
-  
-  // Mental Health Topics
-  if (lowerQuery.includes("depression") || lowerQuery.includes("depresión") || lowerQuery.includes("depresion")) {
-    return language === "en"
-      ? "Depression is a common but serious mood disorder that affects how you feel, think, and handle daily activities. Symptoms can include persistent sadness, feelings of emptiness, loss of interest in activities, sleep disturbances, and difficulty concentrating. If you've been experiencing these symptoms for more than two weeks, it's important to speak with a healthcare provider. Treatment options include therapy, medication, lifestyle changes, and support groups. Remember that depression is a medical condition, not a sign of weakness, and effective treatments are available."
-      : "La depresión es un trastorno del estado de ánimo común pero serio que afecta cómo te sientes, piensas y manejas las actividades diarias. Los síntomas pueden incluir tristeza persistente, sentimientos de vacío, pérdida de interés en actividades, trastornos del sueño y dificultad para concentrarse. Si has estado experimentando estos síntomas por más de dos semanas, es importante hablar con un proveedor de atención médica. Las opciones de tratamiento incluyen terapia, medicación, cambios en el estilo de vida y grupos de apoyo. Recuerda que la depresión es una condición médica, no un signo de debilidad, y hay tratamientos efectivos disponibles.";
-  }
-  
-  if (lowerQuery.includes("anxiety") || lowerQuery.includes("ansiedad")) {
-    return language === "en"
-      ? "Anxiety disorders involve excessive worry or fear that interferes with daily activities. Common symptoms include restlessness, feeling on edge, fatigue, difficulty concentrating, irritability, muscle tension, and sleep problems. There are several types of anxiety disorders, including generalized anxiety disorder, panic disorder, and social anxiety disorder. Treatment approaches may include cognitive-behavioral therapy, medication, stress management techniques, and lifestyle changes like regular exercise and adequate sleep. If anxiety is affecting your quality of life, consider speaking with a healthcare provider for proper evaluation and support."
-      : "Los trastornos de ansiedad involucran preocupación o miedo excesivo que interfiere con las actividades diarias. Los síntomas comunes incluyen inquietud, sentirse al límite, fatiga, dificultad para concentrarse, irritabilidad, tensión muscular y problemas de sueño. Hay varios tipos de trastornos de ansiedad, incluyendo trastorno de ansiedad generalizada, trastorno de pánico y trastorno de ansiedad social. Los enfoques de tratamiento pueden incluir terapia cognitivo-conductual, medicación, técnicas de manejo del estrés y cambios en el estilo de vida como ejercicio regular y sueño adecuado. Si la ansiedad está afectando tu calidad de vida, considera hablar con un proveedor de atención médica para una evaluación y apoyo adecuados.";
-  }
+export function isOfflineModelReady(): boolean {
+  return true;
+}
 
-  // Diet and Nutrition Topics
-  if (lowerQuery.includes("diet") || lowerQuery.includes("nutrition") || lowerQuery.includes("dieta") || lowerQuery.includes("nutrición") || lowerQuery.includes("nutricion")) {
-    return language === "en"
-      ? "A balanced diet is foundational to good health. The key components include: 1) Fruits and vegetables (aim for half your plate), which provide essential vitamins, minerals, and fiber; 2) Whole grains like brown rice, oats, and whole wheat bread for energy and additional fiber; 3) Lean proteins such as fish, poultry, beans, and nuts to support tissue growth and repair; 4) Healthy fats from sources like olive oil, avocados, and nuts for heart health; and 5) Limited intake of added sugars, sodium, and unhealthy fats. Hydration is also crucial—aim for 8 cups of water daily. Individual nutritional needs vary based on age, sex, activity level, and health conditions, so consider consulting with a registered dietitian for personalized advice."
-      : "Una dieta balanceada es fundamental para una buena salud. Los componentes clave incluyen: 1) Frutas y verduras (busca que ocupen la mitad de tu plato), que proporcionan vitaminas esenciales, minerales y fibra; 2) Granos integrales como arroz integral, avena y pan integral para energía y fibra adicional; 3) Proteínas magras como pescado, aves, frijoles y nueces para apoyar el crecimiento y reparación de tejidos; 4) Grasas saludables de fuentes como aceite de oliva, aguacates y nueces para la salud del corazón; y 5) Ingesta limitada de azúcares añadidos, sodio y grasas no saludables. La hidratación también es crucial—intenta beber 8 vasos de agua diariamente. Las necesidades nutricionales individuales varían según la edad, sexo, nivel de actividad y condiciones de salud, así que considera consultar con un dietista registrado para obtener consejos personalizados.";
-  }
+/**
+ * Stub function to initialize an offline model - in a real implementation, 
+ * this would load the model into memory
+ */
+export async function initOfflineModel(): Promise<boolean> {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return true;
+}
 
-  // Heart Health Topics
-  if (lowerQuery.includes("heart") || lowerQuery.includes("cardiac") || lowerQuery.includes("cardiovascular") || 
-      lowerQuery.includes("corazón") || lowerQuery.includes("corazon") || lowerQuery.includes("cardíaco") || lowerQuery.includes("cardiaco") || lowerQuery.includes("cardiovascular")) {
-    return language === "en"
-      ? "Heart health is influenced by multiple factors including diet, physical activity, stress management, and avoiding tobacco. A heart-healthy diet emphasizes fruits, vegetables, whole grains, lean proteins, and healthy fats while limiting sodium, added sugars, and unhealthy fats. Regular physical activity—at least 150 minutes of moderate exercise weekly—helps maintain a healthy heart. Managing blood pressure is critical; ideal blood pressure is below 120/80 mm Hg. High cholesterol can lead to plaque buildup in arteries, so aim for total cholesterol below 200 mg/dL. If you have risk factors such as family history, diabetes, or are over 45 (men) or 55 (women), regular screenings are particularly important. Always consult with healthcare providers for personalized heart health advice."
-      : "La salud del corazón está influenciada por múltiples factores, incluyendo la dieta, la actividad física, el manejo del estrés y evitar el tabaco. Una dieta saludable para el corazón enfatiza frutas, verduras, granos integrales, proteínas magras y grasas saludables, mientras limita el sodio, azúcares añadidos y grasas no saludables. La actividad física regular—al menos 150 minutos de ejercicio moderado semanalmente—ayuda a mantener un corazón saludable. Manejar la presión arterial es crucial; la presión arterial ideal es inferior a 120/80 mm Hg. El colesterol alto puede llevar a la acumulación de placa en las arterias, así que busca mantener el colesterol total por debajo de 200 mg/dL. Si tienes factores de riesgo como antecedentes familiares, diabetes, o tienes más de 45 años (hombres) o 55 años (mujeres), los exámenes regulares son particularmente importantes. Siempre consulta con proveedores de atención médica para obtener consejos personalizados sobre la salud del corazón.";
-  }
-  
-  // Headache and Pain Management
-  if (lowerQuery.includes("headache") || lowerQuery.includes("dolor de cabeza") || 
-      lowerQuery.includes("migraine") || lowerQuery.includes("migraña") || lowerQuery.includes("migrana")) {
-    return language === "en"
-      ? "Headaches can be classified into several types, including tension headaches (most common), migraines, and cluster headaches. Common triggers include stress, dehydration, poor sleep, certain foods, and environmental factors. For occasional tension headaches, over-the-counter pain relievers like acetaminophen or ibuprofen may help, alongside rest, hydration, and stress management techniques. Migraines, which can cause throbbing pain, sensitivity to light and sound, and sometimes nausea, may require prescription medications. Maintaining a headache diary can help identify personal triggers. If you experience frequent or severe headaches, new or changing headache patterns, or headaches with concerning symptoms like fever, stiff neck, or neurological changes, consult a healthcare provider promptly."
-      : "Los dolores de cabeza pueden clasificarse en varios tipos, incluyendo dolores de cabeza por tensión (los más comunes), migrañas y dolores de cabeza en racimo. Los desencadenantes comunes incluyen estrés, deshidratación, mal sueño, ciertos alimentos y factores ambientales. Para dolores de cabeza ocasionales por tensión, analgésicos de venta libre como acetaminofén o ibuprofeno pueden ayudar, junto con descanso, hidratación y técnicas de manejo del estrés. Las migrañas, que pueden causar dolor pulsátil, sensibilidad a la luz y al sonido, y a veces náuseas, pueden requerir medicamentos recetados. Mantener un diario de dolores de cabeza puede ayudar a identificar desencadenantes personales. Si experimentas dolores de cabeza frecuentes o severos, patrones nuevos o cambiantes de dolor de cabeza, o dolores de cabeza con síntomas preocupantes como fiebre, rigidez en el cuello o cambios neurológicos, consulta a un proveedor de atención médica de inmediato.";
-  }
-  
-  // Sleep Health Topics
-  if (lowerQuery.includes("sleep") || lowerQuery.includes("insomnia") || lowerQuery.includes("dormir") || lowerQuery.includes("insomnio") || lowerQuery.includes("sueño") || lowerQuery.includes("sueno")) {
-    return language === "en"
-      ? "Quality sleep is essential for physical and mental health. Most adults need 7-9 hours of sleep per night. Good sleep hygiene practices include: maintaining a consistent sleep schedule; creating a dark, quiet, and cool sleeping environment; limiting screen time before bed; avoiding caffeine, alcohol, and large meals close to bedtime; and engaging in regular physical activity (but not too close to bedtime). Common sleep disorders include insomnia (difficulty falling or staying asleep), sleep apnea (interrupted breathing during sleep), and restless legs syndrome. If you consistently struggle with sleep despite good sleep hygiene, consider speaking with a healthcare provider. Chronic sleep problems can contribute to health issues such as high blood pressure, diabetes, depression, and impaired immune function."
-      : "El sueño de calidad es esencial para la salud física y mental. La mayoría de los adultos necesitan 7-9 horas de sueño por noche. Las buenas prácticas de higiene del sueño incluyen: mantener un horario de sueño constante; crear un ambiente para dormir oscuro, tranquilo y fresco; limitar el tiempo de pantalla antes de acostarse; evitar la cafeína, el alcohol y las comidas abundantes cerca de la hora de acostarse; y realizar actividad física regular (pero no demasiado cerca de la hora de acostarse). Los trastornos del sueño comunes incluyen insomnio (dificultad para conciliar o mantener el sueño), apnea del sueño (respiración interrumpida durante el sueño) y síndrome de piernas inquietas. Si constantemente tienes problemas con el sueño a pesar de una buena higiene del sueño, considera hablar con un proveedor de atención médica. Los problemas crónicos de sueño pueden contribuir a problemas de salud como presión arterial alta, diabetes, depresión y función inmunológica deteriorada.";
-  }
-  
-  // Stress Management
-  if (lowerQuery.includes("stress") || lowerQuery.includes("anxiety") || lowerQuery.includes("estrés") || lowerQuery.includes("estres") || lowerQuery.includes("ansiedad")) {
-    return language === "en"
-      ? "Stress is a natural response to demanding situations, but chronic stress can negatively impact both physical and mental health. Effective stress management strategies include: regular physical activity, which can reduce stress hormones and release endorphins; mindfulness and meditation practices to focus on the present moment; deep breathing exercises to activate the body's relaxation response; maintaining social connections, as social support is linked to better stress resilience; ensuring adequate sleep and nutrition; time management techniques to reduce overwhelm; and setting boundaries to protect your time and energy. If stress becomes overwhelming or is accompanied by symptoms of anxiety or depression, professional support from a mental health provider can be beneficial. Remember that managing stress is an ongoing practice rather than a one-time solution."
-      : "El estrés es una respuesta natural a situaciones exigentes, pero el estrés crónico puede impactar negativamente tanto la salud física como mental. Las estrategias efectivas de manejo del estrés incluyen: actividad física regular, que puede reducir las hormonas del estrés y liberar endorfinas; prácticas de atención plena y meditación para enfocarse en el momento presente; ejercicios de respiración profunda para activar la respuesta de relajación del cuerpo; mantener conexiones sociales, ya que el apoyo social está vinculado a una mejor resiliencia al estrés; asegurar un sueño y nutrición adecuados; técnicas de administración del tiempo para reducir la sobrecarga; y establecer límites para proteger tu tiempo y energía. Si el estrés se vuelve abrumador o está acompañado de síntomas de ansiedad o depresión, el apoyo profesional de un proveedor de salud mental puede ser beneficioso. Recuerda que manejar el estrés es una práctica continua en lugar de una solución única.";
-  }
+/**
+ * Get configuration for the offline model - just a stub
+ */
+export function getOfflineModelConfig() {
+  return {
+    name: "health-assistant-offline",
+    ready: true,
+    size: "240MB"
+  };
+}
 
-  // Exercise Topics
-  if (lowerQuery.includes("exercise") || lowerQuery.includes("workout") || lowerQuery.includes("ejercicio") || lowerQuery.includes("entrenamiento") || lowerQuery.includes("física") || lowerQuery.includes("fisica")) {
-    return language === "en"
-      ? "Regular physical activity is one of the most important things you can do for your health. Adults should aim for at least 150 minutes of moderate-intensity aerobic activity (like brisk walking) or 75 minutes of vigorous activity (like running) weekly, plus muscle-strengthening activities on 2 or more days per week. Benefits of regular exercise include improved cardiovascular health, stronger muscles and bones, better weight management, reduced risk of chronic diseases, improved mental health, better sleep, and enhanced cognitive function. If you're new to exercise, start gradually and increase intensity and duration over time. Choose activities you enjoy to help maintain consistency. Always warm up before exercise and cool down afterward. If you have health concerns or chronic conditions, consult with a healthcare provider before starting a new exercise program."
-      : "La actividad física regular es una de las cosas más importantes que puedes hacer por tu salud. Los adultos deben buscar al menos 150 minutos de actividad aeróbica de intensidad moderada (como caminar rápido) o 75 minutos de actividad vigorosa (como correr) semanalmente, más actividades de fortalecimiento muscular en 2 o más días por semana. Los beneficios del ejercicio regular incluyen mejor salud cardiovascular, músculos y huesos más fuertes, mejor control de peso, reducción del riesgo de enfermedades crónicas, mejor salud mental, mejor sueño y mejor función cognitiva. Si eres nuevo en el ejercicio, comienza gradualmente y aumenta la intensidad y duración con el tiempo. Elige actividades que disfrutes para ayudar a mantener la consistencia. Siempre calienta antes del ejercicio y enfría después. Si tienes problemas de salud o condiciones crónicas, consulta con un proveedor de atención médica antes de comenzar un nuevo programa de ejercicios.";
-  }
+/**
+ * Generate a response using an offline model - this is a stub
+ * In a real implementation, this would use a local model to generate responses
+ */
+export async function generateOfflineResponse(prompt: string, language: "en" | "es"): Promise<string> {
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  return getSampleResponse(prompt, language);
+}
 
-  // Diabetes Information
-  if (lowerQuery.includes("diabetes") || lowerQuery.includes("blood sugar") || lowerQuery.includes("azúcar en sangre") || lowerQuery.includes("azucar en sangre")) {
+/**
+ * Returns sample responses for common health topics based on keywords in the input
+ * This function simulates AI responses without using any external API
+ */
+export function getSampleResponse(input: string, language: "en" | "es" = "en"): string {
+  const lowerInput = input.toLowerCase();
+  
+  // Check for pediatric-related keywords
+  if (containsAny(lowerInput, ['child', 'infant', 'baby', 'toddler', 'kid', 'pediatric', 'niño', 'bebé', 'infantil', 'pediátrico'])) {
+    return getPediatricResponse(lowerInput, language);
+  }
+  
+  // Check for nutrition-related keywords
+  if (containsAny(lowerInput, ['nutrition', 'diet', 'food', 'eat', 'nutrición', 'dieta', 'comida', 'alimentación'])) {
+    return getNutritionResponse(lowerInput, language);
+  }
+  
+  // Check for exercise-related keywords
+  if (containsAny(lowerInput, ['exercise', 'workout', 'fitness', 'active', 'ejercicio', 'entrenamiento', 'actividad física'])) {
+    return getExerciseResponse(lowerInput, language);
+  }
+  
+  // Check for sleep-related keywords
+  if (containsAny(lowerInput, ['sleep', 'insomnia', 'rest', 'nap', 'sueño', 'insomnio', 'descanso', 'siesta'])) {
+    return getSleepResponse(lowerInput, language);
+  }
+  
+  // Check for stress-related keywords
+  if (containsAny(lowerInput, ['stress', 'anxiety', 'worried', 'estrés', 'ansiedad', 'preocupado'])) {
+    return getStressResponse(lowerInput, language);
+  }
+  
+  // Check for heart-related keywords
+  if (containsAny(lowerInput, ['heart', 'blood pressure', 'cholesterol', 'corazón', 'presión arterial', 'colesterol'])) {
+    return getHeartResponse(lowerInput, language);
+  }
+  
+  // Check for diabetes-related keywords
+  if (containsAny(lowerInput, ['diabetes', 'sugar', 'glucose', 'azúcar', 'glucosa'])) {
+    return getDiabetesResponse(lowerInput, language);
+  }
+  
+  // Check for headache-related keywords
+  if (containsAny(lowerInput, ['headache', 'migraine', 'dolor de cabeza', 'migraña'])) {
+    return getHeadacheResponse(lowerInput, language);
+  }
+  
+  // Check for mental health related keywords
+  if (containsAny(lowerInput, ['mental health', 'depression', 'sad', 'salud mental', 'depresión', 'triste'])) {
+    return getMentalHealthResponse(lowerInput, language);
+  }
+  
+  // Default response if no specific topic is detected
+  return language === "en" 
+    ? "I'm here to provide general health information. Could you tell me more about what health topic you're interested in? For example, I can help with nutrition, exercise, sleep, stress management, heart health, diabetes, headaches, mental health, or pediatric health topics."
+    : "Estoy aquí para proporcionar información general sobre salud. ¿Podrías contarme más sobre qué tema de salud te interesa? Por ejemplo, puedo ayudarte con nutrición, ejercicio, sueño, manejo del estrés, salud del corazón, diabetes, dolores de cabeza, salud mental, o temas de salud pediátrica.";
+}
+
+function getPediatricResponse(input: string, language: "en" | "es"): string {
+  // Child development and growth
+  if (containsAny(input, ['development', 'milestone', 'growth', 'desarrollo', 'hito', 'crecimiento'])) {
     return language === "en"
-      ? "Diabetes is a chronic condition that affects how your body turns food into energy. There are several types, with Type 1, Type 2, and gestational diabetes being the most common. In all types, your body either doesn't make enough insulin or can't use it as well as it should. Symptoms may include increased thirst and urination, fatigue, blurred vision, and slow-healing sores. Risk factors for Type 2 diabetes include being overweight, physical inactivity, family history, and age over 45. Management typically involves monitoring blood sugar, medication or insulin therapy if prescribed, regular physical activity, and a balanced diet with consistent carbohydrate intake. Regular check-ups are important to monitor for complications affecting the eyes, kidneys, nerves, and heart. If you notice symptoms or have risk factors, consult with a healthcare provider for proper diagnosis and treatment."
-      : "La diabetes es una condición crónica que afecta cómo tu cuerpo convierte los alimentos en energía. Hay varios tipos, siendo la diabetes Tipo 1, Tipo 2 y gestacional los más comunes. En todos los tipos, tu cuerpo no produce suficiente insulina o no puede usarla tan bien como debería. Los síntomas pueden incluir aumento de sed y micción, fatiga, visión borrosa y heridas de curación lenta. Los factores de riesgo para la diabetes Tipo 2 incluyen sobrepeso, inactividad física, antecedentes familiares y edad mayor de 45 años. El manejo típicamente involucra monitoreo del azúcar en sangre, medicación o terapia con insulina si es prescrita, actividad física regular y una dieta balanceada con ingesta consistente de carbohidratos. Los chequeos regulares son importantes para monitorear complicaciones que afectan los ojos, riñones, nervios y corazón. Si notas síntomas o tienes factores de riesgo, consulta con un proveedor de atención médica para un diagnóstico y tratamiento adecuados.";
+      ? "Child development milestones vary, but generally include: holding head up (2-4 months), sitting unassisted (6-8 months), crawling (7-10 months), walking (9-15 months), and first words (11-14 months). Remember that every child develops at their own pace. If you have concerns about your child's development, it's best to consult with their pediatrician for personalized guidance."
+      : "Los hitos del desarrollo infantil varían, pero generalmente incluyen: sostener la cabeza (2-4 meses), sentarse sin ayuda (6-8 meses), gatear (7-10 meses), caminar (9-15 meses), y primeras palabras (11-14 meses). Recuerde que cada niño se desarrolla a su propio ritmo. Si tiene preocupaciones sobre el desarrollo de su hijo, es mejor consultar con su pediatra para obtener orientación personalizada.";
   }
   
-  // Greeting or Introduction in Spanish
-  if (lowerQuery.includes("hola") || lowerQuery.includes("buenos días") || lowerQuery.includes("buenos dias") || 
-      lowerQuery.includes("buenas tardes") || lowerQuery.includes("buenas noches")) {
+  // Infant feeding
+  if (containsAny(input, ['feeding', 'breastfeeding', 'formula', 'alimentación', 'lactancia', 'fórmula'])) {
     return language === "en"
-      ? "Hello! I'm your Health Assistant. I can provide general health information on topics like nutrition, exercise, sleep, stress management, heart health, and more. How can I help you today?"
-      : "¡Hola! Soy tu Asistente de Salud. Puedo proporcionarte información general sobre temas como nutrición, ejercicio, sueño, manejo del estrés, salud del corazón y más. ¿Cómo puedo ayudarte hoy?";
+      ? "For infants, breast milk or formula is recommended as the primary source of nutrition for the first 6 months. Around 6 months, you can begin introducing solid foods while continuing breast milk or formula. Start with single-ingredient foods without added sugar or salt, and introduce new foods one at a time to watch for allergic reactions. Always consult your pediatrician for specific feeding recommendations for your child."
+      : "Para bebés, se recomienda la leche materna o fórmula como fuente principal de nutrición durante los primeros 6 meses. Alrededor de los 6 meses, puede comenzar a introducir alimentos sólidos mientras continúa con leche materna o fórmula. Comience con alimentos de un solo ingrediente sin azúcar o sal añadidos, e introduzca nuevos alimentos de uno en uno para observar reacciones alérgicas. Siempre consulte a su pediatra para recomendaciones específicas de alimentación para su hijo.";
   }
   
-  // Blood Pressure Questions
-  if (lowerQuery.includes("blood pressure") || lowerQuery.includes("hypertension") || 
-      lowerQuery.includes("presión arterial") || lowerQuery.includes("presion arterial") || lowerQuery.includes("hipertensión") || lowerQuery.includes("hipertension")) {
+  // Childhood vaccinations
+  if (containsAny(input, ['vaccine', 'vaccination', 'immunization', 'shot', 'vacuna', 'vacunación', 'inmunización', 'inyección'])) {
     return language === "en"
-      ? "Blood pressure is the force of blood pushing against the walls of your arteries. It's typically measured using two numbers: systolic pressure (the top number) measures the pressure when your heart beats, while diastolic pressure (the bottom number) measures the pressure when your heart rests between beats. Normal blood pressure is below 120/80 mm Hg. High blood pressure (hypertension) is 130/80 mm Hg or higher. Factors that can contribute to high blood pressure include diet (especially high sodium intake), physical inactivity, obesity, stress, alcohol consumption, tobacco use, and genetics. Managing blood pressure often involves lifestyle changes such as eating a heart-healthy diet, regular physical activity, maintaining a healthy weight, limiting alcohol, avoiding tobacco, and managing stress. For some people, medication may also be necessary. Regular blood pressure monitoring is important, especially if you have risk factors or have been diagnosed with hypertension."
-      : "La presión arterial es la fuerza con la que la sangre empuja contra las paredes de tus arterias. Generalmente se mide usando dos números: la presión sistólica (el número superior) mide la presión cuando tu corazón late, mientras que la presión diastólica (el número inferior) mide la presión cuando tu corazón descansa entre latidos. La presión arterial normal es menor a 120/80 mm Hg. La presión arterial alta (hipertensión) es 130/80 mm Hg o mayor. Los factores que pueden contribuir a la presión arterial alta incluyen la dieta (especialmente la ingesta alta de sodio), inactividad física, obesidad, estrés, consumo de alcohol, uso de tabaco y genética. El manejo de la presión arterial a menudo involucra cambios en el estilo de vida como comer una dieta saludable para el corazón, actividad física regular, mantener un peso saludable, limitar el alcohol, evitar el tabaco y manejar el estrés. Para algunas personas, también puede ser necesaria la medicación. El monitoreo regular de la presión arterial es importante, especialmente si tienes factores de riesgo o has sido diagnosticado con hipertensión.";
+      ? "Childhood vaccinations are an important part of preventive healthcare. The recommended schedule includes vaccines for diseases like measles, mumps, rubella, polio, whooping cough, and others. Vaccines help protect not only your child but also others in the community through herd immunity. Your pediatrician can provide the specific vaccination schedule appropriate for your child's age and medical history."
+      : "Las vacunas infantiles son una parte importante de la atención médica preventiva. El calendario recomendado incluye vacunas para enfermedades como sarampión, paperas, rubéola, polio, tos ferina y otras. Las vacunas ayudan a proteger no solo a su hijo sino también a otros en la comunidad a través de la inmunidad colectiva. Su pediatra puede proporcionar el calendario de vacunación específico apropiado para la edad e historial médico de su hijo.";
   }
   
-  // Weight Management
-  if (lowerQuery.includes("weight") || lowerQuery.includes("obesity") || lowerQuery.includes("weight loss") || 
-      lowerQuery.includes("peso") || lowerQuery.includes("obesidad") || lowerQuery.includes("pérdida de peso") || lowerQuery.includes("perdida de peso")) {
+  // Childhood illnesses
+  if (containsAny(input, ['fever', 'cold', 'flu', 'ear infection', 'fiebre', 'resfriado', 'gripe', 'infección de oído'])) {
     return language === "en"
-      ? "Healthy weight management is about achieving and maintaining a weight that supports overall health and reduces the risk of health problems. Rather than focusing on short-term dieting, sustainable weight management involves long-term lifestyle changes. Key principles include: 1) Eating a balanced diet rich in fruits, vegetables, whole grains, and lean proteins; 2) Controlling portion sizes; 3) Regular physical activity (aim for at least 150 minutes of moderate exercise weekly); 4) Staying hydrated with water rather than sugary beverages; 5) Getting adequate sleep; 6) Managing stress, which can contribute to emotional eating; and 7) Setting realistic goals and tracking progress. It's important to approach weight management with patience and self-compassion. For significant weight concerns or if you have health conditions, consult with healthcare providers who can provide personalized guidance and support."
-      : "El manejo saludable del peso se trata de alcanzar y mantener un peso que apoye la salud general y reduzca el riesgo de problemas de salud. En lugar de enfocarse en dietas a corto plazo, el manejo sostenible del peso implica cambios de estilo de vida a largo plazo. Los principios clave incluyen: 1) Comer una dieta equilibrada rica en frutas, verduras, granos integrales y proteínas magras; 2) Controlar el tamaño de las porciones; 3) Actividad física regular (busca al menos 150 minutos de ejercicio moderado semanalmente); 4) Mantenerse hidratado con agua en lugar de bebidas azucaradas; 5) Dormir adecuadamente; 6) Manejar el estrés, que puede contribuir a la alimentación emocional; y 7) Establecer metas realistas y seguir el progreso. Es importante abordar el manejo del peso con paciencia y autocompasión. Para preocupaciones significativas de peso o si tienes condiciones de salud, consulta con proveedores de atención médica que puedan proporcionar orientación y apoyo personalizados.";
+      ? "Common childhood illnesses include colds, ear infections, sore throats, and stomach bugs. For fevers, a temperature of 100.4°F (38°C) or higher is considered significant in children. Contact your pediatrician if your child has a high fever, especially in babies under 3 months, if the fever lasts more than 2-3 days, or if your child appears very ill or unusually drowsy. Always consult a healthcare provider for proper diagnosis and treatment of childhood illnesses."
+      : "Las enfermedades infantiles comunes incluyen resfriados, infecciones de oído, dolor de garganta y problemas estomacales. Para fiebres, una temperatura de 38°C (100.4°F) o más se considera significativa en niños. Contacte a su pediatra si su hijo tiene fiebre alta, especialmente en bebés menores de 3 meses, si la fiebre dura más de 2-3 días, o si su hijo parece muy enfermo o inusualmente somnoliento. Siempre consulte a un proveedor de atención médica para el diagnóstico y tratamiento adecuados de enfermedades infantiles.";
   }
   
-  // General Spanish questions
-  if (lowerQuery.includes("como") || lowerQuery.includes("qué") || lowerQuery.includes("que") || 
-      lowerQuery.includes("cuál") || lowerQuery.includes("cual") || lowerQuery.includes("cuando") || 
-      lowerQuery.includes("donde") || lowerQuery.includes("por qué")) {
-    // If it's a general Spanish question but no specific health topic matched, provide a general health response
-    return "Estoy aquí para proporcionarte información general sobre salud en temas como nutrición, ejercicio, sueño, manejo del estrés, salud del corazón, diabetes, dolores de cabeza y condiciones de salud mental. Por favor, házme una pregunta específica sobre salud, y haré lo mejor para proporcionarte información útil basada en las pautas médicas actuales. Recuerda que aunque puedo ofrecer orientación general, no puedo proporcionar consejos médicos personalizados. Para preocupaciones específicas de salud, por favor consulta con un proveedor de atención médica calificado.";
+  // Sleep for children
+  if (containsAny(input, ['sleep', 'bedtime', 'nap', 'sueño', 'hora de dormir', 'siesta'])) {
+    return language === "en"
+      ? "Sleep needs vary by age: newborns (0-3 months) need 14-17 hours, infants (4-11 months) need 12-15 hours, toddlers (1-2 years) need 11-14 hours, preschoolers (3-5) need 10-13 hours, and school-age children (6-13) need 9-11 hours of sleep daily. Consistent bedtime routines help signal to children that it's time to sleep. If your child has persistent sleep problems, consult with their pediatrician."
+      : "Las necesidades de sueño varían según la edad: los recién nacidos (0-3 meses) necesitan 14-17 horas, los bebés (4-11 meses) necesitan 12-15 horas, los niños pequeños (1-2 años) necesitan 11-14 horas, los preescolares (3-5) necesitan 10-13 horas, y los niños en edad escolar (6-13) necesitan 9-11 horas de sueño diariamente. Las rutinas consistentes a la hora de dormir ayudan a indicar a los niños que es hora de dormir. Si su hijo tiene problemas persistentes de sueño, consulte con su pediatra.";
   }
   
-  // Default response if no specific topic is matched
+  // Childhood nutrition
+  if (containsAny(input, ['nutrition', 'diet', 'food', 'eat', 'nutrición', 'dieta', 'comida', 'alimentación'])) {
+    return language === "en"
+      ? "A balanced diet for children should include fruits, vegetables, whole grains, lean proteins, and dairy products. Limit processed foods, sugary drinks, and high-sodium items. Children need regular meals and snacks for energy throughout the day. Be patient with picky eaters and continue offering a variety of healthy foods. If you have concerns about your child's nutrition or growth, consult with your pediatrician."
+      : "Una dieta equilibrada para niños debe incluir frutas, verduras, granos integrales, proteínas magras y productos lácteos. Limite los alimentos procesados, bebidas azucaradas y productos con alto contenido de sodio. Los niños necesitan comidas y meriendas regulares para tener energía durante todo el día. Sea paciente con los niños quisquillosos con la comida y continúe ofreciendo una variedad de alimentos saludables. Si tiene preocupaciones sobre la nutrición o el crecimiento de su hijo, consulte con su pediatra.";
+  }
+  
+  // Behavioral issues
+  if (containsAny(input, ['behavior', 'tantrum', 'discipline', 'comportamiento', 'rabieta', 'disciplina'])) {
+    return language === "en"
+      ? "Children's behavioral challenges are a normal part of development. For tantrums, stay calm, ensure safety, and use simple language to acknowledge feelings. Consistent routines and clear expectations help children understand boundaries. Positive reinforcement for good behavior is more effective than punishment. If behavioral issues significantly impact daily life or you notice dramatic changes in behavior, consult your pediatrician or a child psychologist."
+      : "Los desafíos de comportamiento de los niños son una parte normal del desarrollo. Para las rabietas, mantenga la calma, garantice la seguridad y use un lenguaje simple para reconocer los sentimientos. Las rutinas consistentes y expectativas claras ayudan a los niños a entender los límites. El refuerzo positivo para el buen comportamiento es más efectivo que el castigo. Si los problemas de comportamiento afectan significativamente la vida diaria o nota cambios dramáticos en el comportamiento, consulte a su pediatra o a un psicólogo infantil.";
+  }
+  
+  // Default pediatric response
   return language === "en"
-    ? "I can provide general health information on topics such as nutrition, exercise, sleep, stress management, heart health, diabetes, headaches, and mental health conditions like anxiety and depression. Please ask a specific health question, and I'll do my best to provide helpful information based on current medical guidelines. Remember that while I can offer general guidance, I can't provide personalized medical advice. For specific health concerns, please consult with a qualified healthcare provider."
-    : "Puedo proporcionar información general sobre salud en temas como nutrición, ejercicio, sueño, manejo del estrés, salud del corazón, diabetes, dolores de cabeza y condiciones de salud mental como ansiedad y depresión. Por favor, haz una pregunta específica sobre salud, y haré lo mejor para proporcionar información útil basada en las pautas médicas actuales. Recuerda que aunque puedo ofrecer orientación general, no puedo proporcionar consejos médicos personalizados. Para preocupaciones específicas de salud, por favor consulta con un proveedor de atención médica calificado.";
-};
+    ? "Pediatric health covers many aspects of children's wellbeing, from physical development and nutrition to vaccinations and common illnesses. Regular well-child visits with a pediatrician are important for monitoring growth, development, and addressing any concerns. For specific guidance about your child's health, please consult with their healthcare provider who can offer personalized recommendations based on your child's unique needs."
+    : "La salud pediátrica abarca muchos aspectos del bienestar de los niños, desde el desarrollo físico y la nutrición hasta las vacunas y enfermedades comunes. Las visitas regulares de control con un pediatra son importantes para monitorear el crecimiento, desarrollo y abordar cualquier preocupación. Para orientación específica sobre la salud de su hijo, consulte con su proveedor de atención médica, quien puede ofrecer recomendaciones personalizadas basadas en las necesidades únicas de su hijo.";
+}
 
-// Simplified functions that replace the LLM functionality
-export const isOfflineModelReady = (): boolean => false;
-export const initOfflineModel = async (): Promise<boolean> => true;
-export const getOfflineModelConfig = () => ({ modelName: "Simulated Model", isLoaded: true });
-export const generateOfflineResponse = async (query: string, language: "en" | "es" = "en"): Promise<string> => {
-  return getSampleResponse(query, language);
-};
+// Existing response functions
+function getNutritionResponse(input: string, language: "en" | "es"): string {
+  return language === "en"
+    ? "A balanced diet includes a variety of fruits, vegetables, whole grains, lean proteins, and healthy fats. Try to limit processed foods, added sugars, and excessive salt. Stay hydrated by drinking plenty of water. For personalized nutrition advice, consider consulting with a registered dietitian who can provide guidance based on your specific health needs and goals."
+    : "Una dieta equilibrada incluye una variedad de frutas, verduras, granos integrales, proteínas magras y grasas saludables. Trate de limitar los alimentos procesados, azúcares añadidos y sal excesiva. Manténgase hidratado bebiendo suficiente agua. Para consejos de nutrición personalizados, considere consultar con un dietista registrado que pueda proporcionar orientación basada en sus necesidades y objetivos de salud específicos.";
+}
+
+function getExerciseResponse(input: string, language: "en" | "es"): string {
+  return language === "en"
+    ? "Regular physical activity has numerous health benefits, including improved cardiovascular health, stronger muscles and bones, better weight management, and enhanced mental well-being. Adults should aim for at least 150 minutes of moderate-intensity aerobic activity or 75 minutes of vigorous activity each week, plus muscle-strengthening activities twice a week. Start gradually if you haven't been active and choose activities you enjoy to help maintain consistency."
+    : "La actividad física regular tiene numerosos beneficios para la salud, incluyendo mejor salud cardiovascular, músculos y huesos más fuertes, mejor control de peso y bienestar mental mejorado. Los adultos deben tratar de hacer al menos 150 minutos de actividad aeróbica de intensidad moderada o 75 minutos de actividad vigorosa cada semana, más actividades de fortalecimiento muscular dos veces por semana. Comience gradualmente si no ha estado activo y elija actividades que disfrute para ayudar a mantener la consistencia.";
+}
+
+function getSleepResponse(input: string, language: "en" | "es"): string {
+  return language === "en"
+    ? "Quality sleep is essential for overall health and well-being. Most adults need 7-9 hours of sleep per night. To improve sleep, maintain a consistent sleep schedule, create a relaxing bedtime routine, ensure your bedroom is dark, quiet, and cool, limit exposure to screens before bed, avoid caffeine and alcohol close to bedtime, and stay physically active during the day. If you consistently have trouble sleeping, consider speaking with a healthcare provider."
+    : "El sueño de calidad es esencial para la salud y el bienestar general. La mayoría de los adultos necesitan 7-9 horas de sueño por noche. Para mejorar el sueño, mantenga un horario de sueño constante, cree una rutina relajante antes de acostarse, asegúrese de que su dormitorio esté oscuro, tranquilo y fresco, limite la exposición a pantallas antes de acostarse, evite la cafeína y el alcohol cerca de la hora de dormir, y manténgase físicamente activo durante el día. Si constantemente tiene problemas para dormir, considere hablar con un proveedor de atención médica.";
+}
+
+function getStressResponse(input: string, language: "en" | "es"): string {
+  return language === "en"
+    ? "Managing stress is important for both mental and physical health. Effective stress management techniques include regular exercise, deep breathing exercises, meditation, progressive muscle relaxation, spending time in nature, connecting with supportive friends and family, engaging in enjoyable activities, and getting enough sleep. If stress is significantly impacting your daily life, consider speaking with a mental health professional who can provide additional strategies and support."
+    : "Manejar el estrés es importante tanto para la salud mental como física. Las técnicas efectivas de manejo del estrés incluyen ejercicio regular, ejercicios de respiración profunda, meditación, relajación muscular progresiva, pasar tiempo en la naturaleza, conectarse con amigos y familiares que brindan apoyo, participar en actividades agradables y dormir lo suficiente. Si el estrés está impactando significativamente su vida diaria, considere hablar con un profesional de salud mental que pueda proporcionar estrategias y apoyo adicionales.";
+}
+
+function getHeartResponse(input: string, language: "en" | "es"): string {
+  return language === "en"
+    ? "Heart health can be improved through regular physical activity, a heart-healthy diet rich in fruits, vegetables, whole grains, and lean proteins, maintaining a healthy weight, not smoking, limiting alcohol, managing stress, and getting quality sleep. It's also important to monitor and control blood pressure, cholesterol, and blood sugar levels. Regular check-ups with your healthcare provider can help assess your cardiovascular health and identify risk factors early."
+    : "La salud del corazón puede mejorarse mediante actividad física regular, una dieta saludable para el corazón rica en frutas, verduras, granos integrales y proteínas magras, manteniendo un peso saludable, no fumando, limitando el alcohol, manejando el estrés y durmiendo con calidad. También es importante monitorear y controlar la presión arterial, el colesterol y los niveles de azúcar en la sangre. Chequeos regulares con su proveedor de atención médica pueden ayudar a evaluar su salud cardiovascular e identificar factores de riesgo temprano.";
+}
+
+function getDiabetesResponse(input: string, language: "en" | "es"): string {
+  return language === "en"
+    ? "Managing diabetes involves monitoring blood glucose levels, taking medications as prescribed, following a balanced meal plan, regular physical activity, and attending scheduled healthcare appointments. A dietitian can help create a personalized meal plan that controls carbohydrate intake while providing adequate nutrition. If you have diabetes, it's important to also monitor for and manage related conditions like high blood pressure and high cholesterol. Regular check-ups with your healthcare team are essential for ongoing diabetes care."
+    : "El manejo de la diabetes implica monitorear los niveles de glucosa en sangre, tomar medicamentos según lo prescrito, seguir un plan de comidas equilibrado, actividad física regular y asistir a citas médicas programadas. Un dietista puede ayudar a crear un plan de comidas personalizado que controle la ingesta de carbohidratos mientras proporciona nutrición adecuada. Si tiene diabetes, también es importante monitorear y manejar condiciones relacionadas como presión arterial alta y colesterol alto. Chequeos regulares con su equipo de atención médica son esenciales para el cuidado continuo de la diabetes.";
+}
+
+function getHeadacheResponse(input: string, language: "en" | "es"): string {
+  return language === "en"
+    ? "Headaches can have many causes, including stress, dehydration, lack of sleep, eye strain, poor posture, skipped meals, or certain foods and beverages. For occasional tension headaches, over-the-counter pain relievers, rest, cold or hot compresses, and relaxation techniques may help. If you experience severe, frequent, or unusual headaches, headaches that wake you from sleep, headaches with fever or stiff neck, or headaches following a head injury, seek medical attention promptly."
+    : "Los dolores de cabeza pueden tener muchas causas, incluyendo estrés, deshidratación, falta de sueño, fatiga visual, mala postura, comidas omitidas, o ciertos alimentos y bebidas. Para dolores de cabeza tensionales ocasionales, analgésicos de venta libre, descanso, compresas frías o calientes, y técnicas de relajación pueden ayudar. Si experimenta dolores de cabeza severos, frecuentes o inusuales, dolores de cabeza que lo despiertan del sueño, dolores de cabeza con fiebre o rigidez en el cuello, o dolores de cabeza después de una lesión en la cabeza, busque atención médica de inmediato.";
+}
+
+function getMentalHealthResponse(input: string, language: "en" | "es"): string {
+  return language === "en"
+    ? "Mental health is as important as physical health. Practices that support mental wellbeing include regular physical activity, adequate sleep, stress management techniques, connecting with others, engaging in meaningful activities, and seeking help when needed. If you're experiencing persistent sadness, anxiety, changes in sleep or appetite, loss of interest in activities, or thoughts of harming yourself, it's important to reach out to a mental health professional. Many effective treatments exist for mental health conditions, including therapy, medication, and lifestyle changes."
+    : "La salud mental es tan importante como la salud física. Las prácticas que apoyan el bienestar mental incluyen actividad física regular, sueño adecuado, técnicas de manejo del estrés, conexión con otros, participación en actividades significativas, y buscar ayuda cuando sea necesario. Si está experimentando tristeza persistente, ansiedad, cambios en el sueño o apetito, pérdida de interés en actividades, o pensamientos de hacerse daño, es importante contactar a un profesional de salud mental. Existen muchos tratamientos efectivos para condiciones de salud mental, incluyendo terapia, medicación y cambios en el estilo de vida.";
+}
+
+/**
+ * Helper to check if input contains any of the given terms
+ */
+function containsAny(input: string, terms: string[]): boolean {
+  return terms.some(term => input.includes(term));
+}

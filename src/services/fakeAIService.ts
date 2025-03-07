@@ -149,3 +149,4 @@ export class FakeAIService {
 
 // Create and export a singleton instance with no dependencies on Firebase
 export const fakeAIService = new FakeAIService();
+
