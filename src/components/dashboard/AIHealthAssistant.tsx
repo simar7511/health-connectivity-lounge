@@ -67,7 +67,7 @@ export const AIHealthAssistant = ({
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(`${provider}_api_key`) || "";
-    if (provider === "openai" && storedApiKey && storedApiKey.startsWith("sk-")) {
+    if (provider === "openai" && storedApiKey && (storedApiKey.startsWith("sk-") || storedApiKey.startsWith("sk-proj-"))) {
       setUsingOpenAI(true);
       localAiService.setApiKey(storedApiKey);
       
@@ -86,17 +86,17 @@ export const AIHealthAssistant = ({
       setUsingOpenAI(false);
       console.log("Using simulated responses (no valid OpenAI API key)");
     }
-  }, [provider, isOnline]);
+  }, [provider, isOnline, detectedLanguage, localAiService, toast]);
 
   useEffect(() => {
     console.log(`Language preference changed to: ${language}`);
     localAiService.setLanguage(language);
     setDetectedLanguage(language);
-  }, [language]);
+  }, [language, localAiService]);
 
   useEffect(() => {
     localAiService.setModel(model);
-  }, [model]);
+  }, [model, localAiService]);
 
   useEffect(() => {
     const welcomeMessage = language === "en" 
@@ -158,9 +158,13 @@ export const AIHealthAssistant = ({
   const handleSend = async () => {
     if (!input.trim()) return;
     
-    const inputDetectedLang = localAiService.detectLanguage ? 
-      localAiService.detectLanguage(input) : 
-      language;
+    // Handle language detection with proper type checking
+    let inputDetectedLang: "en" | "es" = language;
+    
+    // Use detectLanguage only if the service is FakeAIService which has this method
+    if (localAiService instanceof FakeAIService && localAiService.detectLanguage) {
+      inputDetectedLang = localAiService.detectLanguage(input);
+    }
     
     setDetectedLanguage(inputDetectedLang);
     
@@ -481,4 +485,3 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
-

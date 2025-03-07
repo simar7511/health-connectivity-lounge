@@ -1,4 +1,3 @@
-
 import { AIMessage } from "./fakeAIService";
 import { OfflineModeType } from "@/utils/offlineHelpers";
 
@@ -83,6 +82,20 @@ export class AIService {
       // Use offline mode if no valid API key
       return this.generateOfflineResponse(message, chatId);
     }
+  }
+  
+  /**
+   * Detect language of text
+   * Uses simple pattern matching for Spanish characters and common Spanish words
+   */
+  detectLanguage(text: string): "en" | "es" {
+    // Spanish patterns: accented characters and common Spanish words
+    const spanishPatterns = /[áéíóúüñ¿¡]|(\b(hola|como|qué|donde|cuando|por qué|gracias|salud|español|si|no|ayuda|dia|bien|quien)\b)/i;
+    
+    const isSpanish = spanishPatterns.test(text);
+    console.log(`Language detection for "${text.substring(0, 20)}...": ${isSpanish ? "Spanish" : "English"}`);
+    
+    return isSpanish ? "es" : "en";
   }
   
   /**
