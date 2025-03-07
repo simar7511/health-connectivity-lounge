@@ -1,26 +1,34 @@
 
 /// <reference types="vite/client" />
-/// <reference types="node" />
-/// <reference types="react" />
-/// <reference types="react-dom" />
-/// <reference types="prop-types" />
+
+// Firebase Timestamp
+declare module 'firebase/firestore' {
+  export interface Timestamp {
+    seconds: number;
+    nanoseconds: number;
+    toDate(): Date;
+    toMillis(): number;
+  }
+}
 
 // Web Speech API declarations
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
-  error?: any;
+  error: any;
 }
 
 interface SpeechRecognitionResultList {
   [index: number]: SpeechRecognitionResult;
   length: number;
+  item(index: number): SpeechRecognitionResult;
 }
 
 interface SpeechRecognitionResult {
   [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
   length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  isFinal: boolean;
 }
 
 interface SpeechRecognitionAlternative {
@@ -33,23 +41,28 @@ interface SpeechRecognition extends EventTarget {
   interimResults: boolean;
   lang: string;
   maxAlternatives: number;
-  onaudioend?: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onaudiostart?: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onend?: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onerror?: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onnomatch?: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onresult?: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-  onsoundend?: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onsoundstart?: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onspeechend?: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onspeechstart?: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onstart?: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onaudioend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onaudiostart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onnomatch: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onsoundend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onsoundstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onspeechend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onspeechstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
   abort(): void;
   start(): void;
   stop(): void;
 }
 
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+  prototype: SpeechRecognition;
+}
+
 interface Window {
-  SpeechRecognition?: new () => SpeechRecognition;
-  webkitSpeechRecognition?: new () => SpeechRecognition;
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
 }
