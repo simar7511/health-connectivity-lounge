@@ -21,7 +21,8 @@ export default defineConfig({
     },
     hmr: {
       overlay: true,
-      clientPort: 'auto', // Try to automatically find an available port
+      // Fix: Remove the clientPort setting that's causing the type error
+      // or set it to a number if needed
     },
     allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com", "all"] // Add specific host to allowed hosts
   },
