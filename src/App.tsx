@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
 
 // Import Pages & Components
 import Index from "./pages/Index";
@@ -19,6 +20,9 @@ import { ChatPage } from "./pages/ChatPage";
 import ConfirmationPage from "./pages/ConfirmationPage";
 import AIHealthChatPage from "./pages/AIHealthChatPage";
 
+// Import Firebase config
+import { auth } from "./lib/firebase-config";
+
 const App: React.FC = () => {
   // ✅ Manage Language Selection
   const [language, setLanguage] = useState<"en" | "es">(() => {
@@ -27,6 +31,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     sessionStorage.setItem("preferredLanguage", language);
+    console.log("App initialized, language set to:", language);
+    
+    // Check if Firebase auth is initialized
+    if (auth) {
+      console.log("Firebase auth initialized successfully");
+    }
   }, [language]);
 
   // ✅ Handle Progression (Placeholder for Future Actions)
@@ -88,6 +98,9 @@ const App: React.FC = () => {
           </div>
         } />
       </Routes>
+      
+      {/* Global Toast Notifications */}
+      <Toaster />
     </BrowserRouter>
   );
 };
