@@ -22,8 +22,8 @@ const API_DELAY = 1000;
 const chatHistory: Record<string, AIMessage[]> = {};
 
 /**
- * Fully offline AI service with no external dependencies
- * This service operates completely offline with no Firebase or external API calls
+ * AI service that can operate in offline mode or connect to OpenAI API
+ * This service can work with or without an API key
  */
 export class FakeAIService {
   private apiKey: string;
@@ -31,29 +31,23 @@ export class FakeAIService {
   private language: "en" | "es";
   
   constructor(options: AIServiceOptions = {}) {
-    this.apiKey = options.apiKey || "fake-api-key-12345";
+    this.apiKey = options.apiKey || "";
     this.model = options.model || "health-assistant-model";
     this.language = options.language || "en";
   }
   
   /**
-   * Offline simulation of sending a message to an AI and getting a response
-   * No external calls are made - all processing happens locally
+   * Send a message to the AI and get a response
+   * If a valid OpenAI API key is provided, it will use the OpenAI API
+   * Otherwise, it falls back to offline simulation
    */
   async sendMessage(
     message: string, 
     conversationId?: string,
     fullConversation: AIMessage[] = []
   ): Promise<AIMessage> {
-    if (!this.apiKey || this.apiKey === "invalid-key") {
-      throw new Error("Invalid API key");
-    }
-    
     // Create conversation ID if not provided
     const chatId = conversationId || `chat-${Date.now()}`;
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, API_DELAY));
     
     // Auto-detect language from message
     const detectedLanguage = this.detectLanguage(message);
@@ -66,16 +60,112 @@ export class FakeAIService {
       timestamp: new Date()
     };
     
-    // Store in local chat history (no Firebase)
+    // Store in local chat history
     if (!chatHistory[chatId]) {
       chatHistory[chatId] = [];
     }
     
     chatHistory[chatId].push(userMessage);
     
-    // Use detected language for the response
-    const responseLanguage = detectedLanguage;
-    console.log(`Detected language: ${responseLanguage} for message: "${message}"`);
+    // Check if we have a valid OpenAI API key (starts with "sk-")
+    const isValidOpenAIKey = this.apiKey && this.apiKey.startsWith("sk-");
+    
+    if (isValidOpenAIKey) {
+      try {
+        // Attempt to use OpenAI API
+        return await this.sendToOpenAI(message, chatId, fullConversation, detectedLanguage);
+      } catch (error) {
+        console.error("Error with OpenAI API:", error);
+        // Fallback to offline mode if OpenAI API fails
+        return this.generateOfflineResponse(message, chatId, detectedLanguage);
+      }
+    } else {
+      // Use offline mode
+      return this.generateOfflineResponse(message, chatId, detectedLanguage);
+    }
+  }
+  
+  /**
+   * Send message to OpenAI API
+   */
+  private async sendToOpenAI(
+    message: string,
+    chatId: string,
+    previousMessages: AIMessage[] = [],
+    responseLanguage: "en" | "es"
+  ): Promise<AIMessage> {
+    // Prepare conversation history for API
+    const messageHistory = previousMessages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    
+    // Add system message to guide the AI based on language
+    const systemMessage = {
+      role: "system",
+      content: responseLanguage === "en" 
+        ? "You are a pediatric health assistant. Provide helpful, evidence-based information about children's health, development, common conditions, and wellness. Include information on topics like child development, infant feeding, childhood vaccinations, common childhood illnesses, children's sleep, nutrition, and behavioral issues. Always clarify you're not providing medical advice and encourage seeking professional medical care when appropriate. Keep responses concise and parent-friendly."
+        : "Eres un asistente de salud pediátrica. Proporciona información útil y basada en evidencia sobre la salud, el desarrollo, las afecciones comunes y el bienestar de los niños. Incluye información sobre temas como el desarrollo infantil, la alimentación infantil, las vacunas infantiles, las enfermedades infantiles comunes, el sueño de los niños, la nutrición y los problemas de comportamiento. Siempre aclara que no estás proporcionando consejo médico y anima a buscar atención médica profesional cuando sea apropiado. Mantén las respuestas concisas y amigables para los padres."
+    };
+    
+    // Create array with system message and history for API
+    const apiMessages = [
+      systemMessage,
+      ...messageHistory,
+      { role: "user", content: message }
+    ];
+    
+    // Call OpenAI API
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`
+      },
+      body: JSON.stringify({
+        model: this.model.startsWith("gpt") ? this.model : "gpt-4o",
+        messages: apiMessages,
+        temperature: 0.7,
+        max_tokens: 1000,
+      })
+    });
+    
+    // Check for API errors
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`OpenAI API error: ${errorData.error?.message || "Unknown error"}`);
+    }
+    
+    // Parse API response
+    const responseData = await response.json();
+    const aiContent = responseData.choices[0]?.message?.content || "No response generated.";
+    
+    // Create AI response message
+    const aiResponse: AIMessage = {
+      id: `assistant-${Date.now()}`,
+      role: "assistant",
+      content: aiContent,
+      timestamp: new Date()
+    };
+    
+    // Store AI response in local history
+    chatHistory[chatId].push(aiResponse);
+    
+    return aiResponse;
+  }
+  
+  /**
+   * Generate offline response (when no API key or API call fails)
+   */
+  private async generateOfflineResponse(
+    message: string,
+    chatId: string,
+    responseLanguage: "en" | "es"
+  ): Promise<AIMessage> {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, API_DELAY));
+    
+    console.log(`Using offline response in ${responseLanguage} for message: "${message}"`);
     
     // Generate AI response using the sample responses
     const aiResponseContent = getSampleResponse(message, responseLanguage);
@@ -95,7 +185,7 @@ export class FakeAIService {
   }
   
   /**
-   * Get the chat history from local memory (no Firebase)
+   * Get the chat history from local memory
    */
   async getChatHistory(conversationId: string): Promise<AIMessage[]> {
     await new Promise(resolve => setTimeout(resolve, API_DELAY / 2));
@@ -115,6 +205,7 @@ export class FakeAIService {
    */
   setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
+    console.log(`API key ${apiKey ? "set" : "cleared"}: ${apiKey ? apiKey.substring(0, 5) + "..." : ""}`);
   }
   
   /**
@@ -122,6 +213,7 @@ export class FakeAIService {
    */
   setModel(model: string): void {
     this.model = model;
+    console.log(`Model set to: ${model}`);
   }
   
   /**
@@ -147,6 +239,5 @@ export class FakeAIService {
   }
 }
 
-// Create and export a singleton instance with no dependencies on Firebase
+// Create and export a singleton instance
 export const fakeAIService = new FakeAIService();
-

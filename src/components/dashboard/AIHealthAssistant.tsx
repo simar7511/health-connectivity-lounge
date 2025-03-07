@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, Send, User, AlertCircle, Loader2, RefreshCw, ExternalLink, WifiOff, Cpu } from "lucide-react";
+import { Bot, Send, User, AlertCircle, Loader2, RefreshCw, ExternalLink, WifiOff, Cpu, Check } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -46,6 +46,8 @@ export const AIHealthAssistant = ({
   );
   const [isLoadingOfflineModel, setIsLoadingOfflineModel] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState<"en" | "es">(language);
+  const [usingOpenAI, setUsingOpenAI] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const conversationId = `chat-${patientId || 'default'}`;
@@ -53,14 +55,41 @@ export const AIHealthAssistant = ({
   const aiService = new FakeAIService({ 
     model, 
     language,
-    apiKey: "health-ai-fake-key-12345"
+    apiKey: localStorage.getItem(`${provider}_api_key`) || ""
   });
+
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem(`${provider}_api_key`) || "";
+    if (provider === "openai" && storedApiKey && storedApiKey.startsWith("sk-")) {
+      setUsingOpenAI(true);
+      aiService.setApiKey(storedApiKey);
+      
+      if (isOnline) {
+        console.log("Using OpenAI API for responses");
+        toast({
+          title: detectedLanguage === "en" ? "Using OpenAI" : "Usando OpenAI",
+          description: detectedLanguage === "en" 
+            ? "Using OpenAI for enhanced health assistant responses" 
+            : "Usando OpenAI para respuestas mejoradas del asistente de salud",
+        });
+      } else {
+        console.log("OpenAI API key found but using offline mode due to connectivity");
+      }
+    } else {
+      setUsingOpenAI(false);
+      console.log("Using simulated responses (no valid OpenAI API key)");
+    }
+  }, [provider, isOnline]);
 
   useEffect(() => {
     console.log(`Language preference changed to: ${language}`);
     aiService.setLanguage(language);
     setDetectedLanguage(language);
   }, [language]);
+
+  useEffect(() => {
+    aiService.setModel(model);
+  }, [model]);
 
   useEffect(() => {
     const welcomeMessage = language === "en" 
@@ -150,9 +179,18 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}, detected language: ${detectedLanguage}`);
+      console.log(`Using provider: ${provider}, model: ${model}, isOnline: ${isOnline}, detected language: ${detectedLanguage}`);
       
-      await handleSimulatedResponse(userInput);
+      const apiKey = localStorage.getItem(`${provider}_api_key`);
+      if (provider === "openai" && apiKey && apiKey.startsWith("sk-") && isOnline) {
+        aiService.setApiKey(apiKey);
+        console.log("Using OpenAI API for response");
+      } else {
+        console.log("Using offline/simulated mode for response");
+      }
+      
+      const aiResponse = await aiService.sendMessage(userInput, conversationId, conversationHistory);
+      setMessages((prev) => [...prev, aiResponse]);
     } catch (err: any) {
       console.error("Error in AI chat:", err);
       
@@ -176,31 +214,6 @@ export const AIHealthAssistant = ({
       setIsUsingFallback(true);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleSimulatedResponse = async (userInput: string) => {
-    try {
-      const inputLanguage = aiService.detectLanguage(userInput);
-      aiService.setLanguage(inputLanguage);
-      
-      const aiResponse = await aiService.sendMessage(userInput, conversationId);
-      setMessages((prev) => [...prev, aiResponse]);
-    } catch (error) {
-      console.error("Error with simulated AI response:", error);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const inputLanguage = aiService.detectLanguage(userInput);
-      const aiResponse = getSampleResponse(userInput, inputLanguage);
-      
-      const assistantMessage: AIMessage = {
-        role: "assistant",
-        content: aiResponse,
-        timestamp: new Date()
-      };
-      
-      setMessages((prev) => [...prev, assistantMessage]);
     }
   };
 
@@ -249,6 +262,20 @@ export const AIHealthAssistant = ({
         </Alert>
       )}
       
+      {usingOpenAI && isOnline && (
+        <Alert className="m-2 bg-green-50 border-green-200">
+          <Check className="h-4 w-4 text-green-500" />
+          <AlertTitle>
+            {detectedLanguage === "en" ? "OpenAI Enhanced" : "Mejorado con OpenAI"}
+          </AlertTitle>
+          <AlertDescription>
+            {detectedLanguage === "en" 
+              ? "Using OpenAI for enhanced health assistant responses with the latest medical knowledge."
+              : "Usando OpenAI para respuestas mejoradas del asistente de salud con los conocimientos médicos más recientes."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {error && (
         <Alert variant="destructive" className="m-2">
           <AlertCircle className="h-4 w-4" />
@@ -267,14 +294,6 @@ export const AIHealthAssistant = ({
               >
                 <RefreshCw className="h-3 w-3 mr-1" />
                 {detectedLanguage === "en" ? "Retry" : "Reintentar"}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleUseFallbackMode}
-                className="h-7 text-xs"
-              >
-                {detectedLanguage === "en" ? "Use Offline Mode" : "Usar Modo Sin Conexión"}
               </Button>
               <Button 
                 variant="outline" 
@@ -326,7 +345,12 @@ export const AIHealthAssistant = ({
             placeholder={getInputPlaceholder()}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             disabled={isLoading || isLoadingOfflineModel}
             className="flex-1"
           />
@@ -385,12 +409,6 @@ export const AIHealthAssistant = ({
             </ol>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={handleUseFallbackMode}
-            >
-              {detectedLanguage === "en" ? "Use Offline Mode" : "Usar Modo Sin Conexión"}
-            </Button>
             <Button onClick={() => setShowTroubleshootingDialog(false)}>
               {detectedLanguage === "en" ? "Close" : "Cerrar"}
             </Button>
@@ -444,7 +462,7 @@ export const AIHealthAssistant = ({
             <Button variant="outline" onClick={() => setShowOfflineModeDialog(false)}>
               {detectedLanguage === "en" ? "Cancel" : "Cancelar"}
             </Button>
-            <Button onClick={handleOfflineModeChange}>
+            <Button onClick={() => setShowOfflineModeDialog(false)}>
               {detectedLanguage === "en" ? "Save & Apply" : "Guardar y Aplicar"}
             </Button>
           </DialogFooter>
