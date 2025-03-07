@@ -3,28 +3,39 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { app as firebaseApp } from "./lib/firebase-config";
 
-// Add enhanced debugging for environment variables
-console.log("Environment mode:", import.meta.env.MODE);
-console.log("Base URL:", import.meta.env.BASE_URL);
-console.log("Firebase API Key available:", import.meta.env.VITE_FIREBASE_API_KEY ? "Yes" : "No");
-console.log("Firebase Auth Domain available:", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? "Yes" : "No");
-console.log("Firebase initialized:", firebaseApp ? "Yes" : "No");
+// Defer non-essential logging to not block rendering
+setTimeout(() => {
+  console.log("Environment mode:", import.meta.env.MODE);
+  console.log("Base URL:", import.meta.env.BASE_URL);
+  console.log("Firebase API Key available:", import.meta.env.VITE_FIREBASE_API_KEY ? "Yes" : "No");
+  console.log("Firebase Auth Domain available:", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? "Yes" : "No");
+}, 0);
 
 // Enhanced mounting logic with better error handling
 const rootElement = document.getElementById("root");
   
 if (rootElement) {
-  console.log("Found root element, mounting React application...");
+  console.time('App Mount');
   try {
     const root = createRoot(rootElement);
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
-    console.log("React application mounted successfully");
+    
+    // Use a non-blocking render that doesn't block the main thread as much
+    setTimeout(() => {
+      root.render(
+        // Remove StrictMode in development to prevent double-mounting
+        import.meta.env.PROD ? (
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>
+        ) : (
+          <App />
+        )
+      );
+      console.timeEnd('App Mount');
+      console.log("React application mounted successfully");
+    }, 0);
+    
   } catch (error) {
     console.error("Failed to mount React application:", error);
     // Display fallback error UI
@@ -48,9 +59,7 @@ if (rootElement) {
     try {
       const root = createRoot(newRoot);
       root.render(
-        <React.StrictMode>
-          <App />
-        </React.StrictMode>
+        <App />
       );
       console.log("React application mounted successfully on created root");
     } catch (error) {

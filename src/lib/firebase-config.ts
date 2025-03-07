@@ -1,9 +1,9 @@
 
-// Firebase configuration and initialization
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+// Firebase configuration and initialization with performance optimizations
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getMessaging, isSupported } from "firebase/messaging";
 import { toast } from "@/hooks/use-toast";
 
@@ -18,42 +18,69 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-3BVWXWV69Q",
 };
 
-// Initialize Firebase
+// Initialize Firebase with singleton pattern
 let app;
 let auth;
 let db;
 let storage;
 let messaging = null;
 
-try {
-  app = initializeApp(firebaseConfig);
+// Check if Firebase already initialized to prevent duplicate initialization during HMR
+if (!getApps().length) {
+  try {
+    console.time('Firebase Initialization');
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+
+    // Use emulators when in development
+    if (import.meta.env.DEV) {
+      // Uncomment these lines if you want to use Firebase emulators
+      // connectAuthEmulator(auth, 'http://localhost:9099');
+      // connectFirestoreEmulator(db, 'localhost', 9000);
+      // connectStorageEmulator(storage, 'localhost', 9199);
+    }
+
+    // Initialize Firebase Cloud Messaging with promise handling
+    const initializeMessaging = async () => {
+      try {
+        const isMessagingSupported = await isSupported();
+        if (isMessagingSupported) {
+          messaging = getMessaging(app);
+          console.log("✅ Firebase Cloud Messaging initialized");
+        } else {
+          console.log("ℹ️ Firebase Cloud Messaging not supported in this environment");
+        }
+      } catch (error) {
+        console.error("Error checking FCM support:", error);
+      }
+    };
+
+    // Initialize messaging asynchronously but don't wait for it
+    initializeMessaging();
+    
+    console.timeEnd('Firebase Initialization');
+    console.log("✅ Firebase initialized successfully");
+  } catch (error) {
+    console.error("❌ Firebase initialization error:", error);
+    
+    // Only show toast in browser environment
+    if (typeof window !== 'undefined') {
+      toast({
+        variant: "destructive",
+        title: "Firebase Error",
+        description: `Failed to initialize Firebase: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+  }
+} else {
+  // Reuse existing Firebase instances
+  app = getApps()[0];
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
-
-  // Initialize Firebase Cloud Messaging if supported
-  isSupported()
-    .then(supported => {
-      if (supported) {
-        messaging = getMessaging(app);
-        console.log("✅ Firebase Cloud Messaging initialized");
-      } else {
-        console.log("ℹ️ Firebase Cloud Messaging not supported in this environment");
-      }
-    })
-    .catch(error => {
-      console.error("Error checking FCM support:", error);
-    });
-
-  // Log successful Firebase initialization for debugging
-  console.log("✅ Firebase initialized successfully");
-} catch (error) {
-  console.error("❌ Firebase initialization error:", error);
-  toast({
-    variant: "destructive",
-    title: "Firebase Error",
-    description: `Failed to initialize Firebase: ${error instanceof Error ? error.message : String(error)}`,
-  });
+  console.log("♻️ Reusing existing Firebase instances");
 }
 
 export { app, auth, db, storage, messaging, firebaseConfig };
