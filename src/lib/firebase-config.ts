@@ -83,6 +83,4 @@ if (!getApps().length) {
   console.log("♻️ Reusing existing Firebase instances");
 }
 
-// Speech recognition is now declared in vite-env.d.ts
-
 export { app, auth, db, storage, messaging, firebaseConfig };

@@ -123,7 +123,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
                 {t.menu}
               </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent side="right">
               <nav className="flex flex-col gap-4 mt-8">
                 <Button
                   variant="ghost"

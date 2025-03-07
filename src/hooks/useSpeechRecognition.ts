@@ -1,8 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-// The interface definitions are now in vite-env.d.ts for global use
-
 interface UseSpeechRecognitionProps {
   language: string;
   onResult?: (text: string) => void;
