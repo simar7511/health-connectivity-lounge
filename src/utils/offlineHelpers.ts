@@ -1,139 +1,8 @@
 
-// This is a simplified offline LLM implementation for the health assistant
-// It provides basic offline capabilities when the main AI service is unavailable
-
-import { transformers } from '@xenova/transformers';
+// This is a simplified implementation of offline capabilities for the health assistant
 
 // Define the OfflineModeType as a proper TypeScript type with literal types
 export type OfflineModeType = "localLLM" | "simulated" | "none";
-
-// Track the model loading state
-let modelLoadingPromise: Promise<boolean> | null = null;
-let isModelLoaded = false;
-let pipeline: any = null;
-
-// Configuration for the offline model
-const MODEL_CONFIG = {
-  modelName: "Xenova/distilbert-base-uncased-finetuned-sst-2-english",
-  quantized: true,
-  maxLength: 100,
-  temperature: 0.7,
-  topK: 50,
-  topP: 0.9
-};
-
-/**
- * Checks if the offline model is ready to use
- */
-export const isOfflineModelReady = (): boolean => {
-  return isModelLoaded && pipeline !== null;
-};
-
-/**
- * Initializes the offline model
- * @returns Promise<boolean> - Whether initialization was successful
- */
-export const initOfflineModel = async (): Promise<boolean> => {
-  if (isModelLoaded) {
-    return true;
-  }
-
-  if (modelLoadingPromise) {
-    try {
-      return await modelLoadingPromise;
-    } catch (error) {
-      console.error("Error waiting for model to load:", error);
-      return false;
-    }
-  }
-
-  try {
-    modelLoadingPromise = (async () => {
-      try {
-        // Show progress in console
-        console.log("Loading offline language model...");
-        
-        // Use a smaller model for offline use
-        const { pipeline: pipelineFunc } = await transformers;
-        pipeline = await pipelineFunc('text-classification', MODEL_CONFIG.modelName, {
-          quantized: MODEL_CONFIG.quantized
-        });
-        
-        console.log("Offline language model loaded successfully");
-        isModelLoaded = true;
-        return true;
-      } catch (error) {
-        console.error("Failed to load offline language model:", error);
-        isModelLoaded = false;
-        pipeline = null;
-        return false;
-      }
-    })();
-    
-    return await modelLoadingPromise;
-  } catch (error) {
-    console.error("Error initializing offline model:", error);
-    isModelLoaded = false;
-    modelLoadingPromise = null;
-    return false;
-  }
-};
-
-/**
- * Gets the configuration of the offline model
- */
-export const getOfflineModelConfig = () => {
-  return {
-    ...MODEL_CONFIG,
-    isLoaded: isModelLoaded
-  };
-};
-
-/**
- * Generates a response using the offline model
- * @param query - The user's query
- * @param language - The language to respond in
- * @returns Promise<string> - The generated response
- */
-export const generateOfflineResponse = async (
-  query: string,
-  language: "en" | "es" = "en"
-): Promise<string> => {
-  if (!isOfflineModelReady()) {
-    try {
-      const success = await initOfflineModel();
-      if (!success) {
-        return getSampleResponse(query, language);
-      }
-    } catch (error) {
-      console.error("Error initializing model for response:", error);
-      return getSampleResponse(query, language);
-    }
-  }
-
-  try {
-    // For a real implementation, this would use the model to generate text
-    // Since we're using a classification model as an example, we'll just use it to
-    // determine sentiment and then return a canned response based on that
-    const result = await pipeline(query);
-    
-    // Get the sentiment from the classification result
-    const sentiment = result[0].label;
-    
-    if (sentiment === 'POSITIVE') {
-      return language === "en"
-        ? "I'm glad to hear that! Based on my offline analysis, your question seems positive. I can provide more detailed information when online connectivity is restored."
-        : "¡Me alegra escuchar eso! Según mi análisis sin conexión, tu pregunta parece positiva. Puedo proporcionar información más detallada cuando se restablezca la conectividad.";
-    } else {
-      return language === "en"
-        ? "I understand your concern. Based on my offline analysis, I'd like to address your question more thoroughly when online connectivity is restored. In the meantime, is there anything specific I can help clarify?"
-        : "Entiendo tu preocupación. Según mi análisis sin conexión, me gustaría abordar tu pregunta más a fondo cuando se restablezca la conectividad. Mientras tanto, ¿hay algo específico que pueda ayudarte a aclarar?";
-    }
-  } catch (error) {
-    console.error("Error generating offline response:", error);
-    return getSampleResponse(query, language);
-  }
-};
 
 /**
  * Gets a sample response for common health queries
@@ -182,4 +51,12 @@ export const getSampleResponse = (
   return language === "en"
     ? "I'm currently operating in offline mode with limited capabilities. I can provide general health information, but for personalized advice, please consult a healthcare professional. Once online connectivity is restored, I'll be able to provide more detailed and specific information."
     : "Actualmente estoy operando en modo sin conexión con capacidades limitadas. Puedo proporcionar información general sobre salud, pero para consejos personalizados, consulte a un profesional de la salud. Una vez que se restablezca la conectividad en línea, podré proporcionar información más detallada y específica.";
+};
+
+// Simplified functions that replace the LLM functionality
+export const isOfflineModelReady = (): boolean => false;
+export const initOfflineModel = async (): Promise<boolean> => true;
+export const getOfflineModelConfig = () => ({ modelName: "Simulated Model", isLoaded: true });
+export const generateOfflineResponse = async (query: string, language: "en" | "es" = "en"): Promise<string> => {
+  return getSampleResponse(query, language);
 };

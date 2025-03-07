@@ -6,7 +6,7 @@ import { AIHealthChatHeader } from "@/components/dashboard/AIHealthChatHeader";
 import { AISettingsDialog } from "@/components/dashboard/AISettingsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { initOfflineModel, getOfflineModelConfig, OfflineModeType } from "@/utils/offlineLLM";
+import { OfflineModeType } from "@/utils/offlineHelpers";
 
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
@@ -40,51 +40,10 @@ export const AIHealthChatPage = () => {
     return "gpt-4o";
   });
   
-  // Track if we've tried to load the model
-  const [isUsingLocalModelAlready, setIsUsingLocalModelAlready] = useState(false);
-  
   useEffect(() => {
     // Log current settings to help with debugging
     console.log(`Current settings - Provider: ${provider}, Model: ${model}, Offline Mode: ${offlineMode}, Online: ${isOnline}`);
   }, [provider, model, offlineMode, isOnline]);
-  
-  // Initialize offline model if needed
-  useEffect(() => {
-    // If we're offline or the user has selected localLLM mode, initialize the model
-    if ((!isOnline || offlineMode === "localLLM") && !isUsingLocalModelAlready) {
-      console.log("Initializing offline model");
-      initOfflineModel().then(success => {
-        if (success) {
-          const config = getOfflineModelConfig();
-          toast({
-            title: language === "en" ? "Offline LLM Ready" : "LLM sin conexión listo",
-            description: language === "en" 
-              ? `Using ${config.modelName} for offline responses` 
-              : `Usando ${config.modelName} para respuestas sin conexión`,
-            variant: "default",
-          });
-        } else {
-          // Fall back to simulated responses if model fails to load
-          setOfflineMode("simulated");
-          toast({
-            title: language === "en" ? "Offline LLM Failed" : "Error en LLM sin conexión",
-            description: language === "en" 
-              ? "Falling back to simulated responses" 
-              : "Volviendo a respuestas simuladas",
-            variant: "destructive",
-          });
-        }
-      });
-    }
-  }, [isOnline, offlineMode, toast, language, isUsingLocalModelAlready]);
-
-  // When offline mode changes to localLLM, attempt to load the model
-  useEffect(() => {
-    if (offlineMode === "localLLM" && !isUsingLocalModelAlready) {
-      setIsUsingLocalModelAlready(true);
-      initOfflineModel().catch(console.error);
-    }
-  }, [offlineMode, isUsingLocalModelAlready]);
 
   const handleBack = () => {
     navigate(-1);
@@ -109,12 +68,6 @@ export const AIHealthChatPage = () => {
   const setOfflineModeType = (mode: OfflineModeType) => {
     setOfflineMode(mode);
     localStorage.setItem("ai_offline_mode", mode);
-    
-    // If changing to localLLM, initialize the model
-    if (mode === "localLLM" && !isUsingLocalModelAlready) {
-      setIsUsingLocalModelAlready(true);
-      initOfflineModel().catch(console.error);
-    }
   };
 
   return (

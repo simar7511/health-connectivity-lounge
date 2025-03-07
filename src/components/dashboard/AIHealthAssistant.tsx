@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig, getSampleResponse, OfflineModeType } from "@/utils/offlineLLM";
+import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig, getSampleResponse, OfflineModeType } from "@/utils/offlineHelpers";
 import { FakeAIService, AIMessage } from "@/services/fakeAIService";
 
 interface AIHealthAssistantProps {
@@ -78,33 +79,6 @@ export const AIHealthAssistant = ({
     inputRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    if ((!isOnline || offlineMode === "localLLM") && offlineMode !== "none") {
-      console.log("Initializing offline model");
-      initOfflineModel().then(success => {
-        if (success) {
-          const config = getOfflineModelConfig();
-          toast({
-            title: language === "en" ? "Offline LLM Ready" : "LLM sin conexión listo",
-            description: language === "en" 
-              ? `Using ${config.modelName} for offline responses` 
-              : `Usando ${config.modelName} para respuestas sin conexión`,
-            variant: "default",
-          });
-        } else {
-          setOfflineModeChoice("simulated");
-          toast({
-            title: language === "en" ? "Offline LLM Failed" : "Error en LLM sin conexión",
-            description: language === "en" 
-              ? "Falling back to simulated responses" 
-              : "Volviendo a respuestas simuladas",
-            variant: "destructive",
-          });
-        }
-      });
-    }
-  }, [isOnline, offlineMode, toast, language]);
-
   const loadChatHistory = async () => {
     try {
       const history = await aiService.getChatHistory(conversationId);
@@ -171,10 +145,7 @@ export const AIHealthAssistant = ({
       if (shouldUseOfflineMode) {
         console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
         
-        if ((!isOnline || offlineMode === "localLLM") && isOfflineModelReady()) {
-          return handleLocalLLMResponse(userInput, conversationHistory);
-        }
-        
+        // Always use simulated responses in our simplified version
         await handleSimulatedResponse(userInput);
         return;
       }
@@ -194,11 +165,7 @@ export const AIHealthAssistant = ({
           variant: "default",
         });
         
-        if (offlineMode === "localLLM" && isOfflineModelReady()) {
-          await handleLocalLLMResponse(userInput, conversationHistory);
-        } else {
-          await handleSimulatedResponse(userInput);
-        }
+        await handleSimulatedResponse(userInput);
       }
     } catch (err: any) {
       console.error("Error in AI chat:", err);
@@ -240,51 +207,6 @@ export const AIHealthAssistant = ({
     setMessages((prev) => [...prev, assistantMessage]);
   };
 
-  const handleLocalLLMResponse = async (userInput: string, conversationHistory: AIMessage[]) => {
-    try {
-      if (!isOfflineModelReady()) {
-        setIsLoadingOfflineModel(true);
-        
-        toast({
-          title: language === "en" ? "Loading Offline LLM" : "Cargando LLM sin conexión",
-          description: language === "en" 
-            ? "Preparing the local AI model. This may take a moment..." 
-            : "Preparando el modelo de IA local. Esto puede tardar un momento...",
-          variant: "default",
-        });
-        
-        const success = await initOfflineModel();
-        setIsLoadingOfflineModel(false);
-        
-        if (!success) {
-          toast({
-            title: language === "en" ? "Offline LLM Failed" : "Error en LLM sin conexión",
-            description: language === "en" 
-              ? "Could not initialize local AI model. Using simulated responses instead." 
-              : "No se pudo inicializar el modelo de IA local. Usando respuestas simuladas en su lugar.",
-            variant: "destructive",
-          });
-          
-          await handleSimulatedResponse(userInput);
-          return;
-        }
-      }
-      
-      const aiResponse = await generateOfflineResponse(userInput, language);
-      
-      const assistantMessage: AIMessage = {
-        role: "assistant",
-        content: aiResponse,
-        timestamp: new Date()
-      };
-      
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error("Error using local LLM:", error);
-      await handleSimulatedResponse(userInput);
-    }
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -305,31 +227,7 @@ export const AIHealthAssistant = ({
   };
 
   const handleOfflineModeChange = async () => {
-    if (offlineModeChoice === "localLLM") {
-      setIsLoadingOfflineModel(true);
-      const success = await initOfflineModel();
-      setIsLoadingOfflineModel(false);
-      
-      if (success) {
-        toast({
-          title: language === "en" ? "Offline LLM Ready" : "LLM sin conexión listo",
-          description: language === "en" 
-            ? "Local AI model loaded successfully" 
-            : "Modelo de IA local cargado con éxito",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: language === "en" ? "Offline LLM Failed" : "Error en LLM sin conexión",
-          description: language === "en" 
-            ? "Could not load local AI model. Using simulated responses instead." 
-            : "No se pudo cargar el modelo de IA local. Usando respuestas simuladas en su lugar.",
-          variant: "destructive",
-        });
-        setOfflineModeChoice("simulated");
-      }
-    }
-    
+    // In our simplified version, just update the choice
     setShowOfflineModeDialog(false);
   };
 
@@ -344,8 +242,8 @@ export const AIHealthAssistant = ({
           <AlertDescription className="flex flex-col gap-2">
             <p>
               {language === "en" 
-                ? `You're currently using ${offlineMode === "localLLM" && isOfflineModelReady() ? "a local AI model" : "simplified AI responses"} with limited capabilities.`
-                : `Actualmente estás usando ${offlineMode === "localLLM" && isOfflineModelReady() ? "un modelo de IA local" : "respuestas de IA simplificadas"} con capacidades limitadas.`}
+                ? `You're currently using simplified AI responses with limited capabilities.`
+                : `Actualmente estás usando respuestas de IA simplificadas con capacidades limitadas.`}
             </p>
             
             <Button 
@@ -354,7 +252,7 @@ export const AIHealthAssistant = ({
               onClick={() => setShowOfflineModeDialog(true)}
               className="self-start"
             >
-              {offlineMode === "localLLM" && isOfflineModelReady() ? <Cpu className="h-3 w-3 mr-1" /> : <WifiOff className="h-3 w-3 mr-1" />}
+              <WifiOff className="h-3 w-3 mr-1" />
               {language === "en" ? "Change Offline Mode" : "Cambiar Modo Sin Conexión"}
             </Button>
           </AlertDescription>
@@ -453,17 +351,8 @@ export const AIHealthAssistant = ({
         <p className="text-xs text-muted-foreground mt-2">
           {isUsingFallback || !isOnline ? (
             <span className="flex items-center">
-              {offlineMode === "localLLM" && isOfflineModelReady() ? (
-                <>
-                  <Cpu className="h-3 w-3 mr-1" />
-                  {language === "en" ? "Using local LLM for offline responses" : "Usando LLM local para respuestas sin conexión"}
-                </>
-              ) : (
-                <>
-                  <WifiOff className="h-3 w-3 mr-1" />
-                  {language === "en" ? "Using simulated responses in offline mode" : "Usando respuestas simuladas en modo sin conexión"}
-                </>
-              )}
+              <WifiOff className="h-3 w-3 mr-1" />
+              {language === "en" ? "Using simulated responses in offline mode" : "Usando respuestas simuladas en modo sin conexión"}
             </span>
           ) : (
             <span>
@@ -562,8 +451,8 @@ export const AIHealthAssistant = ({
               </div>
               <p className="text-sm text-muted-foreground ml-6">
                 {language === "en" 
-                  ? "Downloads and runs an AI model directly in your browser. More accurate but requires downloading the model (~50-100MB)."
-                  : "Descarga y ejecuta un modelo de IA directamente en tu navegador. Más preciso pero requiere descargar el modelo (~50-100MB)."}
+                  ? "This option is currently unavailable in this version."
+                  : "Esta opción no está disponible actualmente en esta versión."}
               </p>
             </RadioGroup>
           </div>
@@ -571,10 +460,7 @@ export const AIHealthAssistant = ({
             <Button variant="outline" onClick={() => setShowOfflineModeDialog(false)}>
               {language === "en" ? "Cancel" : "Cancelar"}
             </Button>
-            <Button onClick={handleOfflineModeChange} disabled={isLoadingOfflineModel}>
-              {isLoadingOfflineModel ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
+            <Button onClick={handleOfflineModeChange}>
               {language === "en" ? "Save & Apply" : "Guardar y Aplicar"}
             </Button>
           </DialogFooter>
@@ -583,4 +469,3 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
-
