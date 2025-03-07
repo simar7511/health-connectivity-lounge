@@ -6,7 +6,7 @@ import { AIHealthChatHeader } from "@/components/dashboard/AIHealthChatHeader";
 import { AISettingsDialog } from "@/components/dashboard/AISettingsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { initOfflineModel, getOfflineModelConfig } from "@/utils/offlineLLM";
+import { initOfflineModel, getOfflineModelConfig, OfflineModeType } from "@/utils/offlineLLM";
 
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
@@ -17,8 +17,8 @@ export const AIHealthChatPage = () => {
     return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-  const [offlineMode, setOfflineMode] = useState<"simulated" | "localLLM" | "none">(() => {
-    const savedMode = localStorage.getItem("ai_offline_mode") as "simulated" | "localLLM" | "none";
+  const [offlineMode, setOfflineMode] = useState<OfflineModeType>(() => {
+    const savedMode = localStorage.getItem("ai_offline_mode") as OfflineModeType;
     // Default to "none" if online and no setting, otherwise "simulated"
     return savedMode || (isOnline ? "none" : "simulated");
   });
@@ -158,7 +158,7 @@ export const AIHealthChatPage = () => {
   }, [provider, model, offlineMode]);
 
   // Handle offline mode setting
-  const setOfflineModeType = (mode: "simulated" | "localLLM" | "none") => {
+  const setOfflineModeType = (mode: OfflineModeType) => {
     setOfflineMode(mode);
     localStorage.setItem("ai_offline_mode", mode);
     

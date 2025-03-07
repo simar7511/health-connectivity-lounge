@@ -13,9 +13,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig, getSampleResponse } from "@/utils/offlineLLM";
-
-export type OfflineModeType = "simulated" | "localLLM" | "none";
+import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig, getSampleResponse, OfflineModeType } from "@/utils/offlineLLM";
 
 interface AIHealthAssistantProps {
   language: "en" | "es";
@@ -649,7 +647,7 @@ export const AIHealthAssistant = ({
           <div className="py-4 space-y-4">
             <RadioGroup 
               value={offlineModeChoice} 
-              onValueChange={(value) => setOfflineModeChoice(value as "simulated" | "localLLM")}
+              onValueChange={(value) => setOfflineModeChoice(value as OfflineModeType)}
             >
               <div className="flex items-center space-x-2 mb-2">
                 <RadioGroupItem value="simulated" id="simulated" />
@@ -692,4 +690,3 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
-
