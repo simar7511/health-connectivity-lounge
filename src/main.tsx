@@ -22,16 +22,26 @@ if (typeof window !== 'undefined') {
   window.localStorage.removeItem('vite-previous-packages');
 }
 
-const rootElement = document.getElementById("root");
+// Add a small delay before mounting to ensure all modules are properly loaded
+const mountApp = () => {
+  const rootElement = document.getElementById("root");
 
-if (!rootElement) {
-  throw new Error("Root element not found. Ensure index.html has <div id='root'></div>");
+  if (!rootElement) {
+    throw new Error("Root element not found. Ensure index.html has <div id='root'></div>");
+  }
+
+  const root = createRoot(rootElement);
+
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+};
+
+// Check if document is fully loaded
+if (document.readyState === 'complete') {
+  mountApp();
+} else {
+  window.addEventListener('load', mountApp);
 }
-
-const root = createRoot(rootElement);
-
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);

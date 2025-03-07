@@ -62,9 +62,15 @@ export default defineConfig({
   },
   optimizeDeps: {
     esbuildOptions: {
-      target: 'es2020'
+      target: 'es2020',
+      supported: {
+        bigint: true
+      }
     },
     force: true,
     exclude: ['firebase']
+  },
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
   }
 });
