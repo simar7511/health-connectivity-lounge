@@ -24,21 +24,42 @@ export function useOnlineStatus(): boolean {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Optional: Check connectivity actively
+    // Optional: Check connectivity actively but with a more reliable endpoint
     const checkConnectivity = async () => {
       try {
-        const response = await fetch('https://www.google.com/favicon.ico', { 
-          mode: 'no-cors',
+        // Use a more reliable endpoint that's less likely to be blocked
+        const timestamp = new Date().getTime();
+        const response = await fetch(`https://httpbin.org/get?nocache=${timestamp}`, { 
+          mode: 'cors',
           cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+          // Set a timeout to prevent hanging
+          signal: AbortSignal.timeout(5000)
         });
-        setIsOnline(true);
+        
+        if (response.ok) {
+          setIsOnline(true);
+        } else {
+          console.warn("Connectivity check failed with status:", response.status);
+          // Don't immediately set offline on a single failed check
+        }
       } catch (error) {
-        setIsOnline(false);
+        console.warn("Connectivity check error:", error);
+        // Check if navigator.onLine still says we're online before setting to offline
+        // This helps prevent false negatives from a single failed request
+        if (navigator.onLine) {
+          console.log("Browser reports online but connectivity check failed");
+        } else {
+          setIsOnline(false);
+        }
       }
     };
 
-    // Check connectivity periodically
-    const interval = setInterval(checkConnectivity, 30000);
+    // Check connectivity less frequently to avoid unnecessary requests
+    const interval = setInterval(checkConnectivity, 60000); // Check every minute instead of 30 seconds
 
     // Initial check
     checkConnectivity();
