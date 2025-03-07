@@ -8,16 +8,11 @@ import { componentTagger } from "lovable-tagger";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Simplified Vite configuration for improved stability
+// Extremely simplified Vite configuration for maximum stability
 export default defineConfig({
   base: "/",
   plugins: [
-    react({
-      babel: {
-        plugins: [],
-        compact: false
-      }
-    }),
+    react(),
     componentTagger()
   ],
   server: {
@@ -61,7 +56,6 @@ export default defineConfig({
   esbuild: {
     logOverride: { 
       'this-is-undefined-in-esm': 'silent'
-    },
-    keepNames: true
+    }
   }
 });

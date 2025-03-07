@@ -4,7 +4,7 @@
 
 import { transformers } from '@xenova/transformers';
 
-// Define the OfflineModeType as a proper TypeScript type
+// Define the OfflineModeType as a proper TypeScript type with literal types
 export type OfflineModeType = "localLLM" | "simulated" | "none";
 
 // Track the model loading state
