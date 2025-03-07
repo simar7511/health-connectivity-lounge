@@ -13,7 +13,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig } from "@/utils/offlineLLM";
+import { generateOfflineResponse, isOfflineModelReady, initOfflineModel, getOfflineModelConfig, getSampleResponse } from "@/utils/offlineLLM";
 
 export type OfflineModeType = "simulated" | "localLLM" | "none";
 
@@ -33,35 +33,6 @@ interface Message {
   content: string;
   timestamp?: any;
 }
-
-const getSampleResponse = (query: string, language: "en" | "es"): string => {
-  const responses: Record<string, {en: string, es: string}> = {
-    "hypertension": {
-      en: "Hypertension, or high blood pressure, is a common condition where the long-term force of blood against your artery walls is high enough that it may eventually cause health problems. Blood pressure is determined by the amount of blood your heart pumps and the resistance to blood flow in your arteries. The more blood your heart pumps and the narrower your arteries, the higher your blood pressure.",
-      es: "La hipertensión, o presión arterial alta, es una condición común donde la fuerza a largo plazo de la sangre contra las paredes de las arterias es lo suficientemente alta como para eventualmente causar problemas de salud. La presión arterial está determinada por la cantidad de sangre que bombea el corazón y la resistencia al flujo sanguíneo en las arterias."
-    },
-    "diabetes": {
-      en: "Diabetes is a chronic health condition that affects how your body turns food into energy. Most of the food you eat is broken down into sugar (glucose) and released into your bloodstream. When your blood sugar goes up, it signals your pancreas to release insulin, which lets blood sugar into your body's cells for use as energy.",
-      es: "La diabetes es una condición de salud crónica que afecta cómo su cuerpo convierte los alimentos en energía. La mayoría de los alimentos que consume se descomponen en azúcar (glucosa) y se liberan en el torrente sanguíneo. Cuando su nivel de azúcar en la sangre sube, indica a su páncreas que libere insulina."
-    },
-    "covid": {
-      en: "COVID-19 is a respiratory illness caused by the SARS-CoV-2 virus. Common symptoms include fever, cough, and fatigue. If you're experiencing symptoms, please consider getting tested and consult with a healthcare professional.",
-      es: "COVID-19 es una enfermedad respiratoria causada por el virus SARS-CoV-2. Los síntomas comunes incluyen fiebre, tos y fatiga. Si está experimentando síntomas, considere hacerse una prueba y consulte con un profesional de la salud."
-    }
-  };
-
-  const lowercaseQuery = query.toLowerCase();
-  
-  for (const [keyword, response] of Object.entries(responses)) {
-    if (lowercaseQuery.includes(keyword)) {
-      return response[language];
-    }
-  }
-
-  return language === "en" 
-    ? "I'm in offline mode with limited capabilities. Please try again when online, or ask about common health topics like hypertension, diabetes, or COVID-19."
-    : "Estoy en modo sin conexión con capacidades limitadas. Por favor, inténtalo de nuevo cuando esté en línea, o pregunte sobre temas comunes de salud como hipertensión, diabetes o COVID-19.";
-};
 
 export const AIHealthAssistant = ({ 
   language, 
@@ -721,3 +692,4 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
+
