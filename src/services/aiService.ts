@@ -45,6 +45,13 @@ export class AIService {
   }
 
   /**
+   * Validate OpenAI API key format
+   */
+  private isValidOpenAIKey(apiKey: string): boolean {
+    return apiKey.startsWith('sk-') && apiKey.length > 20;
+  }
+
+  /**
    * Send a message to the AI and get a response
    */
   async sendMessage(
@@ -52,10 +59,8 @@ export class AIService {
     conversationId?: string,
     fullConversation: AIMessage[] = []
   ): Promise<AIMessage> {
-    // Create conversation ID if not provided
     const chatId = conversationId || `chat-${Date.now()}`;
     
-    // Create user message
     const userMessage: AIMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -63,44 +68,34 @@ export class AIService {
       timestamp: new Date()
     };
     
-    // Store in local chat history
     if (!this.chatHistory[chatId]) {
       this.chatHistory[chatId] = [];
     }
     
     this.chatHistory[chatId].push(userMessage);
     
-    // Check if we have a valid OpenAI API key (starts with "sk-" or "sk-proj-")
-    const isValidOpenAIKey = this.apiKey && (this.apiKey.startsWith("sk-") || this.apiKey.startsWith("sk-proj-"));
+    // Validate OpenAI key and online status
+    const hasValidKey = this.isValidOpenAIKey(this.apiKey);
     
-    // IMPORTANT: By default, use OpenAI when online with valid key
-    // Only use offline mode when explicitly requested or when offline
-    const shouldUseOpenAI = this.isOnline && isValidOpenAIKey;
+    console.log(`API Status - Key valid: ${hasValidKey}, Online: ${this.isOnline}, Mode: ${this.offlineMode}`);
     
-    console.log(`Decision factors - Online: ${this.isOnline}, OfflineMode: ${this.offlineMode}, Valid API key: ${isValidOpenAIKey ? "Yes" : "No"}`);
-    
-    if (shouldUseOpenAI) {
+    // Try OpenAI if we're online and have a valid key
+    if (this.isOnline && hasValidKey) {
       try {
-        // Log attempt to use OpenAI API
-        console.log(`Using OpenAI API with model: ${this.model}`);
-        // Attempt to use OpenAI API
+        console.log('Attempting to use OpenAI API...');
         return await this.sendToOpenAI(message, chatId, fullConversation);
       } catch (error) {
-        console.error("Error with OpenAI API:", error);
-        // Fallback to offline mode if OpenAI API fails
-        console.log("Falling back to offline mode due to API error");
+        console.error('OpenAI API Error:', error);
         return this.generateOfflineResponse(message, chatId);
       }
     } else {
       // Log reason for using offline mode
-      if (!isValidOpenAIKey) {
-        console.log("Using offline mode: No valid OpenAI API key found");
+      if (!hasValidKey) {
+        console.log('Using offline mode: Invalid API key');
       } else if (!this.isOnline) {
-        console.log("Using offline mode: Device is offline");
-      } else {
-        console.log("Using offline mode: Unknown reason");
+        console.log('Using offline mode: Device offline');
       }
-      // Use offline mode
+      
       return this.generateOfflineResponse(message, chatId);
     }
   }

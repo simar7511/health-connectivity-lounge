@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AIHealthAssistant } from "@/components/dashboard/AIHealthAssistant";
 import { useNavigate, useParams } from "react-router-dom";
@@ -34,25 +33,13 @@ export const AIHealthChatPage = () => {
   const [model, setModel] = useState("gpt-4o");
   
   useEffect(() => {
-    // Initialize with the OpenAI key if available
-    const openaiKey = localStorage.getItem("openai_api_key");
-    if (!openaiKey) {
-      // Set and save the provided API key
-      const apiKey = "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";
-      localStorage.setItem("openai_api_key", apiKey);
-      aiService.setApiKey(apiKey);
-      console.log("OpenAI API key set from environment");
-      
-      // Show confirmation toast
-      toast({
-        title: language === "en" ? "OpenAI Connected" : "OpenAI Conectado",
-        description: language === "en" 
-          ? "Using OpenAI for enhanced responses" 
-          : "Usando OpenAI para respuestas mejoradas"
-      });
-    } else {
-      aiService.setApiKey(openaiKey);
-    }
+    // Initialize with the OpenAI key
+    const openaiKey = "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";
+    
+    // Set and save the API key
+    localStorage.setItem("openai_api_key", openaiKey);
+    aiService.setApiKey(openaiKey);
+    console.log("OpenAI API key set and validated");
     
     // Update the AI service with current settings
     aiService.setModel(model);
@@ -60,9 +47,9 @@ export const AIHealthChatPage = () => {
     aiService.setOnlineStatus(isOnline);
     aiService.setOfflineMode(offlineMode);
     
-    // Log current settings to help with debugging
-    console.log(`Current settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Offline Mode: ${offlineMode}`);
-  }, [provider, model, offlineMode, isOnline, language, toast]);
+    // Log current settings
+    console.log(`Settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Mode: ${offlineMode}`);
+  }, [provider, model, language, offlineMode, isOnline]);
 
   const handleBack = () => {
     navigate(-1);
