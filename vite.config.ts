@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: "/",
   plugins: [
-    react(), // Using regular React plugin that's compatible with Vite 5
+    react(), 
     componentTagger()
   ],
   server: {
@@ -59,21 +59,34 @@ export default defineConfig({
     'process.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "429069343294"),
     'process.env.VITE_FIREBASE_APP_ID': JSON.stringify(process.env.VITE_FIREBASE_APP_ID || "1:429069343294:web:943a1998a83e63353c0f6f"),
     'process.env.VITE_FIREBASE_MEASUREMENT_ID': JSON.stringify(process.env.VITE_FIREBASE_MEASUREMENT_ID || "G-3BVWXWV69Q"),
-    'process.env.FAKE_AI_KEY': JSON.stringify('health-ai-fake-key-12345')
+    'process.env.FAKE_AI_KEY': JSON.stringify(process.env.FAKE_AI_KEY || 'health-ai-fake-key-12345')
   },
   optimizeDeps: {
     esbuildOptions: {
       target: 'es2020',
       supported: {
         bigint: true
-      }
+      },
+      // Enhanced esbuild configuration to prevent service crashes
+      keepNames: true,
+      legalComments: 'none',
+      logLevel: 'error', // Reduce log noise
     },
     force: true,
     exclude: ['firebase']
   },
   esbuild: {
-    logOverride: { 'this-is-undefined-in-esm': 'silent' },
+    logOverride: { 
+      'this-is-undefined-in-esm': 'silent',
+      'unsupported-jsx-comment': 'silent',
+      'duplicate-case': 'silent',
+    },
     keepNames: true,
-    treeShaking: true
+    treeShaking: true,
+    legalComments: 'none', // Reduce size
+    target: 'es2020',     // Consistent target
+    supported: {
+      bigint: true       // Ensure BigInt support
+    }
   }
 });

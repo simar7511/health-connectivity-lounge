@@ -18,7 +18,8 @@ export const AIHealthChatPage = () => {
   });
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [offlineMode, setOfflineMode] = useState<OfflineModeType>(() => {
-    const savedMode = localStorage.getItem("ai_offline_mode") as OfflineModeType;
+    // Get from localStorage or default based on online status
+    const savedMode = localStorage.getItem("ai_offline_mode") as OfflineModeType | null;
     // Default to "none" if online and no setting, otherwise "simulated"
     return savedMode || (isOnline ? "none" : "simulated");
   });

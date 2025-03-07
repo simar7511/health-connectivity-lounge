@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +51,7 @@ export const AIHealthAssistant = ({
   const aiService = new FakeAIService({ 
     model, 
     language,
-    apiKey: "health-ai-fake-key-12345" // Using a fake API key
+    apiKey: process.env.FAKE_AI_KEY || "health-ai-fake-key-12345" // Using a fake API key
   });
 
   useEffect(() => {
@@ -166,6 +165,7 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
+      // Check if we should use offline mode based on connectivity or settings
       const shouldUseOfflineMode = !isOnline || 
                                   offlineMode === "localLLM" || 
                                   offlineMode === "simulated";
@@ -173,10 +173,12 @@ export const AIHealthAssistant = ({
       if (shouldUseOfflineMode) {
         console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
         
+        // If we're offline or explicitly using localLLM mode and the model is ready
         if ((!isOnline || offlineMode === "localLLM") && isOfflineModelReady()) {
           return handleLocalLLMResponse(userInput, conversationHistory);
         }
         
+        // Otherwise use simulated responses
         await handleSimulatedResponse(userInput);
         return;
       }
