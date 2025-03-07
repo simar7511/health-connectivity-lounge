@@ -35,6 +35,23 @@ const recoverFromESBuildCrash = () => {
     return false;
   }
   
+  // If we detect an esbuild service crash in console errors, reload after a delay
+  const recentErrors = window.performance
+    ?.getEntries()
+    ?.filter(entry => 
+      entry.entryType === 'resource' && 
+      entry.name.includes('esbuild') && 
+      (entry as PerformanceResourceTiming).duration < 10
+    );
+  
+  if (recentErrors && recentErrors.length > 0) {
+    console.warn("Detected potential esbuild service issues, refreshing page...");
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+    return false;
+  }
+  
   return true;
 };
 

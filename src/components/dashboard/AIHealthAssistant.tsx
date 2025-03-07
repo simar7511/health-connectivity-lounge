@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +65,6 @@ export const AIHealthAssistant = ({
     
     setMessages([systemMessage]);
     
-    // Load chat history if a patientId is provided
     if (patientId) {
       loadChatHistory();
     }
@@ -166,7 +164,6 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      // Check if we should use offline mode based on connectivity or settings
       const shouldUseOfflineMode = !isOnline || 
                                   offlineMode === "localLLM" || 
                                   offlineMode === "simulated";
@@ -174,18 +171,14 @@ export const AIHealthAssistant = ({
       if (shouldUseOfflineMode) {
         console.log(`Using offline mode: ${offlineMode}, isOnline: ${isOnline}`);
         
-        // FIX: Make sure to explicitly type-check with === instead of using implicit conversion
-        // This fixes the TypeScript error by using strict string literal comparison
-        if ((!isOnline || (offlineMode === "localLLM" && offlineMode !== "none")) && isOfflineModelReady()) {
+        if ((!isOnline || offlineMode === "localLLM") && isOfflineModelReady()) {
           return handleLocalLLMResponse(userInput, conversationHistory);
         }
         
-        // Otherwise use simulated responses
         await handleSimulatedResponse(userInput);
         return;
       }
       
-      // Using the fake AI service instead of Firebase functions
       try {
         const aiResponse = await aiService.sendMessage(userInput, conversationId, conversationHistory);
         
@@ -201,8 +194,7 @@ export const AIHealthAssistant = ({
           variant: "default",
         });
         
-        // FIX: Same issue with type comparison, using strict string comparison
-        if ((offlineMode === "localLLM" && offlineMode !== "none") && isOfflineModelReady()) {
+        if (offlineMode === "localLLM" && isOfflineModelReady()) {
           await handleLocalLLMResponse(userInput, conversationHistory);
         } else {
           await handleSimulatedResponse(userInput);
@@ -591,3 +583,4 @@ export const AIHealthAssistant = ({
     </div>
   );
 };
+
