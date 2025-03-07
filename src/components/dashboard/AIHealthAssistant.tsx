@@ -226,7 +226,6 @@ export const AIHealthAssistant = ({
     setError(null);
     
     try {
-      // Fix the type comparison issue by checking offline mode explicitly
       const shouldUseOfflineMode = !isOnline || offlineMode === "localLLM";
       
       if (shouldUseOfflineMode) {

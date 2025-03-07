@@ -33,7 +33,7 @@ export const AISettingsDialog = ({
   const { toast } = useToast();
   const [showResetKeySection, setShowResetKeySection] = useState(false);
 
-  // Update based on provider
+  // Update based on provider with OpenAI as default
   useEffect(() => {
     // Set default model based on provider
     if (provider === "openai" && !localStorage.getItem("openai_model")) {
@@ -149,7 +149,7 @@ export const AISettingsDialog = ({
             </div>
           )}
           
-          {offlineMode && setOfflineMode && (
+          {offlineMode !== undefined && setOfflineMode && (
             <div className="space-y-2 mt-4">
               <label htmlFor="offlineMode" className="text-sm font-medium">
                 {language === "en" ? "Offline Mode" : "Modo Sin Conexión"}
