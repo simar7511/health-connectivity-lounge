@@ -1,6 +1,6 @@
 
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";  // Changed from react-swc to regular react plugin
+import react from "@vitejs/plugin-react";  // This plugin should now be found
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { fileURLToPath } from "url";

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -290,7 +289,6 @@ export const AIHealthAssistant = ({
           variant: "default",
         });
         
-        // Fix the type error by using string comparison instead of type comparison
         if (offlineMode === "localLLM" && isOfflineModelReady()) {
           await handleLocalLLMResponse(userInput, conversationHistory);
         } else {
@@ -438,7 +436,6 @@ export const AIHealthAssistant = ({
   };
 
   const handleOfflineModeChange = async () => {
-    // Fix the type error by using string comparison instead of type comparison
     if (offlineModeChoice === "localLLM") {
       setIsLoadingOfflineModel(true);
       const success = await initOfflineModel();
