@@ -8,8 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { OfflineModeType } from "@/utils/offlineHelpers";
 import { aiService } from "@/services/aiService";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export const AIHealthChatPage = () => {
   const { patientId } = useParams();
@@ -41,6 +42,9 @@ export const AIHealthChatPage = () => {
   // Track application error state
   const [applicationError, setApplicationError] = useState<string | null>(null);
   
+  // Track if the app is in a fatal error state and needs a reload
+  const [appCrashed, setAppCrashed] = useState(false);
+  
   useEffect(() => {
     // Initialize with the OpenAI key
     const openaiKey = localStorage.getItem("openai_api_key") || "";
@@ -70,6 +74,7 @@ export const AIHealthChatPage = () => {
       
       // Reset application error if any
       setApplicationError(null);
+      setAppCrashed(false);
       
       // Log current settings
       console.log(`Settings - Provider: ${provider}, Model: ${model}, Language: ${language}, Online: ${isOnline}, Mode: ${offlineMode}, Quota Exceeded: ${apiStatus.quotaExceeded}`);
@@ -80,6 +85,23 @@ export const AIHealthChatPage = () => {
         : "Ocurrió un error al inicializar el asistente de IA. Intente actualizar la página.");
     }
   }, [provider, model, language, offlineMode, isOnline]);
+
+  // Add error boundary effect to recover from crashes
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error("Unhandled error caught:", event.error);
+      setAppCrashed(true);
+      setApplicationError(language === "en"
+        ? "The application encountered an error and needs to be restarted. Please refresh the page."
+        : "La aplicación encontró un error y necesita reiniciarse. Por favor, actualice la página.");
+    };
+
+    window.addEventListener('error', handleError);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+    };
+  }, [language]);
 
   const handleBack = () => {
     navigate(-1);
@@ -150,24 +172,27 @@ export const AIHealthChatPage = () => {
     window.location.reload();
   };
 
-  if (applicationError) {
+  if (applicationError || appCrashed) {
     return (
       <div className="flex flex-col items-center justify-center h-screen p-4">
-        <Alert variant="destructive" className="max-w-md">
+        <Alert variant="destructive" className="max-w-md mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>
             {language === "en" ? "Application Error" : "Error de Aplicación"}
           </AlertTitle>
           <AlertDescription>
-            {applicationError}
+            {applicationError || (language === "en" 
+              ? "The application encountered an unexpected error."
+              : "La aplicación encontró un error inesperado.")}
           </AlertDescription>
         </Alert>
-        <button 
+        <Button 
           onClick={handleRetryApplication}
-          className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
+          <RefreshCw className="h-4 w-4" />
           {language === "en" ? "Refresh Application" : "Actualizar Aplicación"}
-        </button>
+        </Button>
       </div>
     );
   }
