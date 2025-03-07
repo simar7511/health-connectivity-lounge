@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 // Import Pages & Components
@@ -54,6 +54,7 @@ const App: React.FC = () => {
       <Routes>
         {/* 🌍 General Pages */}
         <Route path="/" element={<Index />} />
+        <Route path="/index" element={<Navigate to="/" replace />} />
         <Route path="/free-clinic" element={<ClinicLocatorPage />} />
 
         {/* 🔵 Patient Flow */}
