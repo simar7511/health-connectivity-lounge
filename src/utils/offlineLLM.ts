@@ -1,3 +1,4 @@
+
 // This is a simplified offline LLM implementation for the health assistant
 // It provides basic offline capabilities when the main AI service is unavailable
 
@@ -7,7 +8,7 @@ import { transformers } from '@xenova/transformers';
 export type OfflineModeType = "localLLM" | "simulated" | "none";
 
 // Track the model loading state
-let modelLoadingPromise: Promise<any> | null = null;
+let modelLoadingPromise: Promise<boolean> | null = null;
 let isModelLoaded = false;
 let pipeline: any = null;
 
@@ -39,8 +40,7 @@ export const initOfflineModel = async (): Promise<boolean> => {
 
   if (modelLoadingPromise) {
     try {
-      await modelLoadingPromise;
-      return isModelLoaded;
+      return await modelLoadingPromise;
     } catch (error) {
       console.error("Error waiting for model to load:", error);
       return false;

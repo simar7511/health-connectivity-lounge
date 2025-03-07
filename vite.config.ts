@@ -2,37 +2,26 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { fileURLToPath } from "url";
+import { componentTagger } from "lovable-tagger";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Function to safely get environment variables with fallbacks
-const getEnvVar = (key: string, defaultValue: string): string => {
-  try {
-    return process.env[key] || defaultValue;
-  } catch (e) {
-    console.warn(`Error accessing env var ${key}, using default value`, e);
-    return defaultValue;
-  }
-};
-
-// Simplified configuration that won't crash esbuild
+// Simplified Vite configuration for improved stability
 export default defineConfig({
   base: "/",
   plugins: [
     react({
       babel: {
-        // Less intensive babel configuration
         plugins: [],
         compact: false
       }
-    }), 
+    }),
     componentTagger()
   ],
   server: {
-    host: true, 
+    host: true,
     port: 8080,
     cors: true,
     strictPort: true,
@@ -57,16 +46,7 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
     emptyOutDir: true,
-    chunkSizeWarningLimit: 1000,
-    minify: "esbuild",
-    cssMinify: "lightningcss",
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom']
-        }
-      }
-    }
+    minify: "esbuild"
   },
   define: {
     'process.env.VITE_FIREBASE_API_KEY': JSON.stringify("AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw"),
@@ -78,29 +58,10 @@ export default defineConfig({
     'process.env.VITE_FIREBASE_MEASUREMENT_ID': JSON.stringify("G-3BVWXWV69Q"),
     'process.env.FAKE_AI_KEY': JSON.stringify("health-ai-fake-key-12345")
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      target: 'es2020',
-      supported: { bigint: true },
-      keepNames: true,
-      legalComments: 'none',
-      logLevel: 'error',
-      jsxFactory: 'React.createElement',
-      jsxFragment: 'React.Fragment',
-    },
-    force: true,
-    exclude: ['firebase']
-  },
   esbuild: {
     logOverride: { 
-      'this-is-undefined-in-esm': 'silent',
-      'unsupported-jsx-comment': 'silent',
-      'duplicate-case': 'silent',
+      'this-is-undefined-in-esm': 'silent'
     },
-    keepNames: true,
-    treeShaking: true,
-    legalComments: 'none',
-    target: 'es2020',
-    supported: { bigint: true }
+    keepNames: true
   }
 });
