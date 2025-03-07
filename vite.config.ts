@@ -1,6 +1,5 @@
-
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";  // This plugin should now be found
+import react from "@vitejs/plugin-react";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { fileURLToPath } from "url";
@@ -41,7 +40,6 @@ export default defineConfig({
     sourcemap: true,
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
-    // Add options to reduce memory usage during build
     minify: "esbuild",
     cssMinify: "lightningcss",
     rollupOptions: {
@@ -65,7 +63,7 @@ export default defineConfig({
     esbuildOptions: {
       target: 'es2020'
     },
-    force: true, // Force re-optimization to resolve dependency conflicts
-    exclude: ['firebase'], // Exclude firebase from optimization to reduce memory usage
+    force: true,
+    exclude: ['firebase']
   }
 });
