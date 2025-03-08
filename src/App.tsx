@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ import ConfirmationPage from "./pages/ConfirmationPage";
 import AIHealthChatPage from "./pages/AIHealthChatPage";
 
 // Import Firebase config
-import { auth } from "./lib/firebase-config";
+import { auth } from "./lib/firebase";
 
 const App: React.FC = () => {
   // ✅ Manage Language Selection

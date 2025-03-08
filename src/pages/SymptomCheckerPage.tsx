@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { db, auth } from "@/lib/firebase-config";
+import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "@/types/firebase";
 import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder";
 import { AppointmentDetails } from "@/components/symptom-checker/AppointmentDetails";
