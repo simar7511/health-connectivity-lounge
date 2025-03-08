@@ -5,7 +5,7 @@ import { getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { getMessaging, isSupported } from "firebase/messaging";
 
-// Firebase configuration using environment variables
+// Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,6 +16,17 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Log environment variables to debug (these will be redacted in production)
+console.log("Firebase Config Keys Available:", {
+  apiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: !!import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: !!import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: !!import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: !!import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: !!import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: !!import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+});
+
 // Declare Firebase services
 let db;
 let auth;
@@ -24,7 +35,7 @@ let messaging = null;
 try {
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  console.log("Firebase initialization started with config:", firebaseConfig);
+  console.log("Firebase initialization started");
   
   // Initialize services
   db = getFirestore(app);
@@ -47,7 +58,6 @@ try {
     });
 } catch (error) {
   console.error("❌ Firebase initialization error:", error);
-  console.error("Firebase config:", JSON.stringify(firebaseConfig, null, 2));
   
   // Show error toast
   toast({
