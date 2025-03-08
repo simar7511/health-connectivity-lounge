@@ -1,6 +1,5 @@
-
 import { initializeApp } from "firebase/app";
-import { getFirestore as firebaseGetFirestore } from "firebase/firestore";
+import { getFirestore } from "@/types/firebase";
 import { getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { getMessaging, isSupported } from "firebase/messaging";
@@ -30,7 +29,7 @@ try {
     console.log("✅ Firebase app initialized");
   }
 
-  db = firebaseGetFirestore(app);
+  db = getFirestore(app);
   auth = getAuth(app);
 
   // Initialize Firebase Cloud Messaging if supported

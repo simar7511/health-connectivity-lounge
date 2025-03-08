@@ -1,63 +1,64 @@
 
 // This file provides type definitions for Firebase
 import { 
-  collection as importCollection, 
-  getDocs as importGetDocs, 
-  query as importQuery, 
-  where as importWhere, 
-  orderBy as importOrderBy, 
-  limit as importLimit, 
-  Timestamp as ImportTimestamp,
-  addDoc as importAddDoc,
-  serverTimestamp as importServerTimestamp,
-  onSnapshot as importOnSnapshot,
-  getFirestore as importGetFirestore,
-  setLogLevel as importSetLogLevel,
-  DocumentData as ImportDocumentData
+  collection as firestoreCollection, 
+  getDocs as firestoreGetDocs, 
+  query as firestoreQuery, 
+  where as firestoreWhere, 
+  orderBy as firestoreOrderBy, 
+  limit as firestoreLimit, 
+  Timestamp as FirestoreTimestamp,
+  addDoc as firestoreAddDoc,
+  serverTimestamp as firestoreServerTimestamp,
+  onSnapshot as firestoreOnSnapshot,
+  getFirestore as firestoreGetFirestore,
+  setLogLevel as firestoreSetLogLevel,
+  DocumentData as FirestoreDocumentData
 } from 'firebase/firestore';
 
 import {
-  getAuth as importGetAuth,
-  onAuthStateChanged as importOnAuthStateChanged,
-  signInAnonymously as importSignInAnonymously,
-  signInWithPhoneNumber as importSignInWithPhoneNumber,
-  PhoneAuthProvider as ImportPhoneAuthProvider
+  getAuth as authGetAuth,
+  onAuthStateChanged as authOnAuthStateChanged,
+  signInAnonymously as authSignInAnonymously,
+  signInWithPhoneNumber as authSignInWithPhoneNumber,
+  PhoneAuthProvider as AuthPhoneAuthProvider
 } from 'firebase/auth';
 
 import {
-  getMessaging as importGetMessaging,
-  getToken as importGetToken,
-  onMessage as importOnMessage,
-  isSupported as importIsSupported
+  getMessaging as messagingGetMessaging,
+  getToken as messagingGetToken,
+  onMessage as messagingOnMessage,
+  isSupported as messagingIsSupported
 } from 'firebase/messaging';
 
-// Export non-type values
-export const collection = importCollection;
-export const getDocs = importGetDocs;
-export const query = importQuery;
-export const where = importWhere;
-export const orderBy = importOrderBy;
-export const limit = importLimit;
-export const Timestamp = ImportTimestamp;
-export const addDoc = importAddDoc;
-export const serverTimestamp = importServerTimestamp;
-export const onSnapshot = importOnSnapshot;
-export const getFirestore = importGetFirestore;
-export const setLogLevel = importSetLogLevel;
-export const DocumentData = ImportDocumentData;
+// Export types
+export type { DocumentData } from 'firebase/firestore';
+export type Timestamp = FirestoreTimestamp;
+
+// Export functions and values
+export const collection = firestoreCollection;
+export const getDocs = firestoreGetDocs;
+export const query = firestoreQuery;
+export const where = firestoreWhere;
+export const orderBy = firestoreOrderBy;
+export const limit = firestoreLimit;
+export const Timestamp = FirestoreTimestamp;
+export const addDoc = firestoreAddDoc;
+export const serverTimestamp = firestoreServerTimestamp;
+export const onSnapshot = firestoreOnSnapshot;
+export const getFirestore = firestoreGetFirestore;
+export const setLogLevel = firestoreSetLogLevel;
+export const DocumentData = FirestoreDocumentData;
 
 // Auth exports
-export const getAuth = importGetAuth;
-export const onAuthStateChanged = importOnAuthStateChanged;
-export const signInAnonymously = importSignInAnonymously;
-export const signInWithPhoneNumber = importSignInWithPhoneNumber;
-export const PhoneAuthProvider = ImportPhoneAuthProvider;
+export const getAuth = authGetAuth;
+export const onAuthStateChanged = authOnAuthStateChanged;
+export const signInAnonymously = authSignInAnonymously;
+export const signInWithPhoneNumber = authSignInWithPhoneNumber;
+export const PhoneAuthProvider = AuthPhoneAuthProvider;
 
 // Messaging exports
-export const getMessaging = importGetMessaging;
-export const getToken = importGetToken;
-export const onMessage = importOnMessage;
-export const isSupported = importIsSupported;
-
-// Export types separately
-export type { DocumentData } from 'firebase/firestore';
+export const getMessaging = messagingGetMessaging;
+export const getToken = messagingGetToken;
+export const onMessage = messagingOnMessage;
+export const isSupported = messagingIsSupported;

@@ -11,18 +11,18 @@ const __dirname = path.dirname(__filename);
 // Optimized configuration for faster development updates
 export default defineConfig({
   base: "/",
-  plugins: [react()], // Remove the fastRefresh option since it's not recognized
+  plugins: [react()],
   server: {
     port: 8080,
     host: true,
     strictPort: false,
     watch: {
-      usePolling: false, // Disable polling for better performance
-      ignored: ['**/node_modules/**', '**/dist/**'], // Ignore large directories
+      usePolling: false,
+      ignored: ['**/node_modules/**', '**/dist/**'],
     },
     hmr: {
       overlay: true,
-      timeout: 10000, // Increase timeout to 10 seconds
+      timeout: 10000,
     },
     allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com", "all"]
   },
@@ -31,10 +31,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src")
     }
   },
-  // Don't redefine environment variables, as this can cause issues
-  define: {
-    // Empty define block to avoid redefining env vars
-  },
+  // Ensure environment variables are properly handled
+  envPrefix: "VITE_",
   // Optimize build
   build: {
     target: 'esnext',

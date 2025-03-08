@@ -1,5 +1,5 @@
 
-import { Timestamp as FirestoreTimestamp } from "firebase/firestore";
+import { Timestamp } from "@/types/firebase";
 
 export interface IntakeFormSubmission {
   id: string;
@@ -14,7 +14,7 @@ export interface IntakeFormSubmission {
   hasInsurance: boolean | null;
   otherConcerns?: string;
   language: "en" | "es";
-  timestamp: FirestoreTimestamp;
+  timestamp: Timestamp;
   notificationType: "sms" | "whatsapp";
   userId: string;
 }

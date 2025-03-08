@@ -18,7 +18,8 @@ import {
   where, 
   orderBy, 
   limit, 
-  Timestamp 
+  Timestamp,
+  type Timestamp as TimestampType
 } from "@/types/firebase";
 
 interface ProviderDashboardProps {
@@ -80,7 +81,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const [currentLanguage, setCurrentLanguage] = useState(language);
   const [activeTab, setActiveTab] = useState("intake");
   const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
-  const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<typeof Timestamp | null>(null);
+  const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<TimestampType | null>(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
