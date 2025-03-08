@@ -1,11 +1,11 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "@/types/firebase";
+import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { getMessaging, isSupported } from "firebase/messaging";
 
-// Firebase configuration using environment variables from .env file
+// Firebase configuration using environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -22,39 +22,34 @@ let auth;
 let messaging = null;
 
 try {
-  // Initialize Firebase with minimal logging in production
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
+  console.log("Firebase initialization started with config:", firebaseConfig);
   
-  if (!isProduction) {
-    console.log("✅ Firebase app initialized");
-  }
-
+  // Initialize services
   db = getFirestore(app);
   auth = getAuth(app);
+  
+  console.log("✅ Firebase app and services initialized");
 
   // Initialize Firebase Cloud Messaging if supported
   isSupported()
     .then(supported => {
       if (supported) {
         messaging = getMessaging(app);
-        if (!isProduction) {
-          console.log("✅ Firebase Cloud Messaging initialized");
-        }
+        console.log("✅ Firebase Cloud Messaging initialized");
       } else {
-        console.log("❌ Firebase Cloud Messaging not supported in this environment");
+        console.log("ℹ️ Firebase Cloud Messaging not supported in this environment");
       }
     })
     .catch(error => {
       console.error("Error checking FCM support:", error);
     });
-  
-  // Add offline persistence capability for Firestore
-  // This allows the app to work offline with cached data
-  // Note: This is a simplified approach; for a real implementation,
-  // you would need to enable offline persistence with Firestore settings
 } catch (error) {
   console.error("❌ Firebase initialization error:", error);
+  console.error("Firebase config:", JSON.stringify(firebaseConfig, null, 2));
+  
+  // Show error toast
   toast({
     variant: "destructive",
     title: "Firebase Configuration Error",

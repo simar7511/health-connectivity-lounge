@@ -31,7 +31,7 @@ import {
   isSupported as messagingIsSupported
 } from 'firebase/messaging';
 
-// Export types
+// Export types - import as type to prevent using as value
 export type DocumentData = FirestoreDocumentDataType;
 export type Timestamp = FirestoreTimestamp;
 
@@ -42,7 +42,7 @@ export const query = firestoreQuery;
 export const where = firestoreWhere;
 export const orderBy = firestoreOrderBy;
 export const limit = firestoreLimit;
-export const Timestamp = FirestoreTimestamp; 
+export const Timestamp = FirestoreTimestamp;
 export const addDoc = firestoreAddDoc;
 export const serverTimestamp = firestoreServerTimestamp;
 export const onSnapshot = firestoreOnSnapshot;
