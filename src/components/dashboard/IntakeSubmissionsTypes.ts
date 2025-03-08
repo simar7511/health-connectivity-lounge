@@ -1,5 +1,5 @@
 
-import { Timestamp } from "@/types/firebase";
+import { type Timestamp } from "@/types/firebase";
 
 export interface IntakeFormSubmission {
   id: string;

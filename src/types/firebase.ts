@@ -13,7 +13,7 @@ import {
   onSnapshot as firestoreOnSnapshot,
   getFirestore as firestoreGetFirestore,
   setLogLevel as firestoreSetLogLevel,
-  DocumentData as FirestoreDocumentData
+  type DocumentData as FirestoreDocumentDataType
 } from 'firebase/firestore';
 
 import {
@@ -32,7 +32,7 @@ import {
 } from 'firebase/messaging';
 
 // Export types
-export type { DocumentData } from 'firebase/firestore';
+export type DocumentData = FirestoreDocumentDataType;
 export type Timestamp = FirestoreTimestamp;
 
 // Export functions and values
@@ -48,7 +48,6 @@ export const serverTimestamp = firestoreServerTimestamp;
 export const onSnapshot = firestoreOnSnapshot;
 export const getFirestore = firestoreGetFirestore;
 export const setLogLevel = firestoreSetLogLevel;
-export const DocumentData = FirestoreDocumentData;
 
 // Auth exports
 export const getAuth = authGetAuth;
