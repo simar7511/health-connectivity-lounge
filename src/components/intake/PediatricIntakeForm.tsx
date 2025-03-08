@@ -2,15 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { 
   collection, 
   addDoc, 
-  serverTimestamp, 
-  getAuth, 
+  serverTimestamp
+} from "firebase/firestore";
+import { 
   onAuthStateChanged, 
   signInAnonymously 
-} from "@/types/firebase";
+} from "firebase/auth";
 import { BasicInfoSection } from "./form-sections/BasicInfoSection";
 import { MedicalInfoSection } from "./form-sections/MedicalInfoSection";
 import { SocialInfoSection } from "./form-sections/SocialInfoSection";
@@ -33,23 +34,41 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [language, setLanguage] = useState(propLanguage);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const auth = getAuth();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-      } else {
-        try {
-          const result = await signInAnonymously(auth);
-          setCurrentUser(result.user);
-        } catch (error) {
-          console.error("Anonymous Sign-In Error:", error);
+    console.log("PediatricIntakeForm: Initializing auth state");
+    
+    try {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          console.log("User already signed in:", user.uid);
+          setCurrentUser(user);
+        } else {
+          console.log("No user, attempting anonymous sign-in");
+          try {
+            const result = await signInAnonymously(auth);
+            console.log("Anonymous sign-in successful:", result.user.uid);
+            setCurrentUser(result.user);
+          } catch (error) {
+            console.error("Anonymous Sign-In Error:", error);
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: "Unable to create temporary session. Please try again.",
+            });
+          }
         }
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+        setIsLoading(false);
+      });
+      
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error setting up auth listener:", error);
+      setIsLoading(false);
+      return () => {};
+    }
+  }, [toast]);
 
   const [formData, setFormData] = useState(() => ({
     childName: "",
@@ -210,6 +229,22 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   };
 
   const pageTitle = language === "en" ? "Pediatric Intake Form" : "Formulario de Admisión Pediátrica";
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-50 to-white">
+        <NavigationHeader 
+          title={pageTitle}
+          language={language}
+          showBackButton={true}
+          showBreadcrumbs={true}
+        />
+        <div className="container mx-auto flex items-center justify-center flex-1">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-50 to-white">

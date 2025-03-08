@@ -23,9 +23,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [initAttempted, setInitAttempted] = useState(false);
 
   useEffect(() => {
+    // Prevent multiple initialization attempts
+    if (initAttempted) return;
+    setInitAttempted(true);
+    
     console.log("AuthProvider: Initializing auth state listener");
+    
+    if (!auth) {
+      console.error("Auth is not available");
+      setError(new Error("Firebase authentication is not available"));
+      setLoading(false);
+      return () => {};
+    }
     
     try {
       const unsubscribe = onAuthStateChanged(
@@ -63,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return () => {};
     }
-  }, []);
+  }, [initAttempted]);
 
   const value = {
     currentUser,
