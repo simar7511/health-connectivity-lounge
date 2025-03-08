@@ -3,13 +3,15 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import checkEnvVars from "./env-checker.ts";
+
+// Check environment variables
+checkEnvVars();
 
 // Defer non-essential logging to not block rendering
 setTimeout(() => {
   console.log("Environment mode:", import.meta.env.MODE);
   console.log("Base URL:", import.meta.env.BASE_URL);
-  console.log("Firebase API Key available:", import.meta.env.VITE_FIREBASE_API_KEY ? "Yes" : "No");
-  console.log("Firebase Auth Domain available:", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? "Yes" : "No");
 }, 0);
 
 // Enhanced mounting logic with better error handling
