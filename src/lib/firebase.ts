@@ -1,3 +1,4 @@
+
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "@/types/firebase";
 import { getAuth } from "firebase/auth";
@@ -6,13 +7,13 @@ import { getMessaging, isSupported } from "firebase/messaging";
 
 // Firebase configuration using environment variables from .env file
 const firebaseConfig = {
-  apiKey: "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw",
-  authDomain: "health-connectivity-01.firebaseapp.com",
-  projectId: "health-connectivity-01",
-  storageBucket: "health-connectivity-01.appspot.com",
-  messagingSenderId: "429069343294",
-  appId: "1:429069343294:web:943a1998a83e63353c0f6f",
-  measurementId: "G-3BVWXWV69Q"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Declare Firebase services
