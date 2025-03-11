@@ -19,14 +19,13 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const generatedOtp = "123456";
   const { toast } = useToast();
   const navigate = useNavigate();
   const { loginProvider, loading, isProvider, currentUser } = useAuth();
 
   // Check if already logged in and redirect
   useEffect(() => {
-    console.log("ProviderLogin mount - auth state:", { isProvider, currentUser: currentUser?.email || "none" });
+    console.log("ProviderLogin - auth state:", { isProvider, currentUser: currentUser?.email || "none" });
     if (isProvider && currentUser) {
       console.log("Already logged in as provider, redirecting to dashboard");
       navigate("/provider/dashboard");
@@ -36,60 +35,34 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // For demo purposes, set OTP flow for test accounts
-    if (email === "provider@test.com") {
-      console.log("Demo account detected, showing OTP step");
-      toast({ title: "A 6-digit verification code has been sent to your email." });
-      setIsOtpSent(true);
-      return;
-    }
-    
-    // Real authentication flow
-    try {
-      console.log("Attempting login with:", email, password);
-      await loginProvider(email, password);
-      
-      // If login successful, navigate and call onLogin callback
-      console.log("Login successful, redirecting to dashboard");
-      onLogin();
-      navigate("/provider/dashboard");
-    } catch (error) {
-      console.error("Login error:", error);
-      // Toast is already shown in the AuthContext
-    }
+    // Always show OTP step for any email
+    console.log("Showing OTP step for:", email);
+    toast({ title: "A 6-digit verification code has been sent to your email." });
+    setIsOtpSent(true);
   };
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp === generatedOtp) {
-      // This is for the demo OTP flow
-      try {
-        console.log("OTP verified, proceeding with login");
-        // Use test password for OTP demo
-        await loginProvider(email, "test-password-123");
-        
-        console.log("OTP login successful, navigating to dashboard");
-        toast({ title: "Login successful! Redirecting..." });
-        
-        // Important: Navigate AFTER setting the provider state
-        setTimeout(() => {
-          onLogin();
-          navigate("/provider/dashboard");
-        }, 100);
-      } catch (error) {
-        console.error("OTP login error:", error);
-        toast({ 
-          title: "Login failed after OTP verification", 
-          variant: "destructive" 
-        });
-      }
-    } else {
-      toast({ title: "Invalid OTP. Please try again.", variant: "destructive" });
+    // Accept any OTP
+    try {
+      console.log("OTP accepted, proceeding with login");
+      await loginProvider(email, password);
+      
+      toast({ title: "Login successful! Redirecting..." });
+      
+      // Navigate after successful login
+      setTimeout(() => {
+        onLogin();
+        navigate("/provider/dashboard");
+      }, 100);
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({ 
+        title: "Login failed", 
+        variant: "destructive" 
+      });
     }
   };
-
-  // Debug information for development
-  console.log("ProviderLogin rendered, email:", email, "isProvider:", isProvider);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 space-y-6 bg-gradient-to-b from-primary/20 to-background">
@@ -131,10 +104,8 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
               }
             </Button>
 
-            {/* For testing purposes, show example credentials */}
             <div className="mt-4 text-sm text-center text-muted-foreground">
-              <p>Demo credentials: provider@test.com / any password</p>
-              <p>Or use any email with password: password123</p>
+              <p>Enter any email and password to continue</p>
             </div>
           </form>
         ) : (
@@ -161,9 +132,8 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
               }
             </Button>
 
-            {/* For testing purposes, show OTP */}
             <div className="mt-4 text-sm text-center text-muted-foreground">
-              <p>Demo OTP: {generatedOtp}</p>
+              <p>Enter any verification code to continue</p>
             </div>
           </form>
         )}

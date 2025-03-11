@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { User } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 
 // Create auth context
@@ -29,108 +28,46 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [initialized, setInitialized] = useState(false);
-  // Check localStorage first for isProvider status - this ensures we maintain state on refreshes
+  const [initialized, setInitialized] = useState(true);
+  // Check localStorage for isProvider status - this ensures we maintain state on refreshes
   const [isProvider, setIsProvider] = useState(() => localStorage.getItem('isProvider') === 'true');
 
   useEffect(() => {
-    console.log("AuthProvider: Setting up auth state listener");
-    console.log("Initial isProvider state:", isProvider);
-    let unsubscribe = () => {};
+    console.log("AuthProvider: Initial provider state:", isProvider);
     
-    // Check if auth is available first
-    if (!auth || typeof auth !== 'object' || !('onAuthStateChanged' in auth)) {
-      console.error("Firebase Auth is not properly initialized");
-      setError(new Error("Authentication service is currently unavailable"));
-      setLoading(false);
-      return unsubscribe;
+    // Check if we have a stored user in localStorage
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser) as User);
+      } catch (err) {
+        console.error("Error parsing stored user:", err);
+        localStorage.removeItem('currentUser');
+      }
     }
-    
-    try {
-      unsubscribe = onAuthStateChanged(
-        auth,
-        (user) => {
-          console.log("Auth state changed:", user ? `User logged in: ${user.email}` : "No user");
-          setCurrentUser(user);
-          
-          // Check localStorage first for provider status, which takes precedence
-          const storedIsProvider = localStorage.getItem('isProvider') === 'true';
-          
-          if (storedIsProvider) {
-            console.log("User is a provider (from localStorage)");
-            setIsProvider(true);
-          } else if (user && user.email) {
-            // If not in localStorage, check email domain
-            const isProviderUser = user.email.endsWith('@provider.com') || 
-                                 user.email.endsWith('@health.org') || 
-                                 user.email.endsWith('@clinic.com') ||
-                                 user.email.endsWith('@gmail.com') ||
-                                 user.email.endsWith('@yahoo.com') ||
-                                 user.email.endsWith('@outlook.com') ||
-                                 user.email.endsWith('@hotmail.com') ||
-                                 user.email === 'provider@test.com';
-            
-            console.log(`User is a provider based on email: ${isProviderUser}`);
-            setIsProvider(isProviderUser);
-            
-            if (isProviderUser) {
-              localStorage.setItem('isProvider', 'true');
-            }
-          } else {
-            // If no user or provider status, make sure we're not showing as provider
-            setIsProvider(false);
-          }
-          
-          // Log the current state for debugging
-          console.log("Auth state updated:", { 
-            user: user?.email || "none", 
-            isProvider: storedIsProvider || (user?.email ? "checking email" : false),
-            storedProvider: localStorage.getItem('isProvider')
-          });
-          
-          setLoading(false);
-          setInitialized(true);
-        },
-        (err) => {
-          console.error("Auth state error:", err);
-          setError(err);
-          setLoading(false);
-          
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "There was a problem with the authentication service.",
-          });
-        }
-      );
-    } catch (err) {
-      console.error("Failed to set up auth state listener:", err);
-      setError(err instanceof Error ? err : new Error(String(err)));
-      setLoading(false);
-      
-      toast({
-        variant: "destructive",
-        title: "Authentication Setup Error",
-        description: "Failed to initialize authentication services.",
-      });
-    }
-
-    // Cleanup subscription on unmount
-    return unsubscribe;
   }, []);
 
-  // Provider login function
+  // Provider login function - simplified to work without Firebase
   const loginProvider = async (email: string, password: string) => {
     try {
       setLoading(true);
-      console.log("Attempting provider login with:", email);
-      await signInWithEmailAndPassword(auth, email, password);
+      console.log("Logging in provider with:", email);
       
-      // For demo purposes, all users can log in as providers
-      // In a production app, you would use custom claims or a database check
-      console.log("Setting provider status in localStorage");
+      // Create a mock user object
+      const mockUser = {
+        uid: 'provider-' + Date.now(),
+        email: email,
+        displayName: email.split('@')[0],
+        emailVerified: true,
+      };
+      
+      // Store the user in state and localStorage
+      setCurrentUser(mockUser as unknown as User);
+      localStorage.setItem('currentUser', JSON.stringify(mockUser));
+      
+      // Set provider status
       localStorage.setItem('isProvider', 'true');
       setIsProvider(true);
       
@@ -156,8 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Logout function
   const logout = async () => {
     try {
-      await signOut(auth);
+      // Clear local storage and state
+      localStorage.removeItem('currentUser');
       localStorage.removeItem('isProvider');
+      setCurrentUser(null);
       setIsProvider(false);
       toast({
         title: "Logout Successful",
