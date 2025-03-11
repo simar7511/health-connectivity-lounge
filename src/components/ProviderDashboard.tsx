@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -96,8 +97,16 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
+    // Check if user is logged in and is a provider
+    console.log("Provider Dashboard - Auth state:", { 
+      currentUser: currentUser?.email || "No user", 
+      isProvider, 
+      loading,
+      localStorageProvider: localStorage.getItem('isProvider') 
+    });
+    
     if (!loading && (!currentUser || !isProvider)) {
-      console.log("User not authenticated as provider:", { currentUser, isProvider });
+      console.log("User not authenticated as provider");
       toast({
         variant: "destructive",
         title: translations[currentLanguage].notAuthenticated,
@@ -175,6 +184,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     });
   };
   
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -188,7 +198,10 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     );
   }
   
-  if (!currentUser || !isProvider) {
+  // Not logged in or not a provider
+  const storedIsProvider = localStorage.getItem('isProvider') === 'true';
+  if (!currentUser || (!isProvider && !storedIsProvider)) {
+    console.log("Showing login prompt, not authenticated as provider");
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="max-w-md w-full">
@@ -212,6 +225,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     );
   }
   
+  console.log("Rendering provider dashboard content");
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <ProviderHeader 

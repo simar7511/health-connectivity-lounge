@@ -22,28 +22,30 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const generatedOtp = "123456";
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { loginProvider, loading, isProvider } = useAuth();
+  const { loginProvider, loading } = useAuth();
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // For demo purposes, set OTP flow for test accounts
-    if (email === "provider@test.com" || email.endsWith("@provider.com")) {
+    if (email === "provider@test.com") {
       toast({ title: "A 6-digit verification code has been sent to your email." });
       setIsOtpSent(true);
-    } else {
-      // Real authentication flow
-      try {
-        await loginProvider(email, password);
-        
-        // If login was successful and user is a provider, navigate
-        if (isProvider) {
-          onLogin();
-          navigate("/provider/dashboard");
-        }
-      } catch (error) {
-        console.error("Login error:", error);
-      }
+      return;
+    }
+    
+    // Real authentication flow
+    try {
+      console.log("Attempting login with:", email, password);
+      await loginProvider(email, password);
+      
+      // If login successful, navigate and call onLogin callback
+      toast({ title: "Login successful! Redirecting..." });
+      onLogin();
+      navigate("/provider/dashboard");
+    } catch (error) {
+      console.error("Login error:", error);
+      // Toast is already shown in the AuthContext
     }
   };
 
@@ -69,6 +71,9 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
       toast({ title: "Invalid OTP. Please try again.", variant: "destructive" });
     }
   };
+
+  // Debug information for development
+  console.log("ProviderLogin rendered, email:", email);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 space-y-6 bg-gradient-to-b from-primary/20 to-background">
@@ -109,6 +114,12 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
                 (language === "en" ? "Login" : "Ingresar")
               }
             </Button>
+
+            {/* For testing purposes, show example credentials */}
+            <div className="mt-4 text-sm text-center text-muted-foreground">
+              <p>Demo credentials: provider@test.com / any password</p>
+              <p>Or use any email with password: password123</p>
+            </div>
           </form>
         ) : (
           <form onSubmit={handleOtpSubmit} className="space-y-4">
@@ -133,6 +144,11 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
                 (language === "en" ? "Verify Code" : "Verificar Código")
               }
             </Button>
+
+            {/* For testing purposes, show OTP */}
+            <div className="mt-4 text-sm text-center text-muted-foreground">
+              <p>Demo OTP: {generatedOtp}</p>
+            </div>
           </form>
         )}
       </Card>

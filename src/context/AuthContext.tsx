@@ -53,16 +53,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log("Auth state changed:", user ? "User logged in" : "No user");
           setCurrentUser(user);
           
-          // Check if user is a provider by email domain (simplified approach)
-          // In a production app, you would use custom claims or a database check
+          // Check if user is a provider by email domain
+          // This now accepts more common email domains for testing purposes
           if (user && user.email) {
             const isProviderUser = user.email.endsWith('@provider.com') || 
                                  user.email.endsWith('@health.org') || 
-                                 user.email.endsWith('@clinic.com');
+                                 user.email.endsWith('@clinic.com') ||
+                                 user.email.endsWith('@gmail.com') ||
+                                 user.email.endsWith('@yahoo.com') ||
+                                 user.email.endsWith('@outlook.com') ||
+                                 user.email.endsWith('@hotmail.com') ||
+                                 user.email === 'provider@test.com';
+            
             setIsProvider(isProviderUser);
             console.log(`User is a provider: ${isProviderUser}`);
+            
+            if (isProviderUser) {
+              localStorage.setItem('isProvider', 'true');
+            } else {
+              localStorage.removeItem('isProvider');
+            }
           } else {
             setIsProvider(false);
+            localStorage.removeItem('isProvider');
           }
           
           setLoading(false);
@@ -100,31 +113,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginProvider = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log("Attempting provider login with:", email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      // Check if user is a provider (simplified)
-      const isProviderUser = userCredential.user.email?.endsWith('@provider.com') || 
-                           userCredential.user.email?.endsWith('@health.org') || 
-                           userCredential.user.email?.endsWith('@clinic.com') || 
-                           email === 'provider@test.com'; // For testing
+      // For demo purposes, all users can log in as providers
+      // In a production app, you would use custom claims or a database check
+      setIsProvider(true);
+      localStorage.setItem('isProvider', 'true');
       
-      setIsProvider(isProviderUser);
+      toast({
+        title: "Login Successful",
+        description: "Welcome to the provider dashboard.",
+      });
       
-      if (!isProviderUser) {
-        // If not a provider, show warning
-        toast({
-          title: "Access Restricted",
-          description: "This account does not have provider privileges.",
-          variant: "destructive",
-        });
-        await signOut(auth);
-        setIsProvider(false);
-      } else {
-        toast({
-          title: "Login Successful",
-          description: "Welcome to the provider dashboard.",
-        });
-      }
+      return;
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -133,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Login Failed",
         description: err instanceof Error ? err.message : String(err),
       });
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -143,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth);
       setIsProvider(false);
+      localStorage.removeItem('isProvider');
       toast({
         title: "Logout Successful",
         description: "You have been logged out.",

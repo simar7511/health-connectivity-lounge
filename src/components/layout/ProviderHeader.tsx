@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Globe, LogOut, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface ProviderHeaderProps {
   language: "en" | "es";
@@ -10,6 +11,12 @@ interface ProviderHeaderProps {
 
 export const ProviderHeader = ({ language, onLanguageChange }: ProviderHeaderProps) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/provider/login");
+  };
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md">
@@ -37,7 +44,7 @@ export const ProviderHeader = ({ language, onLanguageChange }: ProviderHeaderPro
             <Button
               variant="ghost"
               className="text-primary-foreground hover:text-primary-foreground/80"
-              onClick={() => navigate("/provider/login")}
+              onClick={handleLogout}
             >
               <LogOut className="h-5 w-5 mr-2" />
               {language === "en" ? "Sign Out" : "Cerrar Sesión"}
