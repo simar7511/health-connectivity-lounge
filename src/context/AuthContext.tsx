@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, onAuthStateChanged } from "firebase/auth";
+import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "@/hooks/use-toast";
 
@@ -10,6 +10,9 @@ type AuthContextType = {
   loading: boolean;
   error: Error | null;
   initialized: boolean;
+  isProvider: boolean;
+  loginProvider: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,6 +20,9 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   error: null,
   initialized: false,
+  isProvider: false,
+  loginProvider: async () => {},
+  logout: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -26,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [initialized, setInitialized] = useState(false);
+  const [isProvider, setIsProvider] = useState(false);
 
   useEffect(() => {
     console.log("AuthProvider: Setting up auth state listener");
@@ -45,6 +52,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         (user) => {
           console.log("Auth state changed:", user ? "User logged in" : "No user");
           setCurrentUser(user);
+          
+          // Check if user is a provider by email domain (simplified approach)
+          // In a production app, you would use custom claims or a database check
+          if (user && user.email) {
+            const isProviderUser = user.email.endsWith('@provider.com') || 
+                                 user.email.endsWith('@health.org') || 
+                                 user.email.endsWith('@clinic.com');
+            setIsProvider(isProviderUser);
+            console.log(`User is a provider: ${isProviderUser}`);
+          } else {
+            setIsProvider(false);
+          }
+          
           setLoading(false);
           setInitialized(true);
         },
@@ -76,11 +96,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
+  // Provider login function
+  const loginProvider = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check if user is a provider (simplified)
+      const isProviderUser = userCredential.user.email?.endsWith('@provider.com') || 
+                           userCredential.user.email?.endsWith('@health.org') || 
+                           userCredential.user.email?.endsWith('@clinic.com') || 
+                           email === 'provider@test.com'; // For testing
+      
+      setIsProvider(isProviderUser);
+      
+      if (!isProviderUser) {
+        // If not a provider, show warning
+        toast({
+          title: "Access Restricted",
+          description: "This account does not have provider privileges.",
+          variant: "destructive",
+        });
+        await signOut(auth);
+        setIsProvider(false);
+      } else {
+        toast({
+          title: "Login Successful",
+          description: "Welcome to the provider dashboard.",
+        });
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Logout function
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setIsProvider(false);
+      toast({
+        title: "Logout Successful",
+        description: "You have been logged out.",
+      });
+    } catch (err) {
+      console.error("Logout error:", err);
+      toast({
+        variant: "destructive",
+        title: "Logout Failed",
+        description: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
+
   const value = {
     currentUser,
     loading,
     error,
     initialized,
+    isProvider,
+    loginProvider,
+    logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

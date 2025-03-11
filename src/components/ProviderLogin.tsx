@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Mail, Lock, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface ProviderLoginProps {
   language: "en" | "es";
@@ -21,19 +22,49 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const generatedOtp = "123456";
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { loginProvider, loading, isProvider } = useAuth();
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "A 6-digit verification code has been sent to your email." });
-    setIsOtpSent(true);
+    
+    // For demo purposes, set OTP flow for test accounts
+    if (email === "provider@test.com" || email.endsWith("@provider.com")) {
+      toast({ title: "A 6-digit verification code has been sent to your email." });
+      setIsOtpSent(true);
+    } else {
+      // Real authentication flow
+      try {
+        await loginProvider(email, password);
+        
+        // If login was successful and user is a provider, navigate
+        if (isProvider) {
+          onLogin();
+          navigate("/provider/dashboard");
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+      }
+    }
   };
 
-  const handleOtpSubmit = (e: React.FormEvent) => {
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp === generatedOtp) {
-      toast({ title: "Login successful! Redirecting..." });
-      onLogin();
-      navigate("/provider/dashboard");
+      // This is for the demo OTP flow
+      try {
+        // Use test password for OTP demo
+        await loginProvider(email, "test-password-123");
+        
+        toast({ title: "Login successful! Redirecting..." });
+        onLogin();
+        navigate("/provider/dashboard");
+      } catch (error) {
+        console.error("OTP login error:", error);
+        toast({ 
+          title: "Login failed after OTP verification", 
+          variant: "destructive" 
+        });
+      }
     } else {
       toast({ title: "Invalid OTP. Please try again.", variant: "destructive" });
     }
@@ -72,8 +103,11 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
               />
             </div>
 
-            <Button type="submit" className="w-full text-lg py-6">
-              {language === "en" ? "Login" : "Ingresar"}
+            <Button type="submit" className="w-full text-lg py-6" disabled={loading}>
+              {loading ? 
+                (language === "en" ? "Logging in..." : "Iniciando sesión...") : 
+                (language === "en" ? "Login" : "Ingresar")
+              }
             </Button>
           </form>
         ) : (
@@ -93,8 +127,11 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
               />
             </div>
 
-            <Button type="submit" className="w-full text-lg py-6">
-              {language === "en" ? "Verify Code" : "Verificar Código"}
+            <Button type="submit" className="w-full text-lg py-6" disabled={loading}>
+              {loading ? 
+                (language === "en" ? "Verifying..." : "Verificando...") : 
+                (language === "en" ? "Verify Code" : "Verificar Código")
+              }
             </Button>
           </form>
         )}

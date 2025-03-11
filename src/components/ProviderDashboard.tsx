@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -9,9 +8,12 @@ import { Patient } from "@/types/patient";
 import { ProviderHeader } from "./layout/ProviderHeader";
 import { ProviderFooter } from "./layout/ProviderFooter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ShieldAlert } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { db } from "@/lib/firebase";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
 import { 
   collection, 
   getDocs, 
@@ -62,6 +64,9 @@ const translations = {
     newSubmissionsMessage: "You have received new intake form submissions that need your attention.",
     viewAll: "View All",
     lastUpdated: "Last updated",
+    notAuthenticated: "Not Authenticated",
+    notAuthenticatedMessage: "You need to log in as a provider to access this dashboard.",
+    loginAsProvider: "Login as Provider",
   },
   es: {
     dashboard: "Panel del Proveedor",
@@ -74,16 +79,32 @@ const translations = {
     newSubmissionsMessage: "Ha recibido nuevos envíos de formularios de admisión que requieren su atención.",
     viewAll: "Ver Todos",
     lastUpdated: "Última actualización",
+    notAuthenticated: "No Autenticado",
+    notAuthenticatedMessage: "Necesita iniciar sesión como proveedor para acceder a este panel.",
+    loginAsProvider: "Iniciar Sesión como Proveedor",
   }
 };
 
 const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { currentUser, isProvider, loading } = useAuth();
   const [currentLanguage, setCurrentLanguage] = useState(language);
   const [activeTab, setActiveTab] = useState("intake");
   const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
   const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<TimestampType | null>(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  useEffect(() => {
+    if (!loading && (!currentUser || !isProvider)) {
+      console.log("User not authenticated as provider:", { currentUser, isProvider });
+      toast({
+        variant: "destructive",
+        title: translations[currentLanguage].notAuthenticated,
+        description: translations[currentLanguage].notAuthenticatedMessage,
+      });
+    }
+  }, [currentUser, isProvider, loading, currentLanguage, toast]);
 
   useEffect(() => {
     if (!lastCheckedTimestamp) {
@@ -153,6 +174,43 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       minute: '2-digit'
     });
   };
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-medium">
+            {currentLanguage === "en" ? "Loading..." : "Cargando..."}
+          </h2>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!currentUser || !isProvider) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="max-w-md w-full">
+          <Alert className="bg-yellow-50 border-yellow-200 mb-6">
+            <ShieldAlert className="h-5 w-5 text-yellow-600" />
+            <AlertTitle className="text-yellow-800">
+              {translations[currentLanguage].notAuthenticated}
+            </AlertTitle>
+            <AlertDescription className="text-yellow-700 mb-4">
+              {translations[currentLanguage].notAuthenticatedMessage}
+            </AlertDescription>
+            <Button 
+              onClick={() => navigate("/provider/login")}
+              className="w-full"
+            >
+              {translations[currentLanguage].loginAsProvider}
+            </Button>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
