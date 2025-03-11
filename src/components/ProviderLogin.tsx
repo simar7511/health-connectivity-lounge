@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -22,13 +22,23 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const generatedOtp = "123456";
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { loginProvider, loading } = useAuth();
+  const { loginProvider, loading, isProvider, currentUser } = useAuth();
+
+  // Check if already logged in and redirect
+  useEffect(() => {
+    console.log("ProviderLogin mount - auth state:", { isProvider, currentUser: currentUser?.email || "none" });
+    if (isProvider && currentUser) {
+      console.log("Already logged in as provider, redirecting to dashboard");
+      navigate("/provider/dashboard");
+    }
+  }, [isProvider, currentUser, navigate]);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // For demo purposes, set OTP flow for test accounts
     if (email === "provider@test.com") {
+      console.log("Demo account detected, showing OTP step");
       toast({ title: "A 6-digit verification code has been sent to your email." });
       setIsOtpSent(true);
       return;
@@ -40,7 +50,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
       await loginProvider(email, password);
       
       // If login successful, navigate and call onLogin callback
-      toast({ title: "Login successful! Redirecting..." });
+      console.log("Login successful, redirecting to dashboard");
       onLogin();
       navigate("/provider/dashboard");
     } catch (error) {
@@ -54,12 +64,18 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
     if (otp === generatedOtp) {
       // This is for the demo OTP flow
       try {
+        console.log("OTP verified, proceeding with login");
         // Use test password for OTP demo
         await loginProvider(email, "test-password-123");
         
+        console.log("OTP login successful, navigating to dashboard");
         toast({ title: "Login successful! Redirecting..." });
-        onLogin();
-        navigate("/provider/dashboard");
+        
+        // Important: Navigate AFTER setting the provider state
+        setTimeout(() => {
+          onLogin();
+          navigate("/provider/dashboard");
+        }, 100);
       } catch (error) {
         console.error("OTP login error:", error);
         toast({ 
@@ -73,7 +89,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   };
 
   // Debug information for development
-  console.log("ProviderLogin rendered, email:", email);
+  console.log("ProviderLogin rendered, email:", email, "isProvider:", isProvider);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 space-y-6 bg-gradient-to-b from-primary/20 to-background">
@@ -126,7 +142,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
             <div className="relative">
               <ShieldCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               <Input
-                type="password"
+                type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder={language === "en" ? "Enter your verification code" : "Ingrese su código de verificación"}

@@ -11,9 +11,10 @@ interface ProviderHeaderProps {
 
 export const ProviderHeader = ({ language, onLanguageChange }: ProviderHeaderProps) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, currentUser } = useAuth();
 
   const handleLogout = async () => {
+    console.log("Logging out user:", currentUser?.email);
     await logout();
     navigate("/provider/login");
   };

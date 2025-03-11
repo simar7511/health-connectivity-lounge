@@ -32,10 +32,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [initialized, setInitialized] = useState(false);
-  const [isProvider, setIsProvider] = useState(false);
+  // Check localStorage first for isProvider status - this ensures we maintain state on refreshes
+  const [isProvider, setIsProvider] = useState(() => localStorage.getItem('isProvider') === 'true');
 
   useEffect(() => {
     console.log("AuthProvider: Setting up auth state listener");
+    console.log("Initial isProvider state:", isProvider);
     let unsubscribe = () => {};
     
     // Check if auth is available first
@@ -50,12 +52,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       unsubscribe = onAuthStateChanged(
         auth,
         (user) => {
-          console.log("Auth state changed:", user ? "User logged in" : "No user");
+          console.log("Auth state changed:", user ? `User logged in: ${user.email}` : "No user");
           setCurrentUser(user);
           
-          // Check if user is a provider by email domain
-          // This now accepts more common email domains for testing purposes
-          if (user && user.email) {
+          // Check localStorage first for provider status, which takes precedence
+          const storedIsProvider = localStorage.getItem('isProvider') === 'true';
+          
+          if (storedIsProvider) {
+            console.log("User is a provider (from localStorage)");
+            setIsProvider(true);
+          } else if (user && user.email) {
+            // If not in localStorage, check email domain
             const isProviderUser = user.email.endsWith('@provider.com') || 
                                  user.email.endsWith('@health.org') || 
                                  user.email.endsWith('@clinic.com') ||
@@ -65,18 +72,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                  user.email.endsWith('@hotmail.com') ||
                                  user.email === 'provider@test.com';
             
+            console.log(`User is a provider based on email: ${isProviderUser}`);
             setIsProvider(isProviderUser);
-            console.log(`User is a provider: ${isProviderUser}`);
             
             if (isProviderUser) {
               localStorage.setItem('isProvider', 'true');
-            } else {
-              localStorage.removeItem('isProvider');
             }
           } else {
+            // If no user or provider status, make sure we're not showing as provider
             setIsProvider(false);
-            localStorage.removeItem('isProvider');
           }
+          
+          // Log the current state for debugging
+          console.log("Auth state updated:", { 
+            user: user?.email || "none", 
+            isProvider: storedIsProvider || (user?.email ? "checking email" : false),
+            storedProvider: localStorage.getItem('isProvider')
+          });
           
           setLoading(false);
           setInitialized(true);
@@ -114,19 +126,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       console.log("Attempting provider login with:", email);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       
       // For demo purposes, all users can log in as providers
       // In a production app, you would use custom claims or a database check
-      setIsProvider(true);
+      console.log("Setting provider status in localStorage");
       localStorage.setItem('isProvider', 'true');
+      setIsProvider(true);
       
       toast({
         title: "Login Successful",
         description: "Welcome to the provider dashboard.",
       });
       
-      return;
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -145,8 +157,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       await signOut(auth);
-      setIsProvider(false);
       localStorage.removeItem('isProvider');
+      setIsProvider(false);
       toast({
         title: "Logout Successful",
         description: "You have been logged out.",
@@ -170,6 +182,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loginProvider,
     logout
   };
+
+  console.log("AuthContext providing value:", { 
+    currentUser: currentUser?.email || null, 
+    isProvider,
+    loading,
+    initialized
+  });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
