@@ -32,7 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<Error | null>(null);
   const [initialized, setInitialized] = useState(true);
   // Check localStorage for isProvider status - this ensures we maintain state on refreshes
-  const [isProvider, setIsProvider] = useState(() => localStorage.getItem('isProvider') === 'true');
+  const [isProvider, setIsProvider] = useState(() => {
+    const storedValue = localStorage.getItem('isProvider');
+    console.log("Initial provider state from localStorage:", storedValue);
+    return storedValue === 'true';
+  });
 
   useEffect(() => {
     console.log("AuthProvider: Initial provider state:", isProvider);
@@ -41,7 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       try {
-        setCurrentUser(JSON.parse(storedUser) as User);
+        const parsedUser = JSON.parse(storedUser) as User;
+        console.log("Restored user from localStorage:", parsedUser.email);
+        setCurrentUser(parsedUser);
       } catch (err) {
         console.error("Error parsing stored user:", err);
         localStorage.removeItem('currentUser');
@@ -67,9 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(mockUser as unknown as User);
       localStorage.setItem('currentUser', JSON.stringify(mockUser));
       
-      // Set provider status
-      localStorage.setItem('isProvider', 'true');
+      // Set provider status in both state and localStorage
       setIsProvider(true);
+      localStorage.setItem('isProvider', 'true');
+      
+      console.log("Provider login successful:", { email, isProvider: true });
       
       toast({
         title: "Login Successful",
@@ -98,6 +106,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('isProvider');
       setCurrentUser(null);
       setIsProvider(false);
+      
+      console.log("User logged out successfully");
+      
       toast({
         title: "Logout Successful",
         description: "You have been logged out.",

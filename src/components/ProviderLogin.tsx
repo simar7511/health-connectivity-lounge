@@ -35,7 +35,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Always show OTP step for any email
+    // Accept any email/password and show OTP step
     console.log("Showing OTP step for:", email);
     toast({ title: "A 6-digit verification code has been sent to your email." });
     setIsOtpSent(true);
@@ -43,23 +43,33 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Accept any OTP
+    
     try {
       console.log("OTP accepted, proceeding with login");
+      
+      // Simulate a successful login with any OTP
       await loginProvider(email, password);
       
-      toast({ title: "Login successful! Redirecting..." });
+      toast({ 
+        title: "Login successful!", 
+        description: "Redirecting to dashboard..." 
+      });
       
-      // Navigate after successful login
+      // Call onLogin callback
+      onLogin();
+      
+      // Force navigation to dashboard with a slight delay to allow state to update
       setTimeout(() => {
-        onLogin();
-        navigate("/provider/dashboard");
-      }, 100);
+        console.log("Navigating to dashboard after OTP verification");
+        navigate("/provider/dashboard", { replace: true });
+      }, 500);
+      
     } catch (error) {
       console.error("Login error:", error);
       toast({ 
         title: "Login failed", 
-        variant: "destructive" 
+        variant: "destructive",
+        description: "Please try again."
       });
     }
   };
