@@ -1,27 +1,28 @@
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
-// Absolute minimal configuration to prevent restart issues
+// Ultra minimal configuration to prevent restart issues
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 8080,
-    hmr: {
-      // Disable WebSocket connection attempts that might be causing issues
-      protocol: 'ws',
-      host: 'localhost',
-      port: 8080
+    port: 3000, // Changed from 8080 to avoid potential conflicts
+    host: true,
+    hmr: false // Disable HMR completely to prevent WebSocket connection issues
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src")
     }
   },
-  // Disable watching for changes in node_modules
-  optimizeDeps: {
-    exclude: ['node_modules/**']
-  },
-  // Use simpler source maps in development
+  // Use direct cache strategy for better stability
+  cacheDir: ".vite_stable_cache",
+  // Disable watch for improved stability
+  clearScreen: false,
   build: {
-    sourcemap: 'inline',
-    // Disable watching for file changes during build
-    watch: null
+    // Simplify source maps
+    sourcemap: true,
+    minify: false
   }
 });
