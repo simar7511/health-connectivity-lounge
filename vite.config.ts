@@ -8,22 +8,31 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Optimized configuration for faster development updates
+// Optimized configuration for faster development updates and better stability
 export default defineConfig({
   base: "/",
-  plugins: [react()],
+  plugins: [
+    react({
+      // Improve React refresh stability
+      fastRefresh: true,
+    }),
+  ],
   server: {
     port: 8080,
     host: true,
     strictPort: false,
     watch: {
-      usePolling: false,
-      ignored: ['**/node_modules/**', '**/dist/**'],
+      usePolling: true, // Enable polling for more reliable file watching
+      interval: 1000, // Check for file changes every second
+      ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
     },
     hmr: {
       overlay: true,
-      timeout: 10000,
+      timeout: 30000, // Increase timeout to 30 seconds
+      clientPort: 8080, // Ensure client port matches server port
+      protocol: 'ws', // Use websocket protocol
     },
+    middlewareMode: false, // Disable middleware mode for better stability
     allowedHosts: ["958bb7b1-eb32-49bb-9d2f-ce3e8224ab61.lovableproject.com", "all"]
   },
   resolve: {
@@ -50,6 +59,9 @@ export default defineConfig({
   // Optimize dependency optimization
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', 'firebase/app', 'firebase/auth', 'firebase/firestore'],
-    exclude: []
+    exclude: [],
+    esbuildOptions: {
+      target: 'esnext', // Ensure compatibility with modern browsers
+    }
   }
 });

@@ -4,9 +4,16 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import checkEnvVars from "./env-checker.ts";
+import { checkDevServerConnection, setupErrorMonitoring } from "./utils/devServerUtils.ts";
 
 // Check environment variables
 checkEnvVars();
+
+// Setup development server monitoring in dev mode
+if (import.meta.env.DEV) {
+  checkDevServerConnection();
+  setupErrorMonitoring();
+}
 
 // Defer non-essential logging to not block rendering
 setTimeout(() => {
