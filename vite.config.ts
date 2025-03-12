@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Extremely simplified configuration for stability
+// Simple configuration with only critical options
 export default defineConfig({
   plugins: [react()],
   server: {
