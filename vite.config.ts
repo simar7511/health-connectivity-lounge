@@ -4,11 +4,11 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Basic setup for dirname in ESM
+// Get dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Simple configuration with only critical options
+// Minimal configuration with optimized settings for stability
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -19,5 +19,12 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src")
     }
+  },
+  optimizeDeps: {
+    force: true
+  },
+  build: {
+    sourcemap: true,
+    outDir: "dist"
   }
 });

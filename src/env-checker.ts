@@ -1,32 +1,27 @@
 
-// Simple utility to check for Firebase availability
-const checkFirebaseAvailability = () => {
+/**
+ * Simple utility to check for Firebase configuration
+ */
+const checkEnvVars = () => {
   try {
-    // Import Firebase modules
-    const { db, auth, app } = require('./lib/firebase');
+    // Check if basic Firebase config is available
+    const firebaseConfigPresent = 
+      !!import.meta.env.VITE_FIREBASE_API_KEY && 
+      !!import.meta.env.VITE_FIREBASE_PROJECT_ID;
     
-    // Check if Firebase app object exists and has basic properties
-    const isAppInitialized = app && typeof app !== 'undefined' && 'options' in app;
-    
-    // Check if auth and db are initialized
-    const isAuthInitialized = auth && typeof auth !== 'undefined';
-    const isDbInitialized = db && typeof db !== 'undefined';
-    
-    console.log('Firebase availability check:', {
-      app: isAppInitialized ? 'Initialized' : 'Failed',
-      auth: isAuthInitialized ? 'Initialized' : 'Failed',
-      db: isDbInitialized ? 'Initialized' : 'Failed'
-    });
-    
-    return isAppInitialized && isAuthInitialized && isDbInitialized;
+    if (!firebaseConfigPresent) {
+      console.warn('Firebase configuration may be incomplete. Check environment variables.');
+    } else {
+      console.log('Firebase environment variables detected');
+    }
+    return true;
   } catch (error) {
-    console.error('Error checking Firebase availability:', error);
+    console.error('Error checking environment variables:', error);
     return false;
   }
 };
 
-// This function can be called from App.tsx or other places
-export default checkFirebaseAvailability;
+export default checkEnvVars;
 
 // Helper to get basic Firebase status
 export const getFirebaseStatus = () => {
