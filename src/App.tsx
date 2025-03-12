@@ -85,6 +85,11 @@ const App: React.FC = () => {
     console.log("Proceeding to next step");
   };
 
+  // Determine if the user is already logged in as a provider
+  const isProviderLoggedIn = () => {
+    return localStorage.getItem('isProvider') === 'true' && localStorage.getItem('currentUser') !== null;
+  };
+
   // Show a loading state while initializing
   if (initializing) {
     return (
@@ -148,7 +153,9 @@ const App: React.FC = () => {
           <Route path="/transportation" element={<TransportationPage language={language} onProceed={handleProceed} />} />
 
           {/* 🏥 Provider Flow */}
-          <Route path="/provider/login" element={<ProviderLogin language={language} onLogin={() => {}} />} />
+          <Route path="/provider/login" element={
+            isProviderLoggedIn() ? <Navigate to="/provider/dashboard" replace /> : <ProviderLogin language={language} onLogin={() => {}} />
+          } />
           <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
 
           {/* 📂 Additional Pages */}

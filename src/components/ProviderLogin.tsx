@@ -50,19 +50,25 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
       // Simulate a successful login with any OTP
       await loginProvider(email, password);
       
+      // Call onLogin callback
+      onLogin();
+      
+      // Force navigation to provider dashboard
+      console.log("Navigating to dashboard after OTP verification");
+      
       toast({ 
         title: "Login successful!", 
         description: "Redirecting to dashboard..." 
       });
       
-      // Call onLogin callback
-      onLogin();
+      // Ensure the authentication state is updated in localStorage before navigating
+      localStorage.setItem('isProvider', 'true');
       
-      // Force navigation to dashboard with a slight delay to allow state to update
+      // Use a delay to ensure all state updates have completed
       setTimeout(() => {
-        console.log("Navigating to dashboard after OTP verification");
-        navigate("/provider/dashboard", { replace: true });
-      }, 500);
+        console.log("Redirecting to /provider/dashboard");
+        window.location.href = "/provider/dashboard";
+      }, 1000);
       
     } catch (error) {
       console.error("Login error:", error);

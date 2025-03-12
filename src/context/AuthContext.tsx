@@ -48,6 +48,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsedUser = JSON.parse(storedUser) as User;
         console.log("Restored user from localStorage:", parsedUser.email);
         setCurrentUser(parsedUser);
+        
+        // Ensure isProvider state is sync with localStorage
+        const storedIsProvider = localStorage.getItem('isProvider') === 'true';
+        if (storedIsProvider !== isProvider) {
+          console.log("Syncing isProvider state with localStorage:", storedIsProvider);
+          setIsProvider(storedIsProvider);
+        }
       } catch (err) {
         console.error("Error parsing stored user:", err);
         localStorage.removeItem('currentUser');
