@@ -59,6 +59,10 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
         description: "Redirecting to dashboard..." 
       });
       
+      // Ensure localStorage is set before navigation
+      localStorage.setItem('isProvider', 'true');
+      localStorage.setItem('currentUser', JSON.stringify({ email }));
+      
       console.log("Navigating to provider dashboard");
       navigate("/provider/dashboard", { replace: true });
       

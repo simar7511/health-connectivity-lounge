@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog, Bot } from "lucide-react";
@@ -63,6 +62,13 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
     },
   };
 
+  // Function to handle navigation to the pediatric intake form
+  const handleGetStarted = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default behavior
+    console.log("Navigating to pediatric intake form");
+    navigate("/pediatric-intake");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* Language Switcher */}
@@ -109,7 +115,7 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
           </div>
         </div>
 
-        {/* AI Health Assistant Button - Removed pulse animation class */}
+        {/* AI Health Assistant Button */}
         <div className="flex justify-center mb-6">
           <Button
             onClick={() => navigate("/ai-chat")}
@@ -155,7 +161,7 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
 
             <div className="space-y-4">
               <Button
-                onClick={() => navigate("/pediatric-intake")}
+                onClick={handleGetStarted}
                 className="w-full py-6 text-lg bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2"
               >
                 {content[language].getStarted}

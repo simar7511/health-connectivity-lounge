@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
 import ProviderLogin from "@/components/ProviderLogin";
@@ -8,6 +8,8 @@ import TransportationPage from "@/pages/TransportationPage";
 import PatientDashboard from "@/components/PatientDashboard";
 import ProviderDashboard from "@/components/ProviderDashboard";
 import { NavigationHeader } from "@/components/layout/NavigationHeader";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 // Define possible states
 type LoginState =
@@ -23,9 +25,39 @@ type LoginState =
 const Index = () => {
   const [language, setLanguage] = useState<"en" | "es">("en");
   const [loginState, setLoginState] = useState<LoginState>("select");
+  const navigate = useNavigate();
+  const { isProvider, currentUser } = useAuth();
+
+  // Check if the user is already logged in
+  useEffect(() => {
+    console.log("Index: Checking login state", { isProvider, currentUser });
+    if (isProvider && currentUser) {
+      console.log("Provider is logged in, redirecting to dashboard");
+      navigate("/provider/dashboard", { replace: true });
+    }
+  }, [isProvider, currentUser, navigate]);
+
+  // Set language preference from storage
+  useEffect(() => {
+    const savedLanguage = sessionStorage.getItem("preferredLanguage") as "en" | "es" | null;
+    if (savedLanguage) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
 
   const toggleLanguage = () => {
-    setLanguage((prev) => (prev === "en" ? "es" : "en"));
+    const newLanguage = language === "en" ? "es" : "en";
+    setLanguage(newLanguage);
+    sessionStorage.setItem("preferredLanguage", newLanguage);
+  };
+
+  // Navigation handlers
+  const handlePatientLoginSubmit = () => {
+    navigate("/pediatric-intake");
+  };
+
+  const handleProviderLoginSubmit = () => {
+    navigate("/provider/dashboard");
   };
 
   // Get the title based on current state
@@ -58,9 +90,9 @@ const Index = () => {
       case "select":
         return <LoginSelector language={language} onLanguageChange={toggleLanguage} />;
       case "patient":
-        return <PatientLogin language={language} onBack={() => setLoginState("select")} onLogin={() => setLoginState("appointment")} />;
+        return <PatientLogin language={language} onBack={() => setLoginState("select")} onLogin={handlePatientLoginSubmit} />;
       case "provider":
-        return <ProviderLogin language={language} onBack={() => setLoginState("select")} onLogin={() => setLoginState("provider-dashboard")} />;
+        return <ProviderLogin language={language} onBack={() => setLoginState("select")} onLogin={handleProviderLoginSubmit} />;
       case "appointment":
         return <AppointmentPage language={language} onProceed={() => setLoginState("symptoms")} />;
       case "symptoms":

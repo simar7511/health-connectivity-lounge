@@ -40,21 +40,25 @@ const PatientLogin: React.FC<PatientLoginProps> = ({ language, onBack, onLogin }
 
     // Store language preference in sessionStorage before async operation
     sessionStorage.setItem("preferredLanguage", language);
+    // Store patient phone in localStorage for future reference
+    localStorage.setItem("patientPhone", formattedPhone);
 
     setIsLoading(true);
     try {
-      // For now, proceed with navigation even if Firebase auth isn't ready
-      // This ensures users can still access the form
+      console.log("Patient login successful, navigating to intake form");
       toast({ 
         title: language === "en" ? "Proceeding to Intake Form" : "Continuando al Formulario de Ingreso"
       });
 
-      onLogin(); // Call onLogin callback if needed
-      navigate("/pediatric-intake");
+      // Call onLogin callback if needed
+      onLogin();
+      
+      // Use React Router navigation with replace to prevent back navigation issues
+      navigate("/pediatric-intake", { replace: true });
     } catch (error) {
       console.error("❌ Error during login:", error);
       // Even if there's an error, we'll still redirect to the intake form
-      navigate("/pediatric-intake");
+      navigate("/pediatric-intake", { replace: true });
     } finally {
       setIsLoading(false);
     }

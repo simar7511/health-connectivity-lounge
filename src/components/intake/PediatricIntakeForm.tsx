@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { ConfidentialityNotice } from "./components/ConfidentialityNotice";
 import { SubmitButton } from "./components/SubmitButton";
 import { notifyProviders, estimateUrgency } from "@/utils/providerNotifications";
+import { logNavigationAttempt } from "@/utils/navigationService";
 import { Hospital } from "lucide-react";
 import { NavigationHeader } from "@/components/layout/NavigationHeader";
 
@@ -28,6 +30,9 @@ interface PediatricIntakeFormProps {
 }
 
 const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProps) => {
+  // Log that we've reached this component
+  console.log("PediatricIntakeForm component mounted");
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMounted = useRef(true);
@@ -66,6 +71,11 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     } catch (error) {
       console.error("Error setting up auth listener:", error);
       setIsLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "There was a problem with authentication. You can still fill out the form.",
+      });
       return () => {};
     }
   }, [toast]);
@@ -129,17 +139,6 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!currentUser) {
-      toast({
-        title: language === "en" ? "Authentication Required" : "Autenticación Requerida",
-        description: language === "en"
-          ? "You must be signed in to submit this form."
-          : "Debe iniciar sesión para enviar este formulario.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!formData.consentToTreatment) {
       toast({
         title: language === "en" ? "Consent Required" : "Se requiere consentimiento",
@@ -155,12 +154,15 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     try {
       console.log("Submitting intake form to Firestore - pediatricIntake collection");
       
-      const docRef = await addDoc(collection(db, "pediatricIntake"), {
+      // Try to use current user if available, otherwise proceed without userId
+      const formDataToSubmit = {
         ...formData,
-        userId: currentUser.uid,
+        userId: currentUser?.uid || 'anonymous',
         timestamp: serverTimestamp(),
         language,
-      });
+      };
+      
+      const docRef = await addDoc(collection(db, "pediatricIntake"), formDataToSubmit);
 
       console.log(`Form submitted successfully with ID: ${docRef.id}`);
 
@@ -197,6 +199,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         });
       }
 
+      // Reset form data
       setFormData({
         childName: "",
         dob: "",
@@ -214,7 +217,11 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         consentToTreatment: false,
       });
 
-      navigate("/confirmation");
+      // Log navigation attempt before navigating
+      logNavigationAttempt("PediatricIntakeForm", "Confirmation");
+      
+      // Navigate to confirmation page using React Router
+      navigate("/confirmation", { replace: true });
 
     } catch (error: any) {
       console.error("Error submitting form:", error);
