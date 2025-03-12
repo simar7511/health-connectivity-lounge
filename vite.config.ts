@@ -3,14 +3,15 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// Use a simple, minimal configuration to avoid service crashes
+// Simplified configuration for better stability
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 8080,         // As required in project instructions
-    open: false,        // Don't open browser automatically
+    port: 8080,
+    open: false,
     hmr: {
-      overlay: false    // Disable HMR overlay which can cause issues
+      overlay: false,
+      timeout: 60000  // Increased timeout for slower environments
     }
   },
   resolve: {
@@ -20,13 +21,20 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    minify: "esbuild",
-    target: "es2015"
+    minify: false,  // Disable minification for more stable builds
+    target: "es2018"  // Use a more compatible target
   },
   optimizeDeps: {
-    entries: ["src/main.tsx"],
+    force: true,  // Force dependency pre-bundling
     esbuildOptions: {
-      target: "es2015"
+      target: "es2018",
+      supported: { 
+        'top-level-await': true 
+      },
+      loglevel: 'error'
     }
+  },
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
   }
 });
