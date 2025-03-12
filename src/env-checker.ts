@@ -2,40 +2,30 @@
 /**
  * Simple utility to check environment variables
  */
-const checkEnvVars = () => {
-  // Basic check for essential Firebase configuration
-  const requiredEnvVars = [
+export const checkEnvVars = () => {
+  // Check for essential Firebase configuration
+  const requiredVars = [
     'VITE_FIREBASE_API_KEY',
     'VITE_FIREBASE_AUTH_DOMAIN',
     'VITE_FIREBASE_PROJECT_ID'
   ];
   
-  const missingVars = requiredEnvVars.filter(
+  const missingVars = requiredVars.filter(
     varName => !import.meta.env[varName]
   );
   
   if (missingVars.length > 0) {
     console.warn(`Missing environment variables: ${missingVars.join(', ')}`);
-    return false;
+    return {
+      valid: false,
+      missing: missingVars
+    };
   }
   
-  return true;
+  return {
+    valid: true,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID
+  };
 };
 
 export default checkEnvVars;
-
-// Basic Firebase status helper
-export const getFirebaseStatus = () => {
-  try {
-    return { 
-      initialized: true, 
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'Unknown'
-    };
-  } catch (error) {
-    console.error('Error checking Firebase status:', error);
-    return { 
-      initialized: false, 
-      projectId: 'Unknown'
-    };
-  }
-};
