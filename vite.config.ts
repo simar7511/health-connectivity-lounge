@@ -13,8 +13,7 @@ export default defineConfig({
   base: "/",
   plugins: [
     react({
-      // Improve React refresh stability
-      fastRefresh: true,
+      // Remove the fastRefresh property as it's not supported
     }),
   ],
   server: {

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
@@ -9,17 +8,19 @@ import { checkDevServerConnection, setupErrorMonitoring } from "./utils/devServe
 // Check environment variables
 checkEnvVars();
 
-// Setup development server monitoring in dev mode
+// Setup development server monitoring in dev mode with slight delay to avoid concurrency issues
 if (import.meta.env.DEV) {
-  checkDevServerConnection();
-  setupErrorMonitoring();
+  setTimeout(() => {
+    checkDevServerConnection();
+    setupErrorMonitoring();
+  }, 100);
 }
 
 // Defer non-essential logging to not block rendering
 setTimeout(() => {
   console.log("Environment mode:", import.meta.env.MODE);
   console.log("Base URL:", import.meta.env.BASE_URL);
-}, 0);
+}, 100);
 
 // Enhanced mounting logic with better error handling
 const rootElement = document.getElementById("root");
@@ -29,21 +30,14 @@ if (rootElement) {
   try {
     const root = createRoot(rootElement);
     
-    // Use a non-blocking render that doesn't block the main thread as much
-    setTimeout(() => {
-      root.render(
-        // Remove StrictMode in development to prevent double-mounting
-        import.meta.env.PROD ? (
-          <React.StrictMode>
-            <App />
-          </React.StrictMode>
-        ) : (
-          <App />
-        )
-      );
-      console.timeEnd('App Mount');
-      console.log("React application mounted successfully");
-    }, 0);
+    // Remove the non-blocking render that was causing issues
+    root.render(
+      // Simplified rendering to improve stability
+      <App />
+    );
+    
+    console.timeEnd('App Mount');
+    console.log("React application mounted successfully");
     
   } catch (error) {
     console.error("Failed to mount React application:", error);
