@@ -6,8 +6,11 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 8080,
-    host: true
+    port: 5173,         // Using a different port to avoid conflicts
+    strictPort: true,   // Prevent port conflicts
+    hmr: {
+      timeout: 5000     // Increase HMR timeout
+    }
   },
   resolve: {
     alias: {
@@ -15,8 +18,13 @@ export default defineConfig({
     }
   },
   build: {
-    // Simplify build process
     sourcemap: true,
-    minify: false
-  }
+    minify: false,
+    chunkSizeWarningLimit: 1000
+  },
+  optimizeDeps: {
+    force: true     // Force dependency pre-bundling
+  },
+  // Using a simple, stable cache directory
+  cacheDir: "node_modules/.vite"
 });
