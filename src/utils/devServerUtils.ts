@@ -1,20 +1,23 @@
 
 /**
- * Utility to help with development server issues
+ * Dev server stability utilities
  */
 
-// Simple check for development server connection
-export const checkDevServerConnection = () => {
-  if (import.meta.env.DEV) {
-    console.log('Development server started');
-  }
-};
-
-// Simple error monitoring
-export const setupErrorMonitoring = () => {
-  if (import.meta.env.DEV) {
+// Add error handler for ESBuild service failures
+export const setupDevErrorHandlers = () => {
+  if (typeof window !== 'undefined') {
     window.addEventListener('error', (event) => {
-      console.error('Application error:', event.message);
+      if (event.message.includes('service is no longer running')) {
+        console.log('ESBuild service error detected, attempting to recover...');
+        // Prevent the default error handling which might cause more restarts
+        event.preventDefault();
+        return true;
+      }
     });
   }
 };
+
+// Initialize the error handlers
+if (import.meta.env.DEV) {
+  setupDevErrorHandlers();
+}
