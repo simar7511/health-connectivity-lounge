@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { toast } from "@/hooks/use-toast";
 
 // Import Authentication Provider
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Import Pages & Components
 import Index from "./pages/Index";
@@ -26,6 +26,24 @@ import AIHealthChatPage from "./pages/AIHealthChatPage";
 
 // Import Firebase config
 import { auth, db } from "./lib/firebase";
+
+// Protected Route component to handle auth checks
+const ProtectedRoute = ({ children, requiredAuth = true, providerOnly = false }) => {
+  const { currentUser, isProvider } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (requiredAuth && !currentUser) {
+      // Not logged in, redirect to login
+      navigate('/');
+    } else if (providerOnly && !isProvider) {
+      // Not a provider, redirect to login
+      navigate('/provider/login');
+    }
+  }, [currentUser, isProvider, navigate, requiredAuth, providerOnly]);
+  
+  return children;
+};
 
 const App: React.FC = () => {
   // ✅ Manage Language Selection
@@ -156,7 +174,11 @@ const App: React.FC = () => {
           <Route path="/provider/login" element={
             isProviderLoggedIn() ? <Navigate to="/provider/dashboard" replace /> : <ProviderLogin language={language} onLogin={() => {}} />
           } />
-          <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
+          <Route path="/provider/dashboard" element={
+            <ProtectedRoute providerOnly={true}>
+              <ProviderDashboard language={language} />
+            </ProtectedRoute>
+          } />
 
           {/* 📂 Additional Pages */}
           <Route path="/patient/:patientId" element={<PatientOverviewPage />} />

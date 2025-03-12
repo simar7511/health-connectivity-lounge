@@ -28,7 +28,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
     console.log("ProviderLogin - auth state:", { isProvider, currentUser: currentUser?.email || "none" });
     if (isProvider && currentUser) {
       console.log("Already logged in as provider, redirecting to dashboard");
-      navigate("/provider/dashboard");
+      navigate("/provider/dashboard", { replace: true });
     }
   }, [isProvider, currentUser, navigate]);
 
@@ -53,22 +53,14 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
       // Call onLogin callback
       onLogin();
       
-      // Force navigation to provider dashboard
-      console.log("Navigating to dashboard after OTP verification");
-      
+      // Use React Router navigation instead of window.location for proper SPA behavior
       toast({ 
         title: "Login successful!", 
         description: "Redirecting to dashboard..." 
       });
       
-      // Ensure the authentication state is updated in localStorage before navigating
-      localStorage.setItem('isProvider', 'true');
-      
-      // Use a delay to ensure all state updates have completed
-      setTimeout(() => {
-        console.log("Redirecting to /provider/dashboard");
-        window.location.href = "/provider/dashboard";
-      }, 1000);
+      console.log("Navigating to provider dashboard");
+      navigate("/provider/dashboard", { replace: true });
       
     } catch (error) {
       console.error("Login error:", error);
