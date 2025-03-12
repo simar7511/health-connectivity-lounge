@@ -31,7 +31,7 @@ export default defineConfig({
       supported: { 
         'top-level-await': true 
       },
-      loglevel: 'error'
+      logLevel: 'error'  // Fixed: changed 'loglevel' to 'logLevel' with capital 'L'
     }
   },
   esbuild: {
