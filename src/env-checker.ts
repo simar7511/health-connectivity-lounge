@@ -1,9 +1,9 @@
 
 /**
- * Enhanced utility to check environment variables
+ * Simple utility to check environment variables
  */
 const checkEnvVars = () => {
-  // Check for essential Firebase configuration
+  // Basic check for essential Firebase configuration
   const requiredEnvVars = [
     'VITE_FIREBASE_API_KEY',
     'VITE_FIREBASE_AUTH_DOMAIN',
@@ -24,21 +24,18 @@ const checkEnvVars = () => {
 
 export default checkEnvVars;
 
-// Enhanced Firebase status helper with error handling
+// Basic Firebase status helper
 export const getFirebaseStatus = () => {
   try {
     return { 
       initialized: true, 
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'Unknown',
-      environment: import.meta.env.DEV ? 'development' : 'production'
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'Unknown'
     };
   } catch (error) {
     console.error('Error checking Firebase status:', error);
     return { 
       initialized: false, 
-      projectId: 'Unknown',
-      environment: 'unknown',
-      error: error instanceof Error ? error.message : String(error)
+      projectId: 'Unknown'
     };
   }
 };
