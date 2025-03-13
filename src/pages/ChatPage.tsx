@@ -4,17 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { Send, UserCircle2 } from "lucide-react";
+import { Send, UserCircle2, Paperclip, LayoutSidebar, X } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { NavigationHeader } from "@/components/layout/NavigationHeader";
-
-interface Message {
-  id: string;
-  content: string;
-  sender: "user" | "provider";
-  timestamp: Date;
-}
+import { DocumentPreview } from "@/components/messages/DocumentPreview";
+import { 
+  Message, 
+  Conversation,
+  loadConversations, 
+  addMessage, 
+  getConversationByPatientName, 
+  markConversationAsRead, 
+  initializeMessageStore
+} from "@/utils/messageStore";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface LocationState {
   initialMessage?: string;
@@ -28,62 +33,121 @@ const mockRecipients = [
 export const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [showAttachments, setShowAttachments] = useState(false);
+  const [hasAttachments, setHasAttachments] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { patientName } = useParams();
   const location = useLocation();
   const state = location.state as LocationState;
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [language, setLanguage] = useState<"en" | "es">("en");
+  const [language, setLanguage] = useState<"en" | "es">(() => {
+    return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Initialize message store
+  useEffect(() => {
+    initializeMessageStore();
+  }, []);
+
+  // Load conversation for the selected patient
+  useEffect(() => {
+    const loadConversation = async () => {
+      if (patientName) {
+        // Mark the conversation as read when opened
+        await markConversationAsRead(patientName);
+        
+        // Load conversation
+        const conversation = await getConversationByPatientName(patientName);
+        if (conversation) {
+          setMessages(conversation.messages);
+          // Check if there are any messages with attachments
+          setHasAttachments(conversation.messages.some(msg => msg.attachments && msg.attachments.length > 0));
+        } else {
+          setMessages([]);
+          setHasAttachments(false);
+        }
+      }
+    };
+    
+    loadConversation();
+  }, [patientName]);
+
+  // Handle auto-scrolling when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  // Handle initial message from state
   useEffect(() => {
-    if (state?.initialMessage) {
-      const message: Message = {
-        id: Date.now().toString(),
-        content: state.initialMessage,
-        sender: "provider",
-        timestamp: new Date(),
+    if (state?.initialMessage && patientName) {
+      const handleInitialMessage = async () => {
+        const newMsg: Omit<Message, 'id'> = {
+          content: state.initialMessage as string,
+          sender: "provider",
+          timestamp: new Date(),
+        };
+        
+        await addMessage(patientName, newMsg);
+        
+        // Reload the conversation to get the updated messages
+        const conversation = await getConversationByPatientName(patientName);
+        if (conversation) {
+          setMessages(conversation.messages);
+        }
+        
+        // Clear the state
+        window.history.replaceState({}, document.title);
       };
-      setMessages(prev => [...prev, message]);
-      window.history.replaceState({}, document.title);
+      
+      handleInitialMessage();
     }
-  }, [state?.initialMessage]);
+  }, [state?.initialMessage, patientName]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !patientName) return;
 
-    const message: Message = {
-      id: Date.now().toString(),
+    const message: Omit<Message, 'id'> = {
       content: newMessage,
-      sender: "user",
+      sender: "provider",
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, message]);
+    // Add message to store
+    await addMessage(patientName, message);
+    
+    // Reload the conversation
+    const conversation = await getConversationByPatientName(patientName);
+    if (conversation) {
+      setMessages(conversation.messages);
+    }
+    
     setNewMessage("");
   };
 
   const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(language === "en" ? "en-US" : "es-ES", {
       hour: "numeric",
       minute: "numeric",
     }).format(date);
   };
 
+  // If we're not on a specific patient's chat, show the patient selection screen
   const pageTitle = patientName 
     ? patientName 
     : language === "en" 
       ? "Select Patient" 
       : "Seleccionar Paciente";
+
+  // Get all attachments from all messages for the current patient
+  const allAttachments = messages
+    .filter(message => message.attachments && message.attachments.length > 0)
+    .flatMap(message => message.attachments || []);
 
   if (!patientName) {
     return (
@@ -120,46 +184,106 @@ export const ChatPage = () => {
         language={language}
       />
 
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.sender === "user" ? "justify-end" : "justify-start"
-              } animate-fade-in`}
-            >
-              <div
-                className={`max-w-[80%] p-4 rounded-lg shadow-sm ${
-                  message.sender === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
-              >
-                <p className="whitespace-pre-wrap text-sm">{message.content}</p>
-                <p className="text-xs mt-2 opacity-70">
-                  {formatTime(message.timestamp)}
-                </p>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+      <div className="flex-1 flex overflow-hidden">
+        <ResizablePanelGroup direction="horizontal" className="w-full">
+          <ResizablePanel defaultSize={showAttachments ? 65 : 100} minSize={50}>
+            <div className="flex flex-col h-full">
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${
+                        message.sender === "provider" ? "justify-end" : "justify-start"
+                      } animate-fade-in`}
+                    >
+                      <div
+                        className={`max-w-[80%] p-4 rounded-lg shadow-sm ${
+                          message.sender === "provider"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        {message.metadata?.title && message.sender === "user" && (
+                          <div className="mb-2">
+                            <Badge variant="outline" className="bg-background/50 mb-1">
+                              {message.metadata.title}
+                            </Badge>
+                          </div>
+                        )}
+                        
+                        <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                        
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-background/20">
+                            {message.attachments.map((attachment) => (
+                              <Badge 
+                                key={attachment.id} 
+                                variant="outline" 
+                                className="bg-background/30 mr-2 cursor-pointer"
+                                onClick={() => setShowAttachments(true)}
+                              >
+                                <Paperclip className="h-3 w-3 mr-1" />
+                                {attachment.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <p className="text-xs mt-2 opacity-70">
+                          {formatTime(message.timestamp)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
 
-      <form onSubmit={handleSendMessage} className="p-4 border-t bg-background">
-        <div className="flex gap-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1"
-          />
-          <Button type="submit" className="shrink-0">
-            <Send className="h-5 w-5" />
-          </Button>
-        </div>
-      </form>
+              <form onSubmit={handleSendMessage} className="p-4 border-t bg-background">
+                <div className="flex gap-2">
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1"
+                  />
+                  {hasAttachments && (
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => setShowAttachments(!showAttachments)}
+                      className="shrink-0"
+                    >
+                      {showAttachments ? (
+                        <X className="h-5 w-5" />
+                      ) : (
+                        <LayoutSidebar className="h-5 w-5" />
+                      )}
+                    </Button>
+                  )}
+                  <Button type="submit" className="shrink-0">
+                    <Send className="h-5 w-5" />
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </ResizablePanel>
+          
+          {showAttachments && (
+            <>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={35} minSize={30}>
+                <DocumentPreview 
+                  attachments={allAttachments}
+                  onClose={() => setShowAttachments(false)}
+                  language={language}
+                />
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
+      </div>
     </div>
   );
 };

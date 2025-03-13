@@ -1,9 +1,11 @@
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Circle, Bot } from "lucide-react";
+import { MessageSquare, Circle, Bot, Paperclip } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { loadConversations, Conversation, initializeMessageStore } from "@/utils/messageStore";
+import { Badge } from "@/components/ui/badge";
 
 interface MessagingInboxProps {
   language: "en" | "es";
@@ -16,22 +18,49 @@ const content = {
     chat: "Secure Chat",
     aiChat: "AI Health Assistant (GPT-4)",
     unread: "unread messages",
+    noMessages: "No messages",
+    attachment: "attachment",
+    attachments: "attachments"
   },
   es: {
     title: "Mensajes Seguros",
     chat: "Chat Seguro",
     aiChat: "Asistente de Salud IA (GPT-4)",
     unread: "mensajes sin leer",
+    noMessages: "No hay mensajes",
+    attachment: "archivo adjunto",
+    attachments: "archivos adjuntos"
   },
 };
 
-const mockMessages = [
-  { id: 1, unread: true, from: "Maria Garcia", preview: "Lab results attached" },
-  { id: 2, unread: true, from: "John Smith", preview: "Follow-up question" },
-];
-
-export const MessagingInbox = ({ language }: MessagingInboxProps) => {
+export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) => {
   const navigate = useNavigate();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+
+  useEffect(() => {
+    // Initialize the message store and load conversations
+    const loadData = async () => {
+      await initializeMessageStore();
+      const loadedConversations = await loadConversations();
+      setConversations(loadedConversations);
+    };
+    
+    loadData();
+  }, []);
+
+  const formatTime = (date: Date) => {
+    return new Intl.DateTimeFormat(language === "en" ? "en-US" : "es-ES", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+    }).format(date);
+  };
+
+  const getAttachmentCountText = (count: number) => {
+    if (count === 0) return "";
+    return `${count} ${count === 1 ? content[language].attachment : content[language].attachments}`;
+  };
 
   return (
     <Card>
@@ -64,25 +93,62 @@ export const MessagingInbox = ({ language }: MessagingInboxProps) => {
           </div>
           
           <div className="space-y-2">
-            {mockMessages.map((message) => (
-              <div
-                key={message.id}
-                className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                onClick={() => navigate(`/chat/${message.from}`)}
-              >
-                <div className="flex items-start gap-2">
-                  {message.unread && (
-                    <Circle className="h-2 w-2 mt-2 fill-blue-500 text-blue-500" />
-                  )}
-                  <div>
-                    <p className="font-medium">{message.from}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {message.preview}
-                    </p>
+            {conversations.length > 0 ? (
+              conversations.map((conversation) => {
+                // Get the latest message
+                const latestMessage = conversation.messages[conversation.messages.length - 1];
+                // Count attachments across all messages
+                const attachmentCount = conversation.messages.reduce(
+                  (count, msg) => count + (msg.attachments?.length || 0), 
+                  0
+                );
+                
+                return (
+                  <div
+                    key={conversation.id}
+                    className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                    onClick={() => navigate(`/chat/${conversation.patientName}`)}
+                  >
+                    <div className="flex items-start gap-2">
+                      {conversation.unread && (
+                        <Circle className="h-2 w-2 mt-2 fill-blue-500 text-blue-500 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <p className="font-medium">{conversation.patientName}</p>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTime(conversation.lastUpdated)}
+                          </span>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground truncate">
+                          {latestMessage.content}
+                        </p>
+                        
+                        <div className="flex items-center gap-2 mt-1">
+                          {latestMessage.metadata?.title && (
+                            <Badge variant="outline" className="text-xs">
+                              {latestMessage.metadata.title}
+                            </Badge>
+                          )}
+                          
+                          {attachmentCount > 0 && (
+                            <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                              <Paperclip className="h-3 w-3" />
+                              {getAttachmentCountText(attachmentCount)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                );
+              })
+            ) : (
+              <div className="p-8 text-center text-muted-foreground">
+                {content[language].noMessages}
               </div>
-            ))}
+            )}
           </div>
         </div>
       </CardContent>
