@@ -1,6 +1,5 @@
-
 import React from "react";
-import { X, Download, FileText, FileImage, Pill, Flask, File } from "lucide-react";
+import { X, Download, FileText, FileImage, Pill, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +43,7 @@ const translations = {
 };
 
 const typeIcons = {
-  lab_result: <Flask className="h-4 w-4" />,
+  lab_result: <FileText className="h-4 w-4" />,
   prescription: <Pill className="h-4 w-4" />,
   image: <FileImage className="h-4 w-4" />,
   document: <File className="h-4 w-4" />

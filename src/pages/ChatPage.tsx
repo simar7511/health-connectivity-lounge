@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { Send, UserCircle2, Paperclip, LayoutSidebar, X } from "lucide-react";
+import { Send, UserCircle2, Paperclip, PanelRight, X } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -258,7 +257,7 @@ export const ChatPage = () => {
                       {showAttachments ? (
                         <X className="h-5 w-5" />
                       ) : (
-                        <LayoutSidebar className="h-5 w-5" />
+                        <PanelRight className="h-5 w-5" />
                       )}
                     </Button>
                   )}
