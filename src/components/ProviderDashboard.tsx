@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -105,7 +104,11 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       localStorageProvider: localStorage.getItem('isProvider') 
     });
     
-    if (!loading && (!currentUser || !isProvider)) {
+    // Use localStorage as a fallback
+    const storedIsProvider = localStorage.getItem('isProvider') === 'true';
+    const storedUser = localStorage.getItem('currentUser');
+    
+    if (!loading && (!currentUser && !storedUser) && (!isProvider && !storedIsProvider)) {
       console.log("User not authenticated as provider");
       toast({
         variant: "destructive",
@@ -198,9 +201,11 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     );
   }
   
-  // Not logged in or not a provider
+  // Not logged in or not a provider - check both context and localStorage for authentication
   const storedIsProvider = localStorage.getItem('isProvider') === 'true';
-  if (!currentUser || (!isProvider && !storedIsProvider)) {
+  const storedUser = localStorage.getItem('currentUser') !== null;
+  
+  if ((!currentUser && !storedUser) || (!isProvider && !storedIsProvider)) {
     console.log("Showing login prompt, not authenticated as provider");
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">

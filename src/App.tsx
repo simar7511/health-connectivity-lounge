@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,22 +9,22 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Import Pages & Components
 import Index from "./pages/Index";
-import ProviderLogin from "./components/ProviderLogin";
-import ProviderDashboard from "./components/ProviderDashboard";
-import PatientLogin from "./components/PatientLogin";
-import PatientDashboard from "./components/PatientDashboard";
-import PediatricIntakeForm from "./components/intake/PediatricIntakeForm";
-import AppointmentPage from "./pages/AppointmentPage";
-import AppointmentConfirmationPage from "./pages/AppointmentConfirmationPage";
-import TransportationPage from "./pages/TransportationPage";
-import ClinicLocatorPage from "./pages/ClinicLocatorPage";
-import PatientOverviewPage from "./pages/PatientOverviewPage";
-import { ChatPage } from "./pages/ChatPage";
-import ConfirmationPage from "./pages/ConfirmationPage";
-import AIHealthChatPage from "./pages/AIHealthChatPage";
+import ProviderLogin from "@/components/ProviderLogin";
+import ProviderDashboard from "@/components/ProviderDashboard";
+import PatientLogin from "@/components/PatientLogin";
+import PatientDashboard from "@/components/PatientDashboard";
+import PediatricIntakeForm from "@/components/intake/PediatricIntakeForm";
+import AppointmentPage from "@/pages/AppointmentPage";
+import AppointmentConfirmationPage from "@/pages/AppointmentConfirmationPage";
+import TransportationPage from "@/pages/TransportationPage";
+import ClinicLocatorPage from "@/pages/ClinicLocatorPage";
+import PatientOverviewPage from "@/pages/PatientOverviewPage";
+import { ChatPage } from "@/pages/ChatPage";
+import ConfirmationPage from "@/pages/ConfirmationPage";
+import AIHealthChatPage from "@/pages/AIHealthChatPage";
 
 // Import Firebase config
-import { auth, db } from "./lib/firebase";
+import { auth, db } from "@/lib/firebase";
 
 // Protected Route component to handle auth checks
 const ProtectedRoute = ({ children, requiredAuth = true, providerOnly = false }) => {
@@ -33,11 +32,17 @@ const ProtectedRoute = ({ children, requiredAuth = true, providerOnly = false })
   const navigate = useNavigate();
   
   useEffect(() => {
-    if (requiredAuth && !currentUser) {
+    // Check localStorage as a fallback for provider status
+    const isProviderInStorage = localStorage.getItem('isProvider') === 'true';
+    const hasUserInStorage = localStorage.getItem('currentUser') !== null;
+    
+    if (requiredAuth && !currentUser && !hasUserInStorage) {
       // Not logged in, redirect to login
+      console.log("Not authenticated, redirecting to home");
       navigate('/');
-    } else if (providerOnly && !isProvider) {
+    } else if (providerOnly && !isProvider && !isProviderInStorage) {
       // Not a provider, redirect to login
+      console.log("Not a provider, redirecting to provider login");
       navigate('/provider/login');
     }
   }, [currentUser, isProvider, navigate, requiredAuth, providerOnly]);

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -21,16 +21,7 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { loginProvider, loading, isProvider, currentUser } = useAuth();
-
-  // Check if already logged in and redirect
-  useEffect(() => {
-    console.log("ProviderLogin - auth state:", { isProvider, currentUser: currentUser?.email || "none" });
-    if (isProvider && currentUser) {
-      console.log("Already logged in as provider, redirecting to dashboard");
-      navigate("/provider/dashboard", { replace: true });
-    }
-  }, [isProvider, currentUser, navigate]);
+  const { loginProvider, loading } = useAuth();
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,10 +49,6 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
         title: "Login successful!", 
         description: "Redirecting to dashboard..." 
       });
-      
-      // Ensure localStorage is set before navigation
-      localStorage.setItem('isProvider', 'true');
-      localStorage.setItem('currentUser', JSON.stringify({ email }));
       
       console.log("Navigating to provider dashboard");
       navigate("/provider/dashboard", { replace: true });
