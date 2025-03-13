@@ -36,6 +36,11 @@ const ProtectedRoute = ({ children, requiredAuth = true, providerOnly = false })
     const isProviderInStorage = localStorage.getItem('isProvider') === 'true';
     const hasUserInStorage = localStorage.getItem('currentUser') !== null;
     
+    // For provider dashboard specifically, we'll let the component handle authentication
+    if (window.location.pathname === '/provider/dashboard') {
+      return;
+    }
+    
     if (requiredAuth && !currentUser && !hasUserInStorage) {
       // Not logged in, redirect to login
       console.log("Not authenticated, redirecting to home");
@@ -179,11 +184,7 @@ const App: React.FC = () => {
           <Route path="/provider/login" element={
             isProviderLoggedIn() ? <Navigate to="/provider/dashboard" replace /> : <ProviderLogin language={language} onLogin={() => {}} />
           } />
-          <Route path="/provider/dashboard" element={
-            <ProtectedRoute providerOnly={true}>
-              <ProviderDashboard language={language} />
-            </ProtectedRoute>
-          } />
+          <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
 
           {/* 📂 Additional Pages */}
           <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
