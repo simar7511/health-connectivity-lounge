@@ -295,3 +295,6 @@ To ensure the effective deployment and sustainability of our virtual pediatric, 
 - Greater Columbia Accountable Community of Health (GCACH): integrating the virtual clinic into existing rural healthcare networks, Medicaid-funded programs, and community health efforts in Adams County
 - East Adams Rural Healthcare (EARH): validating the workflows and accuracy of AI diagnose
 - Adams County schools, churches, and community centers: teaching patients how to access the virtual clinic. Improving accessibility
+
+## Contributor
+- Simardeep Kaur - Frontend and Backend Development of prototype, research develpopment. 
