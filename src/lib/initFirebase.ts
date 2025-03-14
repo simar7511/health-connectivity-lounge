@@ -9,6 +9,13 @@ import { getStorage } from "firebase/storage";
  */
 export const initializeFirebase = () => {
   try {
+    // Log environment variables to help with debugging
+    console.log("Firebase config check:", {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? "Present" : "Missing",
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? "Present" : "Missing",
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? "Present" : "Missing"
+    });
+
     const firebaseConfig = {
       apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
       authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -24,7 +31,7 @@ export const initializeFirebase = () => {
     const db = getFirestore(app);
     const storage = getStorage(app);
     
-    console.log("Firebase initialized");
+    console.log("Firebase initialized successfully");
     
     return { 
       initialized: true, 
