@@ -9,8 +9,10 @@ import TransportationPage from "@/pages/TransportationPage";
 import PatientDashboard from "@/components/PatientDashboard";
 import ProviderDashboard from "@/components/ProviderDashboard";
 import { NavigationHeader } from "@/components/layout/NavigationHeader";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { ensureHomepageStart } from "@/utils/navigationService";
 
 // Define possible states
 type LoginState =
@@ -30,31 +32,32 @@ const Index = () => {
   
   const [loginState, setLoginState] = useState<LoginState>("select");
   const navigate = useNavigate();
-  const { isProvider, currentUser } = useAuth();
+  const location = useLocation();
+  const { isProvider, currentUser, logout } = useAuth();
 
-  // Check if we should restore session and redirect
+  // On first page load, ensure we're on the welcome page
   useEffect(() => {
-    const shouldRestoreSession = localStorage.getItem('restoreSession') === 'true';
-    
-    if (shouldRestoreSession) {
-      console.log("Index: Checking login state", { isProvider, currentUser });
+    // Clear any previous session data to ensure welcome page is shown
+    if (location.pathname === "/" || location.pathname === "") {
+      localStorage.removeItem('restoreSession');
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('isProvider');
       
-      // If user is logged in as provider, redirect to provider dashboard
-      if (isProvider && currentUser) {
-        console.log("Provider is logged in, redirecting to dashboard");
-        navigate("/provider/dashboard", { replace: true });
-      }
+      // Log out any current user to ensure clean state
+      logout().catch(err => {
+        console.error("Error logging out:", err);
+      });
       
-      // If user is logged in as patient but not provider, redirect to patient dashboard
-      else if (currentUser && !isProvider) {
-        console.log("Patient is logged in, redirecting to dashboard");
-        navigate("/patient/dashboard", { replace: true });
-      }
-    } else {
       // Reset to welcome page
       setLoginState("select");
+      
+      toast({
+        title: "Welcome to Health Connectivity",
+        description: "Please select a login method to continue.",
+        duration: 3000,
+      });
     }
-  }, [isProvider, currentUser, navigate]);
+  }, [location.pathname, logout]);
 
   // Set language preference from storage
   useEffect(() => {

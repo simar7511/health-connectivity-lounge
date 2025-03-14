@@ -42,25 +42,32 @@ export const navigateAfterLogout = (navigate: any) => {
   navigate("/");
 };
 
-// Ensure the application always starts at the homepage
+// Force the application to start at the homepage
 export const ensureHomepageStart = () => {
-  // Check if this is the first page load of the session
-  const isFirstPageLoad = !sessionStorage.getItem('appInitialized');
+  // For Lovable compatibility, always ensure we start at homepage
+  console.log('Ensuring app starts at homepage');
   
-  if (isFirstPageLoad) {
-    // Mark that the app has been initialized this session
-    sessionStorage.setItem('appInitialized', 'true');
-    
-    // Clear session restoration flag to ensure we start at welcome page
-    localStorage.removeItem('restoreSession');
-    
-    // If we're not already on the homepage, redirect there
-    if (window.location.pathname !== '/' && window.location.pathname !== '/index') {
-      console.log('First page load detected, redirecting to homepage');
-      window.location.href = '/';
-      return true;
-    }
+  // Clear any stored authentication state
+  localStorage.removeItem('restoreSession');
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('isProvider');
+  
+  // If we're not already on the homepage, redirect there
+  if (window.location.pathname !== '/' && window.location.pathname !== '/index') {
+    console.log('Redirecting to homepage');
+    window.location.href = '/';
+    return true;
   }
   
+  return false;
+};
+
+// Helper function to detect first-time visits
+export const isFirstVisit = () => {
+  const hasVisited = localStorage.getItem('hasVisitedBefore');
+  if (!hasVisited) {
+    localStorage.setItem('hasVisitedBefore', 'true');
+    return true;
+  }
   return false;
 };

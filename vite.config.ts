@@ -2,12 +2,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { componentTagger } from "lovable-tagger";
 
-// Simplified configuration for better stability
-export default defineConfig({
-  plugins: [react()],
+// Improved configuration for better stability and Lovable compatibility
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    react(),
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   server: {
     port: 8080,
+    host: "::",
     open: false,
     hmr: {
       overlay: false,
@@ -31,10 +36,10 @@ export default defineConfig({
       supported: { 
         'top-level-await': true 
       },
-      logLevel: 'error'  // Fixed: changed 'loglevel' to 'logLevel' with capital 'L'
+      logLevel: 'error'
     }
   },
   esbuild: {
     logOverride: { 'this-is-undefined-in-esm': 'silent' }
   }
-});
+}));
