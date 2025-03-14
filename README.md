@@ -1,7 +1,18 @@
 
-# Health Connectivity Platform
+# Health Connectivity Platform: Safe Haven Virtual Pediatric Clinic
 
-A comprehensive platform designed to connect healthcare providers with underserved communities, including undocumented, uninsured, and limited English proficiency individuals.
+A comprehensive platform designed to connect healthcare providers with underserved communities in rural Washington, with a focus on pediatric care for children and adolescents.
+
+## Project Overview
+
+This project is part of the Scaling Rural Healthcare with AI and LLMs initiative at University of Washington. The goal is to develop a virtual pediatric healthcare clinic leveraging AI and Large Language Models (LLMs) to improve access to medical services for children and adolescents in rural Washington, particularly in Adams County. 
+
+By integrating AI-driven intake systems, bilingual virtual consultations, and community-based outreach, the Safe Haven Virtual Pediatric Clinic aims to bridge healthcare gaps for low-income, uninsured, and Hispanic migrant families while enhancing patient engagement and accessibility.
+
+## Location & Healthcare Focus
+* **Rural Area:** Adams County, Washington
+* **Target Healthcare Issues:** Pediatric Care
+* **User Groups:** Rural pediatric patients and healthcare providers
 
 ## Features
 
