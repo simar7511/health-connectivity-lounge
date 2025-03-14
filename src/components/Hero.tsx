@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ScrollText } from "lucide-react";
+import { ScrollText, MapPin } from "lucide-react";
 
 export const Hero = () => {
   const navigate = useNavigate();
@@ -10,11 +10,15 @@ export const Hero = () => {
     <section className="relative py-20 bg-gradient-to-br from-primary/5 to-background overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-3xl mx-auto">
+          <div className="flex items-center justify-center mb-4">
+            <MapPin className="h-5 w-5 text-primary mr-2" />
+            <span className="text-sm font-medium text-muted-foreground">Adams County, Washington</span>
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Quality Care for Every Child
+            Quality Pediatric Care for Rural Families
           </h1>
           <p className="mt-6 text-lg text-muted-foreground">
-            Regardless of insurance or immigration status, we provide comprehensive pediatric care to all children in our community.
+            Safe Haven Virtual Pediatric Clinic provides comprehensive healthcare for children and adolescents in rural Washington, regardless of insurance or immigration status.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -22,7 +26,7 @@ export const Hero = () => {
               onClick={() => navigate("/pediatric-intake")}
               className="bg-gradient-to-r from-primary to-purple-600 text-white shadow-md hover:shadow-lg transition-all"
             >
-              Complete Intake Form
+              Complete Pediatric Intake Form
             </Button>
             <Button 
               size="lg" 
@@ -30,7 +34,7 @@ export const Hero = () => {
               onClick={() => navigate("/ai-chat")}
               className="border-primary text-primary hover:bg-primary/10 hover:text-primary font-medium"
             >
-              Ask Our AI Health Assistant
+              Bilingual AI Health Assistant
             </Button>
           </div>
           <div className="mt-8 flex flex-col items-center">
@@ -39,7 +43,7 @@ export const Hero = () => {
               onClick={() => navigate("/free-clinic")}
               className="text-primary/90 hover:text-primary font-medium"
             >
-              Find Free Clinics Near You
+              Find Free Rural Clinics Near You
             </Button>
             <Button 
               variant="secondary"
