@@ -1,13 +1,20 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { NavigationHeader } from "@/components/layout/NavigationHeader";
 import { ReturnToHomeButton } from "@/components/layout/ReturnToHomeButton";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Send, Paperclip, MoreVertical } from "lucide-react";
+import { Send, Paperclip, MoreVertical, FileText } from "lucide-react";
 import { DEMO_CONVERSATIONS } from "@/utils/demoData";
+import { DocumentPreview } from "@/components/messages/DocumentPreview";
+import { Badge } from "@/components/ui/badge";
+import { 
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle
+} from "@/components/ui/resizable";
 import { toast } from "@/hooks/use-toast";
 
 const ChatPage = () => {
@@ -17,6 +24,18 @@ const ChatPage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [patientName, setPatientName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [showAttachments, setShowAttachments] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [attachments, setAttachments] = useState<any[]>([]);
+
+  // Scroll to bottom of messages
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -32,6 +51,21 @@ const ChatPage = () => {
         console.log("Found conversation:", conversation.patientName);
         setMessages(conversation.messages);
         setPatientName(conversation.patientName);
+        
+        // Collect all attachments from all messages
+        const allAttachments = conversation.messages.reduce((acc, msg) => {
+          if (msg.attachments && msg.attachments.length > 0) {
+            return [...acc, ...msg.attachments.map(att => ({
+              ...att,
+              date: msg.timestamp,
+              type: att.type.includes('pdf') ? 'lab_result' : 
+                    att.type.includes('image') ? 'image' : 'document'
+            }))];
+          }
+          return acc;
+        }, []);
+        
+        setAttachments(allAttachments);
       } else if (DEMO_CONVERSATIONS.length > 0) {
         // Fallback to first conversation if patient not found
         console.log("Patient not found, using first conversation");
@@ -66,11 +100,24 @@ const ChatPage = () => {
       sender: "provider",
       content: newMessage,
       timestamp: new Date(),
-      attachments: []
+      attachments: [],
+      metadata: {
+        title: "Provider Message"
+      }
     };
     
     setMessages(prev => [...prev, newMsg]);
     setNewMessage("");
+    
+    // Update the conversation in DEMO_CONVERSATIONS for persistence
+    const conversation = DEMO_CONVERSATIONS.find(c => 
+      c.patientId === (patientId || DEMO_CONVERSATIONS[0].patientId)
+    );
+    
+    if (conversation) {
+      conversation.messages.push(newMsg);
+      conversation.lastUpdated = new Date();
+    }
     
     // Simulate patient reply after 1.5 seconds
     setTimeout(() => {
@@ -79,9 +126,18 @@ const ChatPage = () => {
         sender: "patient",
         content: "Thank you for your response!",
         timestamp: new Date(),
-        attachments: []
+        attachments: [],
+        metadata: {
+          title: "Patient Reply"
+        }
       };
       setMessages(prev => [...prev, patientReply]);
+      
+      // Update the conversation in DEMO_CONVERSATIONS
+      if (conversation) {
+        conversation.messages.push(patientReply);
+        conversation.lastUpdated = new Date();
+      }
     }, 1500);
   };
 
@@ -90,6 +146,10 @@ const ChatPage = () => {
       hour: "numeric",
       minute: "numeric",
     }).format(date);
+  };
+
+  const toggleAttachments = () => {
+    setShowAttachments(prev => !prev);
   };
 
   return (
@@ -119,29 +179,84 @@ const ChatPage = () => {
                   <p className="text-xs text-muted-foreground">Online</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                {attachments.length > 0 && (
+                  <Button
+                    variant={showAttachments ? "default" : "outline"}
+                    size="sm"
+                    onClick={toggleAttachments}
+                    className="flex items-center gap-1"
+                  >
+                    <FileText className="h-4 w-4" />
+                    {attachments.length} {attachments.length === 1 ? 'Attachment' : 'Attachments'}
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message, index) => (
-                <div 
-                  key={message.id || index}
-                  className={`flex ${message.sender === 'provider' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.sender === 'provider' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted'
-                    }`}
-                  >
-                    <p>{message.content}</p>
-                    <p className="text-xs mt-1 opacity-70">{formatTime(new Date(message.timestamp))}</p>
+            <div className="flex-1 overflow-hidden">
+              <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel defaultSize={showAttachments ? 65 : 100} minSize={40}>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 h-full">
+                    {messages.map((message, index) => (
+                      <div 
+                        key={message.id || index}
+                        className={`flex ${message.sender === 'provider' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className="max-w-[80%]">
+                          {message.metadata && message.metadata.title && (
+                            <div className="mb-1 text-xs">
+                              <Badge variant="outline" className="ml-1">
+                                {message.metadata.title}
+                              </Badge>
+                            </div>
+                          )}
+                          <div 
+                            className={`rounded-lg p-3 ${
+                              message.sender === 'provider' 
+                                ? 'bg-primary text-primary-foreground' 
+                                : 'bg-muted'
+                            }`}
+                          >
+                            <p>{message.content}</p>
+                            <p className="text-xs mt-1 opacity-70">{formatTime(new Date(message.timestamp))}</p>
+                          </div>
+                          {message.attachments && message.attachments.length > 0 && (
+                            <div className="mt-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-xs flex items-center gap-1"
+                                onClick={toggleAttachments}
+                              >
+                                <Paperclip className="h-3 w-3" />
+                                {message.attachments.length} {message.attachments.length === 1 ? 'attachment' : 'attachments'}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
                   </div>
-                </div>
-              ))}
+                </ResizablePanel>
+                
+                {showAttachments && (
+                  <>
+                    <ResizableHandle withHandle />
+                    <ResizablePanel defaultSize={35} minSize={30}>
+                      <DocumentPreview
+                        attachments={attachments}
+                        onClose={toggleAttachments}
+                        language="en"
+                      />
+                    </ResizablePanel>
+                  </>
+                )}
+              </ResizablePanelGroup>
             </div>
             
             <div className="p-3 border-t bg-card">

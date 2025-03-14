@@ -11,20 +11,28 @@ export const DEMO_CONVERSATIONS = [
       {
         id: "msg1",
         sender: "patient",
-        content: "Hello Dr. Johnson, I have a question about my medication.",
+        content: "Hello Dr. Johnson, I've attached my recent lab results for your review.",
         timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        attachments: [],
+        attachments: [
+          {
+            id: "att1",
+            name: "Blood Test Results.pdf",
+            type: "application/pdf",
+            size: 1240000,
+            preview: "Hemoglobin: 13.2 g/dL (Normal)\nWhite Blood Cells: 7,500/μL (Normal)\nPlatelets: 250,000/μL (Normal)\nGlucose: 95 mg/dL (Normal)"
+          }
+        ],
         metadata: {
-          title: "Medication Question"
+          title: "Lab Results"
         }
       },
       {
         id: "msg2",
         sender: "provider",
-        content: "Hi Maria, what would you like to know about your medication?",
+        content: "Thank you for sending these over. Your hemoglobin, white blood cell count, and other values look normal. We should continue monitoring your glucose levels, but I don't see any immediate concerns.",
         timestamp: new Date(),
         metadata: {
-          title: "Medication Inquiry"
+          title: "Results Review"
         },
         attachments: []
       }
@@ -69,18 +77,19 @@ export const DEMO_CONVERSATIONS = [
       {
         id: "msg5",
         sender: "patient",
-        content: "I attached my lab results from last week.",
+        content: "I attached my prescription and have a question about the dosage.",
         timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
         attachments: [
           {
-            id: "att1",
-            name: "Lab_Results.pdf",
+            id: "att2",
+            name: "Prescription.pdf",
             type: "application/pdf",
-            size: 1240000
+            size: 840000,
+            preview: "Medication: Amoxicillin\nDosage: 500mg\nFrequency: 3 times daily\nDuration: 7 days\nNotes: Take with food"
           }
         ],
         metadata: {
-          title: "Lab Results"
+          title: "Prescription Question"
         }
       }
     ]

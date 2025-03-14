@@ -1,11 +1,21 @@
+
 import React from "react";
 import { X, Download, FileText, FileImage, Pill, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Attachment } from "@/utils/messageStore";
 import { Separator } from "@/components/ui/separator";
+
+interface Attachment {
+  id: string;
+  name: string;
+  type: 'lab_result' | 'prescription' | 'image' | 'document';
+  preview?: string;
+  date: Date;
+  size?: number;
+  url?: string;
+}
 
 interface DocumentPreviewProps {
   attachments: Attachment[];
