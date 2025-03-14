@@ -68,6 +68,10 @@
         margin-bottom: 1rem;
         color: #3b82f6;
       }
+      #countdown {
+        font-weight: bold;
+        color: #3b82f6;
+      }
       @media (max-width: 600px) {
         #message {
           margin: 1rem;
@@ -87,15 +91,54 @@
       </svg>
       <h2>404</h2>
       <h1>Page Not Found</h1>
-      <p>The page you are looking for doesn't exist or has been moved.</p>
-      <a href="/">Return to Homepage</a>
+      <p>The page you are looking for doesn't exist or has been moved. Redirecting to homepage in <span id="countdown">5</span> seconds.</p>
+      <a href="/" id="homeLink">Return to Homepage</a>
     </div>
     <script>
-      // Redirect single-page app routes back to index.html
-      const path = window.location.pathname;
-      if (path.includes('/chat/') || path.includes('/provider/') || path.includes('/patient/')) {
-        window.location.href = '/';
-      }
+      // Handle single-page app routing
+      (function() {
+        // Check if this is a spa route
+        const path = window.location.pathname;
+        const isSpaRoute = path.startsWith('/chat/') || 
+                          path.startsWith('/provider/') || 
+                          path.startsWith('/patient/') ||
+                          path.startsWith('/ai-chat/');
+        
+        // Set up countdown
+        let countdown = 5;
+        const countdownEl = document.getElementById('countdown');
+        
+        // Update countdown every second
+        const interval = setInterval(function() {
+          countdown--;
+          if (countdownEl) countdownEl.textContent = countdown;
+          
+          if (countdown <= 0) {
+            clearInterval(interval);
+            
+            // Redirect to homepage or specific app route
+            if (isSpaRoute) {
+              const base = window.location.origin;
+              const queryString = window.location.search || '';
+              window.location.href = `${base}/${queryString}`;
+              console.log("Redirecting SPA route to homepage");
+            } else {
+              window.location.href = '/';
+              console.log("Redirecting to homepage");
+            }
+          }
+        }, 1000);
+        
+        // Allow immediate navigation
+        const homeLink = document.getElementById('homeLink');
+        if (homeLink) {
+          homeLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearInterval(interval);
+            window.location.href = '/';
+          });
+        }
+      })();
     </script>
   </body>
 </html>

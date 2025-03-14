@@ -4,12 +4,90 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Circle, Paperclip } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { loadConversations, Conversation, initializeMessageStore } from "@/utils/messageStore";
 import { Badge } from "@/components/ui/badge";
+
+// Demo data for conversations
+const DEMO_CONVERSATIONS = [
+  {
+    id: "1",
+    patientId: "maria-garcia",
+    patientName: "Maria Garcia",
+    lastUpdated: new Date(),
+    unread: true,
+    messages: [
+      {
+        id: "msg1",
+        sender: "patient",
+        content: "Hello Dr. Johnson, I have a question about my medication.",
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        attachments: []
+      },
+      {
+        id: "msg2",
+        sender: "provider",
+        content: "Hi Maria, what would you like to know about your medication?",
+        timestamp: new Date(),
+        metadata: {
+          title: "Medication Inquiry"
+        },
+        attachments: []
+      }
+    ]
+  },
+  {
+    id: "2",
+    patientId: "james-wilson",
+    patientName: "James Wilson",
+    lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    unread: false,
+    messages: [
+      {
+        id: "msg3",
+        sender: "patient",
+        content: "Dr. Johnson, my appointment is tomorrow at 2pm, correct?",
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        attachments: []
+      },
+      {
+        id: "msg4",
+        sender: "provider",
+        content: "Yes, James. We have you scheduled for tomorrow at 2pm. Please arrive 15 minutes early to complete paperwork.",
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        metadata: {
+          title: "Appointment Confirmation"
+        },
+        attachments: []
+      }
+    ]
+  },
+  {
+    id: "3",
+    patientId: "sophia-rodriguez",
+    patientName: "Sophia Rodriguez",
+    lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    unread: true,
+    messages: [
+      {
+        id: "msg5",
+        sender: "patient",
+        content: "I attached my lab results from last week.",
+        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        attachments: [
+          {
+            id: "att1",
+            name: "Lab_Results.pdf",
+            type: "application/pdf",
+            size: 1240000
+          }
+        ]
+      }
+    ]
+  }
+];
 
 interface MessagingInboxProps {
   language: "en" | "es";
-  onStartChat: () => void;
+  onStartChat?: () => void;
 }
 
 const content = {
@@ -19,7 +97,8 @@ const content = {
     unread: "unread messages",
     noMessages: "No messages",
     attachment: "attachment",
-    attachments: "attachments"
+    attachments: "attachments",
+    loading: "Loading messages..."
   },
   es: {
     title: "Mensajes Seguros",
@@ -27,33 +106,23 @@ const content = {
     unread: "mensajes sin leer",
     noMessages: "No hay mensajes",
     attachment: "archivo adjunto",
-    attachments: "archivos adjuntos"
+    attachments: "archivos adjuntos",
+    loading: "Cargando mensajes..."
   },
 };
 
 export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) => {
   const navigate = useNavigate();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState(DEMO_CONVERSATIONS);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize the message store and load conversations
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        await initializeMessageStore();
-        console.log("Message store initialized in MessagingInbox");
-        const loadedConversations = await loadConversations();
-        console.log("Loaded conversations:", loadedConversations);
-        setConversations(loadedConversations);
-      } catch (error) {
-        console.error("Error loading conversations:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Simulate loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
     
-    loadData();
+    return () => clearTimeout(timer);
   }, []);
 
   const formatTime = (date: Date) => {
@@ -70,9 +139,9 @@ export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) =
     return `${count} ${count === 1 ? content[language].attachment : content[language].attachments}`;
   };
 
-  const handleOpenChat = (patientName: string) => {
-    console.log(`Opening chat for ${patientName}`);
-    navigate(`/chat/${patientName}`);
+  const handleOpenChat = (patientId: string) => {
+    console.log(`Opening chat for ${patientId}`);
+    navigate(`/chat/${patientId}`);
   };
 
   return (
@@ -100,7 +169,7 @@ export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) =
             {isLoading ? (
               <div className="p-8 text-center">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-muted-foreground">Loading messages...</p>
+                <p className="text-muted-foreground">{content[language].loading}</p>
               </div>
             ) : conversations.length > 0 ? (
               conversations.map((conversation) => {
@@ -116,7 +185,7 @@ export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) =
                   <div
                     key={conversation.id}
                     className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                    onClick={() => handleOpenChat(conversation.patientName)}
+                    onClick={() => handleOpenChat(conversation.patientId)}
                   >
                     <div className="flex items-start gap-2">
                       {conversation.unread && (

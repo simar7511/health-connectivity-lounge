@@ -31,6 +31,7 @@ const router = createBrowserRouter([
   { path: "/transportation", element: <TransportationPage language="en" onProceed={() => {}} /> },
   { path: "/confirmation", element: <ConfirmationPage language="en" /> },
   { path: "/chat", element: <ChatPage /> },
+  { path: "/chat/:patientId", element: <ChatPage /> },
   { path: "/ai-chat", element: <AIHealthChatPage /> },
   { path: "/ai-chat/:patientId", element: <AIHealthChatPage /> },
   { path: "/free-clinic", element: <ClinicLocatorPage /> },

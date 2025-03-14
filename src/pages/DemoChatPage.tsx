@@ -3,16 +3,16 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { NavigationHeader } from "@/components/layout/NavigationHeader";
 import { ReturnToHomeButton } from "@/components/layout/ReturnToHomeButton";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Send, Paperclip, MoreVertical } from "lucide-react";
+import { Send, Paperclip, ArrowLeft, MoreVertical } from "lucide-react";
 import { DEMO_CONVERSATIONS } from "@/utils/demoData";
-import { toast } from "@/hooks/use-toast";
 
 const ChatPage = () => {
   const navigate = useNavigate();
-  const { patientId } = useParams<{ patientId?: string }>();
+  const { patientId } = useParams<{ patientId: string }>();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [patientName, setPatientName] = useState("");
@@ -20,35 +20,19 @@ const ChatPage = () => {
 
   useEffect(() => {
     setIsLoading(true);
-    console.log("ChatPage loading with patientId:", patientId);
     
-    try {
-      // Find the conversation for this patient or use the first one if no patientId
-      const conversation = patientId 
-        ? DEMO_CONVERSATIONS.find(c => c.patientId === patientId) 
-        : DEMO_CONVERSATIONS[0];
+    // Find the conversation for this patient or use the first one if no patientId
+    const conversation = patientId 
+      ? DEMO_CONVERSATIONS.find(c => c.patientId === patientId) 
+      : DEMO_CONVERSATIONS[0];
 
-      if (conversation) {
-        console.log("Found conversation:", conversation.patientName);
-        setMessages(conversation.messages);
-        setPatientName(conversation.patientName);
-      } else if (DEMO_CONVERSATIONS.length > 0) {
-        // Fallback to first conversation if patient not found
-        console.log("Patient not found, using first conversation");
-        setMessages(DEMO_CONVERSATIONS[0].messages);
-        setPatientName(DEMO_CONVERSATIONS[0].patientName);
-      } else {
-        console.log("No conversations available");
-        setMessages([]);
-        setPatientName("No Patient");
-      }
-    } catch (error) {
-      console.error("Error loading chat data:", error);
-      toast({
-        variant: "destructive",
-        title: "Error loading chat",
-        description: "There was a problem loading the chat. Please try again."
-      });
+    if (conversation) {
+      setMessages(conversation.messages);
+      setPatientName(conversation.patientName);
+    } else if (DEMO_CONVERSATIONS.length > 0) {
+      // Fallback to first conversation if patient not found
+      setMessages(DEMO_CONVERSATIONS[0].messages);
+      setPatientName(DEMO_CONVERSATIONS[0].patientName);
     }
     
     // Simulate loading
@@ -72,7 +56,7 @@ const ChatPage = () => {
     setMessages(prev => [...prev, newMsg]);
     setNewMessage("");
     
-    // Simulate patient reply after 1.5 seconds
+    // Simulate patient reply after 1 second
     setTimeout(() => {
       const patientReply = {
         id: `msg-${Date.now() + 1}`,
@@ -97,7 +81,7 @@ const ChatPage = () => {
       <NavigationHeader 
         title={patientName || "Secure Chat"} 
         showBackButton
-        onBack={() => navigate("/provider/dashboard")}
+        onBack={() => navigate(-1)}
         language="en"
       />
       
@@ -139,7 +123,7 @@ const ChatPage = () => {
                     }`}
                   >
                     <p>{message.content}</p>
-                    <p className="text-xs mt-1 opacity-70">{formatTime(new Date(message.timestamp))}</p>
+                    <p className="text-xs mt-1 opacity-70">{formatTime(message.timestamp)}</p>
                   </div>
                 </div>
               ))}
