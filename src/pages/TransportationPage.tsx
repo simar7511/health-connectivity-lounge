@@ -9,7 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 
 interface TransportationPageProps {
   language: "en" | "es";
-  onProceed: () => void;
+  onProceed?: () => void; // Made optional with ?
 }
 
 const TransportationPage: React.FC<TransportationPageProps> = ({ language, onProceed }) => {
@@ -21,7 +21,12 @@ const TransportationPage: React.FC<TransportationPageProps> = ({ language, onPro
     alert(language === "en" 
       ? `Transportation confirmed! Pickup at ${pickupTime} from ${pickupLocation}` 
       : `¡Transporte confirmado! Recogida a las ${pickupTime} en ${pickupLocation}`);
-    onProceed();
+    
+    if (onProceed) {
+      onProceed();
+    } else {
+      navigate("/confirmation");
+    }
   };
 
   const pageTitle = language === "en" ? "Transportation Details" : "Detalles de Transporte";

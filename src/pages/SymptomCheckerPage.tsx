@@ -9,6 +9,7 @@ import { collection, addDoc, serverTimestamp } from "@/types/firebase";
 import { VoiceRecorder } from "@/components/symptom-checker/VoiceRecorder";
 import { AppointmentDetails } from "@/components/symptom-checker/AppointmentDetails";
 import { SymptomsDisplay } from "@/components/symptom-checker/SymptomsDisplay";
+import { useNavigate } from "react-router-dom";
 import 'regenerator-runtime/runtime';
 
 interface Provider {
@@ -27,7 +28,7 @@ interface AppointmentDetails {
 
 interface SymptomCheckerPageProps {
   language: "en" | "es";
-  onProceed: () => void;
+  onProceed?: () => void; // Made optional with ?
   appointmentDetails: AppointmentDetails;
 }
 
@@ -38,6 +39,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({
 }) => {
   const [symptoms, setSymptoms] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const saveReportToFirestore = async () => {
     if (!symptoms.trim() || !appointmentDetails?.provider) {
@@ -121,12 +123,24 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({
     const reportId = await saveReportToFirestore();
     
     if (reportId) {
-      onProceed(); // Only proceed if save was successful
+      if (onProceed) {
+        onProceed(); // Call only if provided
+      } else {
+        navigate("/transportation"); // Default navigation if no onProceed
+      }
     }
   };
 
   const handleVoiceInput = (_fieldName: string, input: string) => {
     setSymptoms(input);
+  };
+
+  const handleProceedToTransportation = () => {
+    if (onProceed) {
+      onProceed();
+    } else {
+      navigate("/transportation");
+    }
   };
 
   return (
@@ -171,7 +185,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerPageProps> = ({
 
         <Button 
           className="w-full py-6 mt-4 bg-green-500 hover:bg-green-600" 
-          onClick={onProceed}
+          onClick={handleProceedToTransportation}
         >
           {language === "en" ? "Proceed to Transportation" : "Proceder al Transporte"}
         </Button>

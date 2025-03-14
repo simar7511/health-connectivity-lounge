@@ -133,7 +133,7 @@ const Index = () => {
       case "provider":
         return <ProviderLogin language={language} onBack={() => setLoginState("select")} onLogin={handleProviderLoginSubmit} />;
       case "appointment":
-        return <AppointmentPage language={language} onProceed={() => setLoginState("symptoms")} />;
+        return <AppointmentPage language={language} />; // Removed onProceed
       case "symptoms":
         return (
           <SymptomCheckerPage 
