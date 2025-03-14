@@ -7,18 +7,8 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    // Only use the tagger in development mode if it's available
-    mode === 'development' && (() => {
-      try {
-        // Dynamic import to prevent build errors if the package is missing
-        const { componentTagger } = require('lovable-tagger');
-        return componentTagger();
-      } catch (e) {
-        console.warn('Lovable tagger not available or incompatible, skipping');
-        return null;
-      }
-    })()
-  ].filter(Boolean),
+    // Remove the lovable-tagger usage that causes conflicts
+  ],
   server: {
     port: 8080,
     host: "::",
