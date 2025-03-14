@@ -19,7 +19,7 @@ import PediatricIntakeForm from "./components/intake/PediatricIntakeForm";
 // Create routes
 const router = createBrowserRouter([
   { path: "/", element: <Index /> },
-  { path: "/pediatric-intake", element: <PediatricIntakeForm /> },
+  { path: "/pediatric-intake", element: <PediatricIntakeForm language="en" /> },
   { path: "/patient-intake/:id", element: <PatientIntakeDetails language="en" /> },
   { path: "/provider/dashboard", element: <PatientOverviewPage /> }, 
   { path: "/symptoms", element: <SymptomCheckerPage language="en" onProceed={() => {}} appointmentDetails={{type: "", date: new Date(), time: "", provider: {id: "", name: "", specialty: "", availability: []}}} /> },
