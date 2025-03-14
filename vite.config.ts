@@ -3,11 +3,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// Improved configuration for better stability
+// Improved configuration for better stability and compatibility
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    // Remove the lovable-tagger usage that causes conflicts
   ],
   server: {
     port: 8080,
@@ -26,9 +25,17 @@ export default defineConfig(({ mode }) => ({
   build: {
     sourcemap: true,
     minify: false,
-    target: "es2018"
+    target: "es2018",
+    // Exclude problematic dependencies from processing
+    commonjsOptions: {
+      exclude: [
+        /node_modules\/@xenova\/transformers/,
+        /node_modules\/sharp/
+      ]
+    }
   },
   optimizeDeps: {
+    exclude: ['@xenova/transformers', 'sharp'],
     force: true,
     esbuildOptions: {
       target: "es2018",
