@@ -5,26 +5,28 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 /**
- * Simple and reliable Firebase initialization
+ * Firebase initialization with hardcoded config
  */
 export const initializeFirebase = () => {
   try {
-    // Log environment variables to help with debugging
-    console.log("Firebase config check:", {
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? "Present" : "Missing",
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? "Present" : "Missing",
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? "Present" : "Missing"
-    });
-
+    // Using hardcoded config instead of environment variables
+    // since we're having issues with env variables
     const firebaseConfig = {
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || null,
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || null,
-      appId: import.meta.env.VITE_FIREBASE_APP_ID || null,
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || null
+      apiKey: "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw",
+      authDomain: "health-connectivity-01.firebaseapp.com",
+      projectId: "health-connectivity-01",
+      storageBucket: "health-connectivity-01.appspot.com",
+      messagingSenderId: "429069343294",
+      appId: "1:429069343294:web:943a1998a83e63353c0f6f",
+      measurementId: "G-3BVWXWV69Q"
     };
+    
+    console.log("Initializing Firebase with config:", {
+      apiKey: firebaseConfig.apiKey ? "Present" : "Missing",
+      authDomain: firebaseConfig.authDomain ? "Present" : "Missing",
+      projectId: firebaseConfig.projectId ? "Present" : "Missing",
+      storageBucket: firebaseConfig.storageBucket ? "Present" : "Missing"
+    });
     
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
