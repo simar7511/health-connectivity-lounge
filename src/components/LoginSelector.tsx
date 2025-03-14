@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog, Bot, ShieldCheck, Phone } from "lucide-react";
@@ -90,7 +89,7 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
         <Button
           variant="outline"
           size="lg"
-          onClick={() => navigate("/provider/login")}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white transition-all rounded-xl px-5 py-6 shadow-sm border-primary/10"
         >
           <UserCog className="w-5 h-5 text-primary" />

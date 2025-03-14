@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -38,6 +39,15 @@ const Index = () => {
   useEffect(() => {
     // Clear any previous session data to ensure welcome page is shown
     if (location.pathname === "/" || location.pathname === "") {
+      // Check for query parameters to set initial state
+      const params = new URLSearchParams(location.search);
+      const mode = params.get('mode');
+      
+      if (mode === 'provider-login') {
+        setLoginState("provider");
+        return;
+      }
+      
       localStorage.removeItem('restoreSession');
       localStorage.removeItem('currentUser');
       localStorage.removeItem('isProvider');
@@ -58,13 +68,22 @@ const Index = () => {
         duration: 5000,
       });
     }
-  }, [location.pathname, logout, language]);
+  }, [location.pathname, location.search, logout, language]);
 
   // Set language preference from storage
   useEffect(() => {
     const savedLanguage = sessionStorage.getItem("preferredLanguage") as "en" | "es" | null;
     if (savedLanguage) {
       setLanguage(savedLanguage);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Show provider login if the button was clicked
+    const showProviderLogin = sessionStorage.getItem("showProviderLogin");
+    if (showProviderLogin === "true") {
+      setLoginState("provider");
+      sessionStorage.removeItem("showProviderLogin");
     }
   }, []);
 
