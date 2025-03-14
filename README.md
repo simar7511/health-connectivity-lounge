@@ -54,3 +54,30 @@ VITE_FIREBASE_MEASUREMENT_ID=G-3BVWXWV69Q
 
 ## Target Audience
 Marginalized groups, including those who are undocumented, uninsured, and have limited English proficiency, face significant barriers to accessing healthcare. This platform aims to address these challenges.
+
+## Clinic Onboarding
+Partner with free clinics in Adams County. Make sure the clinics install the equipment below:
+- Laptops, computers, or tablets
+- High-speed internet access with secure VPN encryption for patient privacy
+
+To ensure successful implementation, we will provide training for staff and volunteers at partner locations. The training includes:
+- How to use our virtual clinic
+- Ensuring patient confidentiality and secure data handling
+
+We provide a 24/7 technical helpline for troubleshooting
+
+## Patient Onboarding
+Patient Awareness Campaigns：
+- Bilingual (Spanish & English) flyers, including a QR code linked to our virtual clinic, at churches, schools, and grocery stores
+- Engaging Latino communities through digital platforms, such as WhatsApp
+
+Collaborates with churches and schools, where patients feel safe and supported. Supplying devices, such as tablets, at these locations to ensure patients without personal devices can access our virtual clinic.
+
+Once patients successfully access our virtual clinic, they can schedule an appointment or use the AI chatbot for basic inquiries.
+
+## Sustainability
+We will apply for federal, state, and local healthcare grants that support pediatric care and underserved communities:
+- Health Resources & Services Administration (HRSA). This program provides funding for free clinics. 
+- Title V Maternal and Child Health (MCH). This program provides funding for pediatric health initiatives
+- Maternal and Child Health Block Grant. This program supports improving the health of women, infants, children, youth, and their families.
+- Bill & Melinda Gates Foundation. This program supports community health initiatives.
