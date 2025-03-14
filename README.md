@@ -276,6 +276,11 @@ Scalability:
 - Ensure that AI serves solely as a support tool rather than making independent decisions. Following Washington State law, all medical decisions must be reviewed and approved by a licensed provider
 - Compliance with Washington State laws, which typically require parental or legal guardian consent for minors to receive medical treatment, except in specific cases where minors can consent independently
 
+As our virtual clinic specializes in pediatrics, certain specific regulations apply:
+- Criminal History Background Checks: hospitals and clinics must conduct criminal background checks for employees or prospective employees who will have unsupervised access to children, vulnerable adults, or developmentally disabled individuals(RCW 43.43.834.)
+- Ensure Staff Training: at least one RN or physician trained in pediatric resuscitation must be present when caring for these patients.
+- Provide Essential Services (Lab, Pharmacy, Radiology, Respiratory): must be timely and available at all times during assisted ventilation.
+
 ## Security & Data Protection
 - End-to-End Encryption: all virtual consultations, messages, and patient data transmissions are encrypted using TLS 1.2+, ensuring secure communication between patients and healthcare providers
 - Secure Provider Authentication: use 2FA for provider login, ensuring that only authorized users can access patient data
