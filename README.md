@@ -87,6 +87,7 @@ To ensure the AI Health Assistant effectively supports both patients and provide
 ## Features
 
 - Patient and Provider portals
+- AI Health Assistant
 - Appointment scheduling and management
 - Multilingual support (English/Spanish)
 - Secure messaging system
@@ -301,6 +302,7 @@ To ensure the effective deployment and sustainability of our virtual pediatric, 
 - Greater Columbia Accountable Community of Health (GCACH): integrating the virtual clinic into existing rural healthcare networks, Medicaid-funded programs, and community health efforts in Adams County
 - East Adams Rural Healthcare (EARH): validating the workflows and accuracy of AI diagnose
 - Adams County schools, churches, and community centers: teaching patients how to access the virtual clinic. Improving accessibility
+- Better Health Together (BTC): integrating social services by being able to develop a referral systems for housing, food security and community health outreach program possibly involving transportation solutions.
 
 ## Contributor
 - Simardeep Kaur - Frontend and backend development of prototype patient and provider side, research development through integrations of patient and provider personas through AI models (ChatGPT, llama, etc.), as well as qualatiative research development. 
