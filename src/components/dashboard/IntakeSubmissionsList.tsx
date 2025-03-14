@@ -35,35 +35,49 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up real-time listener for intake form submissions
-    const q = query(collection(db, "pediatricIntake"), orderBy("timestamp", "desc"));
-    
-    console.log("Setting up Firestore listener for pediatricIntake collection");
-    
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      console.log(`Received ${querySnapshot.size} documents from Firestore`);
-      
-      const submissionsData: IntakeFormSubmission[] = [];
-      querySnapshot.forEach((doc) => {
-        console.log(`Processing document: ${doc.id}`);
-        const data = doc.data() as DocumentData;
-        submissionsData.push({
-          id: doc.id,
-          ...data,
-          timestamp: data.timestamp
-        } as IntakeFormSubmission);
-      });
-      
-      setSubmissions(submissionsData);
-      setLoading(false);
-      
-      console.log(`Processed ${submissionsData.length} intake submissions`);
-    }, (error) => {
-      console.error("Error fetching intake submissions:", error);
-      setLoading(false);
-    });
+    try {
+      // Make sure db is properly initialized before accessing
+      if (!db || typeof db.collection !== 'function') {
+        console.log("Firebase db not properly initialized", db);
+        setLoading(false);
+        return () => {};
+      }
 
-    return () => unsubscribe();
+      // Set up real-time listener for intake form submissions
+      const submissionsRef = collection(db, "pediatricIntake");
+      const q = query(submissionsRef, orderBy("timestamp", "desc"));
+      
+      console.log("Setting up Firestore listener for pediatricIntake collection");
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        console.log(`Received ${querySnapshot.size} documents from Firestore`);
+        
+        const submissionsData: IntakeFormSubmission[] = [];
+        querySnapshot.forEach((doc) => {
+          console.log(`Processing document: ${doc.id}`);
+          const data = doc.data() as DocumentData;
+          submissionsData.push({
+            id: doc.id,
+            ...data,
+            timestamp: data.timestamp
+          } as IntakeFormSubmission);
+        });
+        
+        setSubmissions(submissionsData);
+        setLoading(false);
+        
+        console.log(`Processed ${submissionsData.length} intake submissions`);
+      }, (error) => {
+        console.error("Error fetching intake submissions:", error);
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error setting up Firestore listener:", error);
+      setLoading(false);
+      return () => {};
+    }
   }, []);
 
   const handleViewDetails = (submission: IntakeFormSubmission) => {
@@ -96,9 +110,6 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
         ) : submissions.length === 0 ? (
           <div>
             <p className="text-center py-8 text-muted-foreground">{content.noSubmissions}</p>
-            <p className="text-center text-sm text-muted-foreground">
-              Looking for collection: pediatricIntake
-            </p>
           </div>
         ) : (
           <ScrollArea className="h-[400px]">

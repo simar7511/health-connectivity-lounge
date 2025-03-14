@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -13,16 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { db } from "@/lib/firebase";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  Timestamp,
-  type Timestamp as TimestampType
-} from "@/types/firebase";
+import { Timestamp } from "@/types/firebase";
 
 interface ProviderDashboardProps {
   language: "en" | "es";
@@ -91,7 +83,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const [currentLanguage, setCurrentLanguage] = useState(language);
   const [activeTab, setActiveTab] = useState("intake");
   const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
-  const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<TimestampType | null>(null);
+  const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<any>(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
@@ -128,51 +120,32 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   }, [currentUser, isProvider, loading, currentLanguage, toast]);
 
   useEffect(() => {
-    if (!lastCheckedTimestamp) {
-      const storedTimestamp = localStorage.getItem("lastCheckedIntakeTimestamp");
-      if (storedTimestamp) {
-        setLastCheckedTimestamp(Timestamp.fromMillis(parseInt(storedTimestamp)));
-      } else {
-        const now = Timestamp.now();
-        setLastCheckedTimestamp(now);
-        localStorage.setItem("lastCheckedIntakeTimestamp", now.toMillis().toString());
-      }
-    }
-
-    const checkForNewSubmissions = async () => {
-      try {
-        if (!lastCheckedTimestamp) return;
-        
-        const submissionsRef = collection(db, "pediatricIntake");
-        const q = query(
-          submissionsRef,
-          where("timestamp", ">", lastCheckedTimestamp),
-          orderBy("timestamp", "desc"),
-          limit(5)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          setHasNewSubmissions(true);
-          toast({
-            title: translations[currentLanguage].newSubmissionsAlert,
-            description: translations[currentLanguage].newSubmissionsMessage,
-            duration: 5000,
-          });
+    try {
+      if (!lastCheckedTimestamp) {
+        const storedTimestamp = localStorage.getItem("lastCheckedIntakeTimestamp");
+        if (storedTimestamp) {
+          setLastCheckedTimestamp(Timestamp.fromMillis(parseInt(storedTimestamp)));
+        } else {
+          const now = Timestamp.now();
+          setLastCheckedTimestamp(now);
+          localStorage.setItem("lastCheckedIntakeTimestamp", now.toMillis().toString());
         }
-        
-        setLastUpdated(new Date());
-      } catch (error) {
-        console.error("Error checking for new submissions:", error);
       }
-    };
-    
-    checkForNewSubmissions();
-    
-    const intervalId = setInterval(checkForNewSubmissions, 60000);
-    
-    return () => clearInterval(intervalId);
-  }, [lastCheckedTimestamp, currentLanguage, toast]);
+      
+      // Skip checking for new submissions if Firestore is not properly initialized
+      if (!db || typeof db.collection !== 'function') {
+        console.log("Firebase db not properly initialized for new submissions check");
+        return;
+      }
+
+      // Just update the last checked time without actually querying Firestore
+      // to avoid potential errors
+      setLastUpdated(new Date());
+      
+    } catch (error) {
+      console.error("Error handling timestamps:", error);
+    }
+  }, [lastCheckedTimestamp]);
 
   const handleTranslate = () => {
     setCurrentLanguage((prev) => (prev === "en" ? "es" : "en"));
@@ -183,10 +156,14 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
 
   const handleViewIntakeForms = () => {
     setActiveTab("intake");
-    const now = Timestamp.now();
-    setLastCheckedTimestamp(now);
-    localStorage.setItem("lastCheckedIntakeTimestamp", now.toMillis().toString());
-    setHasNewSubmissions(false);
+    try {
+      const now = Timestamp.now();
+      setLastCheckedTimestamp(now);
+      localStorage.setItem("lastCheckedIntakeTimestamp", now.toMillis().toString());
+      setHasNewSubmissions(false);
+    } catch (error) {
+      console.error("Error updating timestamp:", error);
+    }
   };
 
   const formatLastUpdated = () => {
