@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Patient } from "@/types/patient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,45 +142,285 @@ const patientSummaries: PatientSummary[] = [
   }
 ];
 
-const mockSymptomLogs: SymptomLog[] = [
-  {
-    timestamp: "2024-03-20T09:30:00",
-    symptom: "Headache",
-    severity: "moderate",
-    description: "Persistent headache with visual disturbances",
-    relatedCondition: "Gestational Hypertension",
-    bp: [140, 90]
-  },
-  {
-    timestamp: "2024-03-19T15:45:00",
-    symptom: "Swelling",
-    severity: "mild",
-    description: "Slight ankle swelling",
-    bp: [135, 88]
-  },
-  {
-    timestamp: "2024-03-18T11:20:00",
-    symptom: "Dizziness",
-    severity: "severe",
-    description: "Severe dizziness upon standing",
-    relatedCondition: "Gestational Hypertension",
-    bp: [150, 95]
-  }
-];
+// Patient-specific symptom logs - each patient has different entries
+const patientSymptomLogs: Record<string, SymptomLog[]> = {
+  "1": [
+    {
+      timestamp: "2024-03-20T09:30:00",
+      symptom: "Headache",
+      severity: "moderate",
+      description: "Persistent headache with visual disturbances",
+      relatedCondition: "Gestational Hypertension",
+      bp: [140, 90]
+    },
+    {
+      timestamp: "2024-03-19T15:45:00",
+      symptom: "Swelling",
+      severity: "mild",
+      description: "Slight ankle swelling",
+      bp: [135, 88]
+    },
+    {
+      timestamp: "2024-03-18T11:20:00",
+      symptom: "Dizziness",
+      severity: "severe",
+      description: "Severe dizziness upon standing",
+      relatedCondition: "Gestational Hypertension",
+      bp: [150, 95]
+    }
+  ],
+  "2": [
+    {
+      timestamp: "2024-03-19T14:15:00",
+      symptom: "Mild cough",
+      severity: "mild",
+      description: "Occasional dry cough, especially in the morning",
+      bp: [120, 76]
+    },
+    {
+      timestamp: "2024-03-17T10:30:00",
+      symptom: "Fatigue",
+      severity: "mild",
+      description: "Feeling tired after light activities",
+      bp: [125, 80]
+    }
+  ],
+  "3": [
+    {
+      timestamp: "2024-03-20T08:45:00",
+      symptom: "Nausea",
+      severity: "moderate",
+      description: "Morning sickness, unable to eat breakfast",
+      relatedCondition: "Pregnancy",
+      bp: [132, 85]
+    },
+    {
+      timestamp: "2024-03-19T16:20:00",
+      symptom: "Fatigue",
+      severity: "moderate",
+      description: "Extreme tiredness even after resting",
+      bp: [136, 87],
+      glucose: 108
+    },
+    {
+      timestamp: "2024-03-16T12:10:00",
+      symptom: "Heartburn",
+      severity: "mild",
+      description: "Burning sensation after meals",
+      relatedCondition: "Pregnancy",
+      bp: [130, 84]
+    }
+  ],
+  "4": [
+    {
+      timestamp: "2024-03-19T13:40:00",
+      symptom: "Mild cramps",
+      severity: "mild",
+      description: "Occasional cramping in lower abdomen",
+      bp: [116, 74]
+    }
+  ],
+  "5": [
+    {
+      timestamp: "2024-03-20T10:15:00",
+      symptom: "Dizziness",
+      severity: "severe",
+      description: "Almost passed out when getting up",
+      relatedCondition: "Hypertension",
+      bp: [150, 95],
+      glucose: 115
+    },
+    {
+      timestamp: "2024-03-19T14:50:00",
+      symptom: "Blurred vision",
+      severity: "moderate",
+      description: "Difficulty focusing, especially in bright light",
+      relatedCondition: "Hypertension",
+      bp: [145, 92]
+    },
+    {
+      timestamp: "2024-03-16T09:30:00",
+      symptom: "Headache",
+      severity: "severe",
+      description: "Pounding headache at the back of the head",
+      relatedCondition: "Hypertension",
+      bp: [148, 94]
+    }
+  ],
+  "6": [
+    {
+      timestamp: "2024-03-20T11:25:00",
+      symptom: "Back pain",
+      severity: "moderate",
+      description: "Lower back pain, worse when sitting for long periods",
+      bp: [126, 81]
+    },
+    {
+      timestamp: "2024-03-17T15:30:00",
+      symptom: "Insomnia",
+      severity: "mild",
+      description: "Difficulty falling asleep",
+      bp: [128, 83]
+    }
+  ],
+  "7": [
+    {
+      timestamp: "2024-03-18T09:10:00",
+      symptom: "Mild allergies",
+      severity: "mild",
+      description: "Occasional sneezing and itchy eyes",
+      bp: [126, 82]
+    }
+  ],
+  "8": [
+    {
+      timestamp: "2024-03-20T08:00:00",
+      symptom: "Severe headache",
+      severity: "severe",
+      description: "Intense pain on one side of the head with nausea",
+      relatedCondition: "Hypertension",
+      bp: [152, 97]
+    },
+    {
+      timestamp: "2024-03-19T10:45:00",
+      symptom: "Vision changes",
+      severity: "moderate",
+      description: "Seeing spots and temporary visual disturbances",
+      relatedCondition: "Hypertension",
+      bp: [148, 95]
+    },
+    {
+      timestamp: "2024-03-17T14:20:00",
+      symptom: "Palpitations",
+      severity: "moderate",
+      description: "Heart racing, especially when lying down",
+      bp: [145, 93],
+      glucose: 112
+    }
+  ]
+};
 
-const mockIntakeForm = {
-  patientInfo: {
-    name: "John Doe",
-    dob: "1990-01-01",
-    phone: "123-456-7890"
+// Patient-specific intake forms - each patient has different information
+const patientIntakeForms: Record<string, any> = {
+  "1": {
+    patientInfo: {
+      name: "Maria Garcia",
+      dob: "1996-05-12",
+      phone: "415-555-7890"
+    },
+    medicalHistory: {
+      allergies: ["Penicillin"],
+      currentMedications: ["Prenatal vitamins", "Iron supplements"]
+    },
+    currentPregnancy: {
+      dueDate: "2024-06-15",
+      complications: "Gestational hypertension"
+    }
   },
-  medicalHistory: {
-    allergies: ["Penicillin", "Lactose"],
-    currentMedications: ["Aspirin", "Ibuprofen"]
+  "2": {
+    patientInfo: {
+      name: "John Smith",
+      dob: "1985-09-23",
+      phone: "510-555-1234"
+    },
+    medicalHistory: {
+      allergies: ["None"],
+      currentMedications: ["Multivitamin"]
+    },
+    currentPregnancy: {
+      dueDate: "2024-07-22",
+      complications: "None"
+    }
   },
-  currentPregnancy: {
-    dueDate: "2024-06-15",
-    complications: "None"
+  "3": {
+    patientInfo: {
+      name: "Sarah Johnson",
+      dob: "1992-11-30",
+      phone: "628-555-4567"
+    },
+    medicalHistory: {
+      allergies: ["Shellfish", "Latex"],
+      currentMedications: ["Prenatal vitamins", "Folic acid"]
+    },
+    currentPregnancy: {
+      dueDate: "2024-08-10",
+      complications: "Morning sickness"
+    }
+  },
+  "4": {
+    patientInfo: {
+      name: "Emily Chen",
+      dob: "1994-04-18",
+      phone: "408-555-8901"
+    },
+    medicalHistory: {
+      allergies: ["None"],
+      currentMedications: ["Prenatal vitamins"]
+    },
+    currentPregnancy: {
+      dueDate: "2024-09-05",
+      complications: "None"
+    }
+  },
+  "5": {
+    patientInfo: {
+      name: "David Wilson",
+      dob: "1978-07-14",
+      phone: "650-555-2345"
+    },
+    medicalHistory: {
+      allergies: ["Sulfa drugs"],
+      currentMedications: ["Labetalol", "Prenatal vitamins"]
+    },
+    currentPregnancy: {
+      dueDate: "2024-05-30",
+      complications: "Chronic hypertension"
+    }
+  },
+  "6": {
+    patientInfo: {
+      name: "Ana Rodriguez",
+      dob: "1990-12-25",
+      phone: "925-555-6789"
+    },
+    medicalHistory: {
+      allergies: ["Aspirin"],
+      currentMedications: ["Prenatal vitamins"]
+    },
+    currentPregnancy: {
+      dueDate: "2024-07-15",
+      complications: "Back pain"
+    }
+  },
+  "7": {
+    patientInfo: {
+      name: "Michael Brown",
+      dob: "1987-02-14",
+      phone: "510-555-9012"
+    },
+    medicalHistory: {
+      allergies: ["Pollen"],
+      currentMedications: ["Claritin", "Prenatal vitamins"]
+    },
+    currentPregnancy: {
+      dueDate: "2024-08-22",
+      complications: "None"
+    }
+  },
+  "8": {
+    patientInfo: {
+      name: "Lisa Taylor",
+      dob: "1984-06-08",
+      phone: "415-555-3456"
+    },
+    medicalHistory: {
+      allergies: ["Penicillin", "Ibuprofen"],
+      currentMedications: ["Methyldopa", "Prenatal vitamins"]
+    },
+    currentPregnancy: {
+      dueDate: "2024-06-05",
+      complications: "Severe hypertension, requires close monitoring"
+    }
   }
 };
 
@@ -286,7 +527,20 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
     }
   };
 
-  const filteredLogs = mockSymptomLogs
+  // Get patient-specific symptom logs based on the expanded patient ID
+  const getPatientSymptomLogs = () => {
+    if (!expandedPatientId) return [];
+    return patientSymptomLogs[expandedPatientId] || [];
+  };
+
+  // Get patient-specific intake form
+  const getPatientIntakeForm = () => {
+    if (!expandedPatientId) return patientIntakeForms["1"]; // Default fallback
+    return patientIntakeForms[expandedPatientId] || patientIntakeForms["1"];
+  };
+
+  // Filter logs by severity and time
+  const filteredLogs = getPatientSymptomLogs()
     .filter(log => severityFilter === "all" || log.severity === severityFilter)
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
@@ -294,15 +548,16 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
     if (providerNote.trim()) {
       toast({
         title: "Note Sent",
-        description: "Message has been sent to the patient via secure messaging.",
+        description: `Message has been sent to ${expandedPatientId ? patientSummaries.find(p => p.id === expandedPatientId)?.name : "the patient"} via secure messaging.`,
       });
       setProviderNote("");
     }
   };
 
   const handleGenerateIntakeForm = (language: string) => {
-    const pdf = generateIntakeFormPDF(mockIntakeForm, language);
-    pdf.save(`intake_form_${mockIntakeForm.patientInfo.name.replace(/\s+/g, '_')}_${language}.pdf`);
+    const patientData = getPatientIntakeForm();
+    const pdf = generateIntakeFormPDF(patientData, language);
+    pdf.save(`intake_form_${patientData.patientInfo.name.replace(/\s+/g, '_')}_${language}.pdf`);
     
     toast({
       title: language === "es" ? "Formulario Generado" : "Form Generated",
@@ -444,12 +699,18 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
 
   const renderDetailedView = () => {
     if (!expandedPatientId) return null;
+    
+    // Get the selected patient's data
+    const selectedPatient = patientSummaries.find(p => p.id === expandedPatientId);
+    if (!selectedPatient) return null;
 
     return (
       <div className="mt-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl font-semibold">Reported Symptoms</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              {selectedPatient.name}'s Reported Symptoms
+            </CardTitle>
             <div className="flex items-center gap-4">
               <div className="flex gap-2">
                 <Button
@@ -494,44 +755,63 @@ export const HealthDataLogs = ({ patient }: HealthDataLogsProps) => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {filteredLogs.map((log, index) => (
-                <Alert key={index} className="relative">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <AlertTitle className="flex items-center gap-2">
-                        {getAlertIcon(log.severity)}
-                        {log.symptom}
-                        <Badge className={`${getSeverityColor(log.severity)} text-white`}>
-                          {log.severity}
-                        </Badge>
-                      </AlertTitle>
-                      <AlertDescription>
-                        <p className="mt-1">{log.description}</p>
-                        {log.relatedCondition && (
-                          <Badge variant="outline" className="mt-2">
-                            Related: {log.relatedCondition}
+            {filteredLogs.length === 0 ? (
+              <Alert>
+                <AlertTitle>No symptoms reported</AlertTitle>
+                <AlertDescription>
+                  {selectedPatient.name} has not reported any symptoms in the selected time period and severity.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="space-y-4">
+                {filteredLogs.map((log, index) => (
+                  <Alert key={index} className="relative">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <AlertTitle className="flex items-center gap-2">
+                          {getAlertIcon(log.severity)}
+                          {log.symptom}
+                          <Badge className={`${getSeverityColor(log.severity)} text-white`}>
+                            {log.severity}
                           </Badge>
-                        )}
-                      </AlertDescription>
+                        </AlertTitle>
+                        <AlertDescription>
+                          <p className="mt-1">{log.description}</p>
+                          {log.relatedCondition && (
+                            <Badge variant="outline" className="mt-2">
+                              Related: {log.relatedCondition}
+                            </Badge>
+                          )}
+                          {log.bp && (
+                            <div className="mt-2 text-sm">
+                              BP at time of report: {log.bp[0]}/{log.bp[1]} mmHg
+                            </div>
+                          )}
+                          {log.glucose && (
+                            <div className="mt-1 text-sm">
+                              Glucose at time of report: {log.glucose} mg/dL
+                            </div>
+                          )}
+                        </AlertDescription>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </span>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(log.timestamp).toLocaleString()}
-                    </span>
-                  </div>
-                </Alert>
-              ))}
-            </div>
+                  </Alert>
+                ))}
+              </div>
+            )}
 
             <div className="mt-6 space-y-4">
               <h3 className="font-medium flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Send Message to Patient
+                Send Message to {selectedPatient.name}
               </h3>
               <Textarea
                 value={providerNote}
                 onChange={(e) => setProviderNote(e.target.value)}
-                placeholder="Write a message to the patient regarding their symptoms..."
+                placeholder={`Write a message to ${selectedPatient.name} regarding their symptoms...`}
                 className="min-h-[100px]"
               />
               <div className="flex justify-end gap-2">
