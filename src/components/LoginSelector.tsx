@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog, Bot, ShieldCheck, Phone } from "lucide-react";
+import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog, Bot, ShieldCheck, Phone, Scroll } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface LoginSelectorProps {
@@ -69,6 +69,14 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
     navigate("/pediatric-intake");
   };
 
+  // Function to handle provider login navigation
+  const handleProviderLogin = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log("Setting provider login state");
+    sessionStorage.setItem("showProviderLogin", "true");
+    navigate("/?mode=provider-login");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white">
       {/* Language Switcher */}
@@ -89,7 +97,7 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
         <Button
           variant="outline"
           size="lg"
-          onClick={() => navigate("/")}
+          onClick={handleProviderLogin}
           className="flex items-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white transition-all rounded-xl px-5 py-6 shadow-sm border-primary/10"
         >
           <UserCog className="w-5 h-5 text-primary" />
@@ -186,6 +194,18 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
             </div>
           </div>
         </Card>
+      </div>
+
+      {/* Terms of Service Link */}
+      <div className="text-center pb-8">
+        <Button
+          variant="link"
+          onClick={() => navigate("/terms-of-service")}
+          className="text-sm text-gray-600 hover:text-primary flex mx-auto items-center gap-1"
+        >
+          <Scroll className="w-4 h-4" />
+          {language === "en" ? "Terms of Service" : "Términos de Servicio"}
+        </Button>
       </div>
     </div>
   );
