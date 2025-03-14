@@ -12,10 +12,9 @@ import { ReturnToHomeButton } from "@/components/layout/ReturnToHomeButton";
 
 interface AppointmentPageProps {
   language: "en" | "es";
-  onProceed?: () => void;
 }
 
-const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }) => {
+const AppointmentPage: React.FC<AppointmentPageProps> = ({ language }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isVirtual, setIsVirtual] = useState<boolean | null>(null);
@@ -46,6 +45,13 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
   const handleProceed = () => {
     if (!selectedDate || !selectedTime) return;
 
+    // Log the navigation attempt for debugging
+    console.log("Navigating to appointment confirmation with data:", {
+      appointmentType: isVirtual ? "Virtual Visit" : "In-Person Visit",
+      date: selectedDate.toISOString(),
+      time: selectedTime,
+    });
+
     navigate("/appointment-confirmation", {
       state: {
         appointmentType: isVirtual ? "Virtual Visit" : "In-Person Visit",
@@ -53,10 +59,6 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ language, onProceed }
         time: selectedTime,
       },
     });
-
-    if (onProceed) {
-      onProceed();
-    }
   };
 
   const pageTitle = language === "en" ? "Schedule an Appointment" : "Agendar una Cita";
