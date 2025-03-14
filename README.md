@@ -14,6 +14,35 @@ By integrating AI-driven intake systems, bilingual virtual consultations, and co
 * **Target Healthcare Issues:** Pediatric Care
 * **User Groups:** Rural pediatric patients and healthcare providers
 
+## Tech Stack
+
+### Frontend
+- **Framework:** React with TypeScript
+- **Routing:** React Router
+- **Styling:** Tailwind CSS
+- **UI Components:** shadcn/ui
+- **Icons:** Lucide React
+- **Charts & Visualization:** Recharts
+- **Form Handling:** React Hook Form with Zod validation
+
+### Backend
+- **Cloud Platform:** Firebase
+- **Database:** Firestore
+- **Authentication:** Firebase Authentication
+- **Storage:** Firebase Storage
+- **Cloud Functions:** Firebase Functions
+- **Messaging:** Twilio SMS & WhatsApp integration
+
+### AI & Language Services
+- **LLM Integration:** OpenAI, Hugging Face (Llama models)
+- **Multilingual Support:** English/Spanish translation
+- **Voice Recognition:** React Speech Recognition
+
+### Development
+- **Build Tool:** Vite
+- **Package Manager:** npm
+- **Linting & Formatting:** ESLint
+
 ## Features
 
 - Patient and Provider portals
