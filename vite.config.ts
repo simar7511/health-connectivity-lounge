@@ -2,12 +2,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { componentTagger } from "lovable-tagger";
 
-// Simplified configuration for better stability
-export default defineConfig({
+// Updated configuration for Lovable compatibility
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-  ],
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   server: {
     port: 8080,
     host: "::",
@@ -41,4 +43,4 @@ export default defineConfig({
   esbuild: {
     logOverride: { 'this-is-undefined-in-esm': 'silent' }
   }
-});
+}));
