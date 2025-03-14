@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -15,6 +14,7 @@ import { db } from "@/lib/firebase";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Timestamp } from "@/types/firebase";
+import { initializeMessageStore } from "@/utils/messageStore";
 
 interface ProviderDashboardProps {
   language: "en" | "es";
@@ -85,6 +85,11 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
   const [hasNewSubmissions, setHasNewSubmissions] = useState(false);
   const [lastCheckedTimestamp, setLastCheckedTimestamp] = useState<any>(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  // Initialize message store
+  useEffect(() => {
+    initializeMessageStore();
+  }, []);
 
   useEffect(() => {
     // Check if user is logged in and is a provider
@@ -207,6 +212,10 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
     }
   };
 
+  const handleStartChat = (patientName: string) => {
+    navigate(`/chat/${patientName}`);
+  };
+
   const formatLastUpdated = () => {
     return lastUpdated.toLocaleTimeString(currentLanguage === "en" ? "en-US" : "es-ES", {
       hour: '2-digit',
@@ -295,7 +304,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
                 <div className="lg:col-span-4">
                   <MessagingInbox
                     language={currentLanguage}
-                    onStartChat={() => {}}
+                    onStartChat={() => handleStartChat("Maria Garcia")}
                   />
                 </div>
               </div>
@@ -313,7 +322,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
                 <div className="lg:col-span-4">
                   <MessagingInbox
                     language={currentLanguage}
-                    onStartChat={() => {}}
+                    onStartChat={() => handleStartChat("Maria Garcia")}
                   />
                 </div>
               </div>
@@ -328,7 +337,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
                 <div className="lg:col-span-4">
                   <MessagingInbox
                     language={currentLanguage}
-                    onStartChat={() => {}}
+                    onStartChat={() => handleStartChat("Maria Garcia")}
                   />
                 </div>
               </div>

@@ -107,16 +107,24 @@ const initialConversations: Conversation[] = [
 // In-memory store as a fallback
 let memoryStore: {
   conversations: Conversation[];
+  initialized: boolean;
 } = {
-  conversations: [...initialConversations]
+  conversations: [...initialConversations],
+  initialized: false
 };
 
 // Load conversations from localStorage or use initial data
 export const loadConversations = async (): Promise<Conversation[]> => {
   try {
+    // If already initialized in memory, return that
+    if (memoryStore.initialized) {
+      return memoryStore.conversations;
+    }
+    
     // Try to get from IndexedDB first
     const storedConversations = await get('secureMessages');
     if (storedConversations) {
+      console.log("Loaded conversations from IndexedDB", storedConversations);
       // Parse dates from stored JSON
       const conversations = storedConversations.map((conv: any) => ({
         ...conv,
@@ -131,34 +139,42 @@ export const loadConversations = async (): Promise<Conversation[]> => {
         }))
       }));
       memoryStore.conversations = conversations;
+      memoryStore.initialized = true;
       return conversations;
     }
     
     // Fallback to localStorage
-    const localStorage = window.localStorage.getItem('secureMessages');
-    if (localStorage) {
-      const parsed = JSON.parse(localStorage);
-      // Parse dates from stored JSON
-      const conversations = parsed.map((conv: any) => ({
-        ...conv,
-        lastUpdated: new Date(conv.lastUpdated),
-        messages: conv.messages.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp),
-          attachments: msg.attachments?.map((att: any) => ({
-            ...att,
-            date: new Date(att.date)
+    const localStorageData = window.localStorage.getItem('secureMessages');
+    if (localStorageData) {
+      console.log("Loaded conversations from localStorage");
+      try {
+        const parsed = JSON.parse(localStorageData);
+        // Parse dates from stored JSON
+        const conversations = parsed.map((conv: any) => ({
+          ...conv,
+          lastUpdated: new Date(conv.lastUpdated),
+          messages: conv.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+            attachments: msg.attachments?.map((att: any) => ({
+              ...att,
+              date: new Date(att.date)
+            }))
           }))
-        }))
-      }));
-      memoryStore.conversations = conversations;
-      return conversations;
+        }));
+        memoryStore.conversations = conversations;
+        memoryStore.initialized = true;
+        return conversations;
+      } catch (error) {
+        console.error("Error parsing localStorage data:", error);
+      }
     }
   } catch (error) {
     console.error('Error loading conversations:', error);
   }
   
   // Return initial data if nothing is stored
+  memoryStore.initialized = true;
   return memoryStore.conversations;
 };
 
@@ -166,12 +182,15 @@ export const loadConversations = async (): Promise<Conversation[]> => {
 export const saveConversations = async (conversations: Conversation[]): Promise<void> => {
   try {
     memoryStore.conversations = conversations;
+    memoryStore.initialized = true;
     
     // Try to save to IndexedDB
     await set('secureMessages', conversations);
+    console.log("Saved conversations to IndexedDB");
     
     // Fallback to localStorage
     window.localStorage.setItem('secureMessages', JSON.stringify(conversations));
+    console.log("Saved conversations to localStorage");
   } catch (error) {
     console.error('Error saving conversations:', error);
   }
@@ -180,7 +199,13 @@ export const saveConversations = async (conversations: Conversation[]): Promise<
 // Get conversation by patient name
 export const getConversationByPatientName = async (patientName: string): Promise<Conversation | undefined> => {
   const conversations = await loadConversations();
-  return conversations.find(conv => conv.patientName === patientName);
+  const conversation = conversations.find(conv => conv.patientName === patientName);
+  
+  if (!conversation) {
+    console.warn(`No conversation found for patient ${patientName}`);
+  }
+  
+  return conversation;
 };
 
 // Add message to conversation
@@ -237,10 +262,23 @@ export const markConversationAsRead = async (patientName: string): Promise<void>
 
 // Initialize data
 export const initializeMessageStore = async (): Promise<void> => {
-  const conversations = await loadConversations();
-  
-  // If no conversations exist, save the initial ones
-  if (conversations.length === 0) {
-    await saveConversations(initialConversations);
+  // Force re-initialization if data doesn't exist
+  if (!memoryStore.initialized) {
+    const conversations = await loadConversations();
+    
+    // If no conversations exist, save the initial ones
+    if (conversations.length === 0) {
+      console.log("Initializing message store with default data");
+      await saveConversations(initialConversations);
+    }
+    
+    memoryStore.initialized = true;
+  } else {
+    console.log("Message store already initialized");
   }
+};
+
+// Utility function to check if store is initialized
+export const isMessageStoreInitialized = (): boolean => {
+  return memoryStore.initialized;
 };

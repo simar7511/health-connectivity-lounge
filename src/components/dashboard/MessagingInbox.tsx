@@ -34,13 +34,23 @@ const content = {
 export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) => {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Initialize the message store and load conversations
     const loadData = async () => {
-      await initializeMessageStore();
-      const loadedConversations = await loadConversations();
-      setConversations(loadedConversations);
+      setIsLoading(true);
+      try {
+        await initializeMessageStore();
+        console.log("Message store initialized in MessagingInbox");
+        const loadedConversations = await loadConversations();
+        console.log("Loaded conversations:", loadedConversations);
+        setConversations(loadedConversations);
+      } catch (error) {
+        console.error("Error loading conversations:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     loadData();
@@ -58,6 +68,11 @@ export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) =
   const getAttachmentCountText = (count: number) => {
     if (count === 0) return "";
     return `${count} ${count === 1 ? content[language].attachment : content[language].attachments}`;
+  };
+
+  const handleOpenChat = (patientName: string) => {
+    console.log(`Opening chat for ${patientName}`);
+    navigate(`/chat/${patientName}`);
   };
 
   return (
@@ -82,7 +97,12 @@ export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) =
           </div>
           
           <div className="space-y-2">
-            {conversations.length > 0 ? (
+            {isLoading ? (
+              <div className="p-8 text-center">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-muted-foreground">Loading messages...</p>
+              </div>
+            ) : conversations.length > 0 ? (
               conversations.map((conversation) => {
                 // Get the latest message
                 const latestMessage = conversation.messages[conversation.messages.length - 1];
@@ -96,7 +116,7 @@ export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) =
                   <div
                     key={conversation.id}
                     className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                    onClick={() => navigate(`/chat/${conversation.patientName}`)}
+                    onClick={() => handleOpenChat(conversation.patientName)}
                   >
                     <div className="flex items-start gap-2">
                       {conversation.unread && (

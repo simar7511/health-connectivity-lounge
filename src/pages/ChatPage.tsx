@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,32 +49,55 @@ export const ChatPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Initialize message store
+  // Initialize message store on component mount
   useEffect(() => {
-    initializeMessageStore();
-  }, []);
-
-  // Load conversation for the selected patient
-  useEffect(() => {
-    const loadConversation = async () => {
+    const initMessages = async () => {
+      await initializeMessageStore();
+      console.log("Message store initialized");
+      
+      // If we have a patientName, load that conversation immediately
       if (patientName) {
-        // Mark the conversation as read when opened
-        await markConversationAsRead(patientName);
-        
-        // Load conversation
-        const conversation = await getConversationByPatientName(patientName);
-        if (conversation) {
-          setMessages(conversation.messages);
-          // Check if there are any messages with attachments
-          setHasAttachments(conversation.messages.some(msg => msg.attachments && msg.attachments.length > 0));
-        } else {
-          setMessages([]);
-          setHasAttachments(false);
-        }
+        loadPatientConversation(patientName);
       }
     };
     
-    loadConversation();
+    initMessages();
+  }, []);
+
+  // Function to load a specific patient's conversation
+  const loadPatientConversation = async (name: string) => {
+    try {
+      console.log(`Loading conversation for ${name}`);
+      // Mark the conversation as read when opened
+      await markConversationAsRead(name);
+      
+      // Load conversation
+      const conversation = await getConversationByPatientName(name);
+      if (conversation) {
+        console.log("Conversation found:", conversation);
+        setMessages(conversation.messages);
+        // Check if there are any messages with attachments
+        setHasAttachments(conversation.messages.some(msg => msg.attachments && msg.attachments.length > 0));
+      } else {
+        console.log("No conversation found for patient:", name);
+        setMessages([]);
+        setHasAttachments(false);
+      }
+    } catch (error) {
+      console.error("Error loading conversation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load messages. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle patient name change in URL
+  useEffect(() => {
+    if (patientName) {
+      loadPatientConversation(patientName);
+    }
   }, [patientName]);
 
   // Handle auto-scrolling when messages change
@@ -94,10 +118,7 @@ export const ChatPage = () => {
         await addMessage(patientName, newMsg);
         
         // Reload the conversation to get the updated messages
-        const conversation = await getConversationByPatientName(patientName);
-        if (conversation) {
-          setMessages(conversation.messages);
-        }
+        loadPatientConversation(patientName);
         
         // Clear the state
         window.history.replaceState({}, document.title);
@@ -117,16 +138,22 @@ export const ChatPage = () => {
       timestamp: new Date(),
     };
 
-    // Add message to store
-    await addMessage(patientName, message);
-    
-    // Reload the conversation
-    const conversation = await getConversationByPatientName(patientName);
-    if (conversation) {
-      setMessages(conversation.messages);
+    try {
+      // Add message to store
+      await addMessage(patientName, message);
+      
+      // Reload the conversation
+      loadPatientConversation(patientName);
+      
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    setNewMessage("");
   };
 
   const formatTime = (date: Date) => {
