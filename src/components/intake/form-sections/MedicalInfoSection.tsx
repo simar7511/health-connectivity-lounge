@@ -35,7 +35,7 @@ export const MedicalInfoSection = ({
       {/* Symptoms */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-700">
-          {language === "en" ? "What symptoms are you experiencing?" : "¿Qué síntomas tiene?"}
+          {language === "en" ? "What symptoms is your child experiencing?" : "¿Qué síntomas tiene su hijo?"}
         </Label>
         <Textarea
           name="symptoms"
@@ -54,7 +54,7 @@ export const MedicalInfoSection = ({
       {/* Medical History */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-700">
-          {language === "en" ? "Medical History (Past Conditions, Surgeries, Chronic Illnesses)" : "Historial Médico (Condiciones Previas, Cirugías, Enfermedades Crónicas)"}
+          {language === "en" ? "Child's Medical History (Past Conditions, Surgeries, Chronic Illnesses)" : "Historial Médico del Niño (Condiciones Previas, Cirugías, Enfermedades Crónicas)"}
         </Label>
         <Textarea
           name="medicalHistory"
@@ -72,7 +72,7 @@ export const MedicalInfoSection = ({
       {/* Medications & Allergies */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-700">
-          {language === "en" ? "Current Medications & Allergies" : "Medicamentos Actuales y Alergias"}
+          {language === "en" ? "Child's Medications & Allergies" : "Medicamentos y Alergias del Niño"}
         </Label>
         <Textarea
           name="medicationsAndAllergies"
@@ -90,7 +90,7 @@ export const MedicalInfoSection = ({
       {/* Recent Hospital Visits */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-700">
-          {language === "en" ? "Have you been to a hospital recently for medical care?" : "¿Ha estado en un hospital recientemente para atención médica?"}
+          {language === "en" ? "Has your child been to a hospital recently for medical care?" : "¿Ha estado su hijo en un hospital recientemente para atención médica?"}
         </Label>
         <div className="flex items-center space-x-4">
           {["Yes", "No"].map((value, index) => (
@@ -111,7 +111,7 @@ export const MedicalInfoSection = ({
         {formData.hasRecentHospitalVisits && (
           <div className="space-y-2 mt-2 p-3 bg-purple-50 rounded-md">
             <Label className="text-sm font-medium text-gray-700">
-              {language === "en" ? "Where did you receive care?" : "¿Dónde recibió atención?"}
+              {language === "en" ? "Where did your child receive care?" : "¿Dónde recibió atención su hijo?"}
             </Label>
             <Input
               name="hospitalVisitLocation"
