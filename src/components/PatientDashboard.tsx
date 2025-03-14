@@ -17,7 +17,9 @@ import {
   MessageSquare, 
   Bot,
   User,
-  Heart
+  Heart,
+  ChevronRight,
+  Shield
 } from "lucide-react";
 
 const PatientDashboard = ({ language }: { language: "en" | "es" }) => {
@@ -27,109 +29,171 @@ const PatientDashboard = ({ language }: { language: "en" | "es" }) => {
 
   const content = {
     en: {
-      upcomingAppointment: "Upcoming Appointment",
+      upcomingAppointment: "Health Services",
       nextCheckup: "Next Check-up",
       transportation: "Transportation Details",
       pickup: "Pickup: 9:15 AM",
-      symptoms: "Record Symptoms",
-      reminders: "View Reminders",
+      symptoms: "Check Symptoms",
+      reminders: "Appointment Reminders",
       communityResources: "Community Resources",
       findClinics: "Find Free Clinics",
       sendWhatsApp: "Send WhatsApp Reminder",
       aiAssistant: "AI Health Assistant",
       secureChat: "Secure Chat",
-      communication: "Communication"
+      communication: "Communication",
+      welcome: "Welcome back",
+      dashboard: "Patient Dashboard"
     },
     es: {
-      upcomingAppointment: "Próxima Cita",
+      upcomingAppointment: "Servicios de Salud",
       nextCheckup: "Próxima Revisión",
       transportation: "Detalles de Transporte",
       pickup: "Recogida: 9:15 AM",
-      symptoms: "Registrar Síntomas",
-      reminders: "Ver Recordatorios",
+      symptoms: "Verificar Síntomas",
+      reminders: "Recordatorios de Citas",
       communityResources: "Recursos Comunitarios",
       findClinics: "Encontrar Clínicas Gratuitas",
       sendWhatsApp: "Enviar Recordatorio por WhatsApp",
       aiAssistant: "Asistente de Salud IA",
       secureChat: "Chat Seguro",
-      communication: "Comunicación"
+      communication: "Comunicación",
+      welcome: "Bienvenido de nuevo",
+      dashboard: "Panel del Paciente"
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white text-foreground p-5 space-y-6 max-w-2xl mx-auto animate-fadeIn">
-      <div className="mb-8 flex justify-center">
-        <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-4 rounded-xl shadow-md inline-flex items-center gap-3">
-          <User className="h-8 w-8" />
-          <div>
-            <h1 className="text-xl font-bold">
-              {language === "en" ? "Patient Dashboard" : "Panel del Paciente"}
-            </h1>
-            <p className="text-sm opacity-80">
-              {language === "en" ? "Welcome back" : "Bienvenido de nuevo"}
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white text-foreground p-5 space-y-8 max-w-2xl mx-auto animate-fadeIn">
+      <div className="mb-8">
+        <div className="bg-gradient-to-r from-primary to-purple-500 text-white p-6 rounded-xl shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 p-3 rounded-full">
+              <User className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">
+                {language === "en" ? content.en.dashboard : content.es.dashboard}
+              </h1>
+              <p className="text-sm opacity-90">
+                {language === "en" ? content.en.welcome : content.es.welcome}
+              </p>
+            </div>
           </div>
         </div>
       </div>
       
-      <Card className="p-5 border-t-4 border-primary shadow-md hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden">
-        <h2 className="text-xl font-semibold text-primary flex items-center gap-3 mb-4">
-          <Heart className="h-5 w-5 text-primary" />
-          {content[currentLanguage].upcomingAppointment}
-        </h2>
-        <div className="grid gap-4">
-          <Button 
-            variant="gradient"
-            className="w-full flex items-center justify-start gap-3 py-6 rounded-xl"
-            onClick={() => navigate("/symptoms")}
-          >
-            <Clock className="w-5 h-5" />
-            {content[currentLanguage].symptoms}
-          </Button>
+      <Card className="overflow-hidden rounded-xl border-none shadow-lg transition-all duration-300 hover:shadow-xl bg-white">
+        <div className="p-1">
+          <div className="bg-gradient-to-r from-primary to-purple-500 p-4 rounded-t-lg">
+            <h2 className="text-xl font-semibold text-white flex items-center gap-3">
+              <Heart className="h-5 w-5 text-white" />
+              {content[currentLanguage].upcomingAppointment}
+            </h2>
+          </div>
+        </div>
+        <div className="p-5">
+          <div className="grid gap-4">
+            <Button 
+              variant="default"
+              className="w-full flex items-center justify-between py-5 px-4 bg-gradient-to-r from-primary/90 to-purple-500/90 hover:from-primary hover:to-purple-500 text-white rounded-xl shadow-md hover:shadow-lg transition-all"
+              onClick={() => navigate("/symptoms")}
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-full">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <span className="font-medium">{content[currentLanguage].symptoms}</span>
+              </div>
+              <ChevronRight className="w-5 h-5 opacity-70" />
+            </Button>
+            
+            <Button 
+              variant="outline"
+              className="w-full flex items-center justify-between py-5 px-4 border-primary/10 bg-primary/5 hover:bg-primary/10 text-primary rounded-xl transition-all"
+              onClick={() => navigate("/appointment")}
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <span className="font-medium">{content[currentLanguage].reminders}</span>
+              </div>
+              <ChevronRight className="w-5 h-5 opacity-70" />
+            </Button>
+          </div>
         </div>
       </Card>
 
-      <Card className="p-5 border-t-4 border-accent shadow-md hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden">
-        <h2 className="text-xl font-semibold text-primary flex items-center gap-3 mb-4">
-          <Hospital className="h-5 w-5 text-primary" />
-          {content[currentLanguage].communityResources}
-        </h2>
-        <div className="grid gap-3">
+      <Card className="overflow-hidden rounded-xl border-none shadow-lg transition-all duration-300 hover:shadow-xl bg-white">
+        <div className="p-1">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-400 p-4 rounded-t-lg">
+            <h2 className="text-xl font-semibold text-white flex items-center gap-3">
+              <Hospital className="h-5 w-5 text-white" />
+              {content[currentLanguage].communityResources}
+            </h2>
+          </div>
+        </div>
+        <div className="p-5">
           <Button 
             variant="outline" 
-            className="flex items-center justify-start gap-3 hover:border-primary"
+            className="w-full flex items-center justify-between py-5 px-4 border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition-all"
             onClick={() => navigate("/free-clinic")}
           >
-            <Hospital className="w-5 h-5" />
-            {content[currentLanguage].findClinics}
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2 rounded-full">
+                <Hospital className="w-5 h-5" />
+              </div>
+              <span className="font-medium">{content[currentLanguage].findClinics}</span>
+            </div>
+            <ChevronRight className="w-5 h-5 opacity-70" />
           </Button>
         </div>
       </Card>
 
-      <Card className="p-5 border-t-4 border-blue-400 shadow-md hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden">
-        <h2 className="text-xl font-semibold text-primary flex items-center gap-3 mb-4">
-          <MessageSquare className="h-5 w-5 text-primary" />
-          {content[currentLanguage].communication}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <Card className="overflow-hidden rounded-xl border-none shadow-lg transition-all duration-300 hover:shadow-xl bg-white">
+        <div className="p-1">
+          <div className="bg-gradient-to-r from-green-500 to-teal-400 p-4 rounded-t-lg">
+            <h2 className="text-xl font-semibold text-white flex items-center gap-3">
+              <MessageSquare className="h-5 w-5 text-white" />
+              {content[currentLanguage].communication}
+            </h2>
+          </div>
+        </div>
+        <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Button 
-            variant="outline" 
-            className="flex items-center justify-start gap-3 hover:border-primary"
+            variant="outline"
+            className="flex flex-col items-center justify-center gap-3 p-5 border-green-200 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl transition-all h-auto"
             onClick={() => navigate("/chat")}
           >
-            <MessageSquare className="w-5 h-5" />
-            {content[currentLanguage].secureChat}
+            <div className="bg-green-100 p-3 rounded-full">
+              <MessageSquare className="w-6 h-6" />
+            </div>
+            <span className="font-medium text-center">{content[currentLanguage].secureChat}</span>
           </Button>
+          
           <Button 
-            variant="outline" 
-            className="flex items-center justify-start gap-3 hover:border-primary"
+            variant="outline"
+            className="flex flex-col items-center justify-center gap-3 p-5 border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl transition-all h-auto"
             onClick={() => navigate("/ai-chat")}
           >
-            <Bot className="w-5 h-5" />
-            {content[currentLanguage].aiAssistant}
+            <div className="bg-purple-100 p-3 rounded-full">
+              <Bot className="w-6 h-6" />
+            </div>
+            <span className="font-medium text-center">{content[currentLanguage].aiAssistant}</span>
           </Button>
         </div>
       </Card>
+      
+      <div className="fixed bottom-0 left-0 right-0 bg-white p-3 shadow-lg border-t border-gray-100 flex justify-center">
+        <Button
+          variant="outline"
+          className="flex items-center gap-2 bg-gradient-to-r from-primary/10 to-purple-100 hover:from-primary/15 hover:to-purple-200 text-primary border-none rounded-full px-6 py-2"
+          onClick={() => navigate("/")}
+        >
+          <Shield className="w-4 h-4" />
+          {language === "en" ? "Safe Haven Pediatrics" : "Safe Haven Pediatrics"}
+        </Button>
+      </div>
     </div>
   );
 };

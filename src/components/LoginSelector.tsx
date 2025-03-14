@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog, Bot } from "lucide-react";
+import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog, Bot, ShieldCheck, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface LoginSelectorProps {
@@ -70,16 +71,16 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white">
       {/* Language Switcher */}
       <div className="absolute top-4 right-4">
         <Button
           variant="outline"
           size="lg"
           onClick={() => onLanguageChange?.(language === "en" ? "es" : "en")}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white transition-all rounded-xl px-5 py-6 shadow-sm border-primary/10"
         >
-          <Globe className="w-5 h-5" />
+          <Globe className="w-5 h-5 text-primary" />
           {content[language].switchLanguage}
         </Button>
       </div>
@@ -90,84 +91,97 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
           variant="outline"
           size="lg"
           onClick={() => navigate("/provider/login")}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white transition-all rounded-xl px-5 py-6 shadow-sm border-primary/10"
         >
-          <UserCog className="w-5 h-5" />
+          <UserCog className="w-5 h-5 text-primary" />
           {content[language].providerLogin}
         </Button>
       </div>
 
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="text-center space-y-6 mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary">
+      <div className="container mx-auto px-4 py-16 max-w-4xl">
+        <div className="text-center space-y-6 mb-12 animate-fadeIn">
+          <h1 className="text-4xl md:text-5xl font-bold text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
             ✨ {content[language].title} ✨
           </h1>
-          <p className="text-2xl md:text-3xl text-primary/80">
+          <p className="text-2xl md:text-3xl text-primary/80 font-medium">
             {content[language].subtitle}
           </p>
-          <div className="space-y-3 mt-8">
+          <div className="space-y-4 mt-8 max-w-3xl mx-auto">
             {content[language].benefits.map((benefit, index) => (
-              <p key={index} className="text-lg text-primary/90 flex items-center justify-center gap-2">
-                {["🏥", "📅", "🏡", "🛑", "🌎"][index]}
-                {benefit}
-              </p>
+              <div key={index} className="bg-white/70 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-primary/5 transform transition-all hover:-translate-y-1 hover:shadow-md">
+                <p className="text-lg text-gray-700 flex items-center gap-3">
+                  <span className="bg-primary/10 p-2 rounded-full text-primary">
+                    {[<Heart className="w-5 h-5" key="heart" />, <Calendar className="w-5 h-5" key="calendar" />, <VideoIcon className="w-5 h-5" key="video" />, <ShieldCheck className="w-5 h-5" key="shield" />, <Globe className="w-5 h-5" key="globe" />][index]}
+                  </span>
+                  {benefit}
+                </p>
+              </div>
             ))}
           </div>
         </div>
 
         {/* AI Health Assistant Button */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-8">
           <Button
             onClick={() => navigate("/ai-chat")}
-            variant="gradient"
+            variant="default"
             size="lg"
-            className="group transition-all duration-300 drop-shadow-md hover:drop-shadow-xl"
+            className="group bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-600 text-white py-6 px-8 rounded-full transition-all duration-300 drop-shadow-md hover:drop-shadow-xl flex items-center gap-3"
           >
-            <Bot className="w-6 h-6 mr-2 text-white group-hover:scale-110 transition-transform" />
+            <Bot className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
             {content[language].tryAiAssistant}
+            <span className="bg-white/20 text-xs py-1 px-2 rounded-full">New</span>
           </Button>
         </div>
 
-        <Card className="p-8 bg-white/80 backdrop-blur shadow-lg">
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <p className="text-lg leading-relaxed text-gray-700 flex items-start gap-2">
+        <Card className="p-8 bg-white/90 backdrop-blur shadow-xl rounded-2xl border-t border-l border-white/50 border-r-0 border-b-0">
+          <div className="space-y-8">
+            <div className="space-y-5 bg-gradient-to-br from-primary/5 to-purple-50 p-5 rounded-xl">
+              <p className="text-lg leading-relaxed text-gray-700 flex items-start gap-3">
                 <Heart className="w-6 h-6 text-primary shrink-0 mt-1" />
-                {content[language].welcomeMessage1}
+                <span>{content[language].welcomeMessage1}</span>
               </p>
-              <p className="text-lg leading-relaxed text-gray-700 flex items-start gap-2">
+              <p className="text-lg leading-relaxed text-gray-700 flex items-start gap-3">
                 <Baby className="w-6 h-6 text-primary shrink-0 mt-1" />
-                {content[language].welcomeMessage2}
+                <span>{content[language].welcomeMessage2}</span>
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 my-8">
-              <div className="text-center p-4 rounded-lg bg-primary/5">
-                <VideoIcon className="w-8 h-8 mx-auto text-primary mb-2" />
-                <p className="font-medium">{content[language].virtualVisits}</p>
-                <p className="text-sm mt-2 text-gray-600">💻 {content[language].virtualDescription}</p>
+            <div className="grid md:grid-cols-3 gap-5 my-8">
+              <div className="bg-white rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-primary/5 flex flex-col items-center text-center">
+                <div className="bg-gradient-to-r from-primary/10 to-purple-100 p-4 rounded-full mb-4">
+                  <VideoIcon className="w-8 h-8 text-primary" />
+                </div>
+                <p className="font-semibold text-primary">{content[language].virtualVisits}</p>
+                <p className="text-sm mt-2 text-gray-600">{content[language].virtualDescription}</p>
               </div>
-              <div className="text-center p-4 rounded-lg bg-primary/5">
-                <Calendar className="w-8 h-8 mx-auto text-primary mb-2" />
-                <p className="font-medium">{content[language].inPersonVisits}</p>
-                <p className="text-sm mt-2 text-gray-600">🏥 {content[language].inPersonDescription}</p>
+              
+              <div className="bg-white rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-primary/5 flex flex-col items-center text-center">
+                <div className="bg-gradient-to-r from-primary/10 to-purple-100 p-4 rounded-full mb-4">
+                  <Calendar className="w-8 h-8 text-primary" />
+                </div>
+                <p className="font-semibold text-primary">{content[language].inPersonVisits}</p>
+                <p className="text-sm mt-2 text-gray-600">{content[language].inPersonDescription}</p>
               </div>
-              <div className="text-center p-4 rounded-lg bg-purple-100">
-                <Bot className="w-8 h-8 mx-auto text-purple-600 mb-2" />
-                <p className="font-medium">{content[language].aiAssistant}</p>
-                <p className="text-sm mt-2 text-gray-600">🤖 {content[language].aiAssistantDescription}</p>
+              
+              <div className="bg-white rounded-xl p-5 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-primary/5 flex flex-col items-center text-center">
+                <div className="bg-gradient-to-r from-primary/10 to-purple-100 p-4 rounded-full mb-4">
+                  <Bot className="w-8 h-8 text-primary" />
+                </div>
+                <p className="font-semibold text-primary">{content[language].aiAssistant}</p>
+                <p className="text-sm mt-2 text-gray-600">{content[language].aiAssistantDescription}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <Button
                 onClick={handleGetStarted}
-                className="w-full py-6 text-lg bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2"
+                className="w-full py-6 text-lg bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-600 text-white flex items-center justify-center gap-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {content[language].getStarted}
                 <ArrowRight className="w-5 h-5" />
               </Button>
-              <p className="text-sm text-center text-gray-600">
+              <p className="text-sm text-center text-gray-600 bg-primary/5 py-2 px-4 rounded-lg inline-block mx-auto">
                 ✅ {content[language].formDescription}
               </p>
             </div>

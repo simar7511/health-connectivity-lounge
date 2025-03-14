@@ -12,12 +12,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%);
   min-height: 100vh;
+  color: #1e293b;
 }
 
 /* Improved focus styles for accessibility */
 :focus-visible {
   outline: 2px solid #6E59A5;
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* Card hover effects */
@@ -44,9 +46,31 @@ body {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Float animation for attention */
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading states */
+.shimmer {
+  background-size: 200% 100%;
+  background-image: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  animation: shimmer 2s linear infinite;
+}
+
+/* Glassmorphism styles */
+.glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 /* Improved button styles */
 button {
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Form control focus states */
@@ -55,4 +79,55 @@ textarea:focus,
 select:focus {
   border-color: #6E59A5;
   box-shadow: 0 0 0 3px rgba(110, 89, 165, 0.2);
+  outline: none;
+}
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(247, 250, 252, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(110, 89, 165, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(110, 89, 165, 0.5);
+}
+
+/* High contrast text for accessibility */
+.high-contrast {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+/* Responsive font sizing */
+@media (max-width: 640px) {
+  .text-responsive {
+    font-size: calc(1rem + 0.5vw);
+  }
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #6E59A5, #9b87f5);
+}
+
+/* Enhanced accessibility: reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
