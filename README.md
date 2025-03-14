@@ -41,3 +41,6 @@ const apiKey = process.env.OPENAI_API_KEY || process.env.HUGGING_FACE_TOKEN;
 
 1. Build the project: `npm run build`
 2. Deploy to Firebase: `firebase deploy`
+
+## Target Audience
+1. Margized Group, including those who are undocumented, uninsured, and have limited English proficiency, face significant barriers to accessing healthcare.
