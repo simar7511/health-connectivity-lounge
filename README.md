@@ -235,7 +235,7 @@ Patient Awareness Campaigns：
 - Bilingual (Spanish & English) flyers, including a QR code linked to our virtual clinic, at churches, schools, and grocery stores
 - Engaging Latino communities through digital platforms, such as WhatsApp
 
-Collaborates with churches and schools, where patients feel safe and supported. Supplying devices, such as tablets, at these locations to ensure patients without personal devices can access our virtual clinic.
+Collaborating with churches and schools, where patients feel safe and supported. Supplying devices, such as tablets, at these locations to ensure patients without personal devices can access our virtual clinic.
 
 Once patients successfully access our virtual clinic, they can schedule an appointment or use the AI chatbot for basic inquiries.
 
@@ -245,3 +245,53 @@ We will apply for federal, state, and local healthcare grants that support pedia
 - Title V Maternal and Child Health (MCH). This program provides funding for pediatric health initiatives
 - Maternal and Child Health Block Grant. This program supports improving the health of women, infants, children, youth, and their families.
 - Bill & Melinda Gates Foundation. This program supports community health initiatives.
+- Robert Wood Johnson Foundation (RWJF)
+- Church donation
+
+Embedding in churches, schools, pharmacies, community centers
+- Builds trust with the congregation
+- Strengthens educational equity
+- Increases prescription sales and customer visits
+- Enhances social services
+
+With our virtual clinic’s telehealth appointment feature, we can engage medical students and retired providers to support virtual care, helping to alleviate the high provider-to-patient ratio
+
+We will track patient engagement and clinic feedback to modify our promotion strategy and update the virtual clinic. 
+
+Scalability:
+- Phrase 1 (1 year): Only in Adams County
+- Phrase 2 (2 years to 4 years): Expanding to surrounding rural counties with the same embedded method
+- Phrase 3 (5 years and beyond): Expanding nationally by collaborating with larger organizations and communities
+
+## Legal & Compliance Considerations
+- Register as a 501(c)(3) nonprofit with the IRS to operate as a tax-exempt organization
+- Obtain a business license from the Washington State Department of Revenue (DOR) to legally conduct healthcare operations
+- Verify credentials through the Washington State Department of Health (DOH) to ensure compliance with professional licensing requirements
+- Ensure healthcare providers have valid Washington state medical licenses, meeting all state regulations for telehealth and in-person care
+- Comply with Clinical Laboratory Improvement Amendments (CLIA) regulations for any diagnostic testing services
+- Adhere to HIPAA regulations, ensuring that all patient data is securely handled, stored, and transmitted to protect privacy
+- Compliance with OSHA regulations, ensuring workplace safety for staff and healthcare providers
+- Compliance with FDA regulations, ensuring AI meets FDA approval standards
+- Ensure that AI serves solely as a support tool rather than making independent decisions. Following Washington State law, all medical decisions must be reviewed and approved by a licensed provider
+- Compliance with Washington State laws, which typically require parental or legal guardian consent for minors to receive medical treatment, except in specific cases where minors can consent independently
+
+## Security & Data Protection
+- End-to-End Encryption: all virtual consultations, messages, and patient data transmissions are encrypted using TLS 1.2+, ensuring secure communication between patients and healthcare providers
+- Secure Provider Authentication: use 2FA for provider login, ensuring that only authorized users can access patient data
+- HIPAA-Compliant Cloud Storage: all patient records and telehealth data are securely stored in HIPAA-compliant cloud infrastructure (AWS, Google Cloud, or Azure) to maintain confidentiality and compliance
+- AI and Data Protection: AI tools used in the clinic comply with Washington State and FDA regulations, ensuring that clinical decisions do not store or share sensitive patient data without consent
+- Routine Security Audits Checks: the virtual clinic undergoes regular security assessments, ensuring no security issues and meeting county and state regulations
+
+## Licensing
+Our virtual clinic operates:
+- Healthcare Licensing: the virtual clinic and its providers comply with Washington State laws and state medical licensing requirements
+- Medical Software Certification: undergoing FDA regulation, ensuring the AI tools used in the virtual clinic meet FDA approval standards
+- Usage Restrictions: all medical decisions must be reviewed and approved by a licensed provider. AI only serves as a support tool
+- HIPAA and Data Protection Compliance: ensuring that all patient data storage meets HIPAA, state privacy laws, and federal telehealth regulations
+
+## Collaboration with Local Health Jurisdictions & ACH Organizations
+To ensure the effective deployment and sustainability of our virtual pediatric, we are coordinating with healthcare and public health organizations in Adams County:
+- Adams County Health Department (ACHD): ensure compliance with state healthcare regulations, and expand access to virtual pediatric care.
+- Greater Columbia Accountable Community of Health (GCACH): integrating the virtual clinic into existing rural healthcare networks, Medicaid-funded programs, and community health efforts in Adams County
+- East Adams Rural Healthcare (EARH): validating the workflows and accuracy of AI diagnose
+- Adams County schools, churches, and community centers: teaching patients how to access the virtual clinic. Improving accessibility. 
