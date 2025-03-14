@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -23,7 +24,10 @@ type LoginState =
   | "provider-dashboard";
 
 const Index = () => {
-  const [language, setLanguage] = useState<"en" | "es">("en");
+  const [language, setLanguage] = useState<"en" | "es">(() => {
+    return sessionStorage.getItem("preferredLanguage") as "en" | "es" || "en";
+  });
+  
   const [loginState, setLoginState] = useState<LoginState>("select");
   const navigate = useNavigate();
   const { isProvider, currentUser } = useAuth();
@@ -31,9 +35,17 @@ const Index = () => {
   // Check if the user is already logged in
   useEffect(() => {
     console.log("Index: Checking login state", { isProvider, currentUser });
+    
+    // If user is logged in as provider, redirect to provider dashboard
     if (isProvider && currentUser) {
       console.log("Provider is logged in, redirecting to dashboard");
       navigate("/provider/dashboard", { replace: true });
+    }
+    
+    // If user is logged in as patient but not provider, redirect to patient dashboard
+    else if (currentUser && !isProvider) {
+      console.log("Patient is logged in, redirecting to dashboard");
+      navigate("/patient/dashboard", { replace: true });
     }
   }, [isProvider, currentUser, navigate]);
 

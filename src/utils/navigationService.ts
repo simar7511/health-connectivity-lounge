@@ -34,10 +34,29 @@ export const clearNavigationState = () => {
 export const navigateAfterLogout = (navigate: any) => {
   // Clear any session/local storage items that should be removed on logout
   clearNavigationState();
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('isProvider');
   
   // Navigate to the home page
   navigate("/");
+};
+
+// Ensure the application always starts at the homepage
+export const ensureHomepageStart = () => {
+  // Check if this is the first page load of the session
+  const isFirstPageLoad = !sessionStorage.getItem('appInitialized');
   
-  // Optionally force a page refresh to ensure clean state
-  // window.location.href = "/";
+  if (isFirstPageLoad) {
+    // Mark that the app has been initialized this session
+    sessionStorage.setItem('appInitialized', 'true');
+    
+    // If we're not already on the homepage, redirect there
+    if (window.location.pathname !== '/' && window.location.pathname !== '/index') {
+      console.log('First page load detected, redirecting to homepage');
+      window.location.href = '/';
+      return true;
+    }
+  }
+  
+  return false;
 };

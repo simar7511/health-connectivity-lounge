@@ -3,11 +3,19 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { ensureHomepageStart } from "./utils/navigationService";
 
 // Simple and reliable mounting approach
 const mount = () => {
   try {
     console.log("Starting app initialization...");
+    
+    // Check if we should redirect to the homepage
+    if (ensureHomepageStart()) {
+      console.log("Redirecting to homepage...");
+      return; // Exit early, we're redirecting
+    }
+    
     const container = document.getElementById("root");
     
     if (!container) {
