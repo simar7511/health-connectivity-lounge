@@ -24,7 +24,6 @@ const router = createBrowserRouter([
   { path: "/provider/login", element: <Index /> },
   { path: "/pediatric-intake", element: <PediatricIntakeForm language="en" /> },
   { path: "/patient-intake/:id", element: <PatientIntakeDetails language="en" /> },
-  // Explicitly define the provider dashboard route to render the ProviderDashboard component directly
   { path: "/provider/dashboard", element: <ProviderDashboard language="en" /> },
   { path: "/symptoms", element: <SymptomCheckerPage language="en" onProceed={() => {}} appointmentDetails={{type: "", date: new Date(), time: "", provider: {id: "", name: "", specialty: "", availability: []}}} /> },
   { path: "/appointment", element: <AppointmentPage language="en" /> },

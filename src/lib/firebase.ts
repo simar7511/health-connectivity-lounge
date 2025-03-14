@@ -1,29 +1,19 @@
+
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { getMessaging, isSupported } from "firebase/messaging";
 
-// Hardcoded Firebase configuration as fallback
-const hardcodedConfig = {
-  apiKey: "AIzaSyCx60XPDz1pEfh2y4ZyARYDU86h9AxNFXw",
-  authDomain: "health-connectivity-01.firebaseapp.com",
-  projectId: "health-connectivity-01",
-  storageBucket: "health-connectivity-01.appspot.com",
-  messagingSenderId: "429069343294",
-  appId: "1:429069343294:web:943a1998a83e63353c0f6f",
-  measurementId: "G-3BVWXWV69Q"
-};
-
-// Firebase configuration - Use environment variables first, fall back to hardcoded values
+// Firebase configuration - Use environment variables
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || hardcodedConfig.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || hardcodedConfig.authDomain,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || hardcodedConfig.projectId,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || hardcodedConfig.storageBucket,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || hardcodedConfig.messagingSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || hardcodedConfig.appId,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || hardcodedConfig.measurementId
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Log a redacted version of the config for troubleshooting
@@ -37,18 +27,11 @@ console.log("Firebase Config Status:", {
   measurementId: !!firebaseConfig.measurementId ? "Present" : "Missing"
 });
 
-// Declare Firebase services with default empty implementations for type safety
+// Declare Firebase services
 let app;
 let db;
 let auth;
 let messaging = null;
-
-// Check if we're missing any critical config values
-const isMissingConfig = !firebaseConfig.apiKey || !firebaseConfig.projectId;
-
-if (isMissingConfig) {
-  console.warn("⚠️ Some Firebase config values are missing, using hardcoded values as fallback");
-}
 
 try {
   // Initialize Firebase
@@ -81,7 +64,7 @@ try {
   toast({
     variant: "destructive",
     title: "Firebase Configuration Error",
-    description: `Please ensure Firebase is properly configured. Error: ${error instanceof Error ? error.message : String(error)}`,
+    description: `Please check your .env file for proper configuration. Error: ${error instanceof Error ? error.message : String(error)}`,
   });
 
   // Create dummy implementations

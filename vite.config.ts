@@ -3,8 +3,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// Improved configuration for better stability and compatibility
-export default defineConfig(({ mode }) => ({
+// Simplified configuration for better stability
+export default defineConfig({
   plugins: [
     react(),
   ],
@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
     open: false,
     hmr: {
       overlay: false,
-      timeout: 60000  // Increased timeout for slower environments
+      timeout: 60000
     }
   },
   resolve: {
@@ -25,18 +25,11 @@ export default defineConfig(({ mode }) => ({
   build: {
     sourcemap: true,
     minify: false,
-    target: "es2018",
-    // Exclude problematic dependencies from processing
-    commonjsOptions: {
-      exclude: [
-        /node_modules\/@xenova\/transformers/,
-        /node_modules\/sharp/
-      ]
-    }
+    target: "es2018"
   },
   optimizeDeps: {
+    // Exclude problematic native dependencies 
     exclude: ['@xenova/transformers', 'sharp'],
-    force: true,
     esbuildOptions: {
       target: "es2018",
       supported: { 
@@ -48,4 +41,4 @@ export default defineConfig(({ mode }) => ({
   esbuild: {
     logOverride: { 'this-is-undefined-in-esm': 'silent' }
   }
-}));
+});
