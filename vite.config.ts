@@ -2,13 +2,22 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 
 // Improved configuration for better stability and Lovable compatibility
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    mode === 'development' && componentTagger(),
+    // Only use the tagger in development mode if it's available
+    mode === 'development' && (() => {
+      try {
+        // Dynamic import to prevent build errors if the package is missing
+        const { componentTagger } = require('lovable-tagger');
+        return componentTagger();
+      } catch (e) {
+        console.warn('Lovable tagger not available or incompatible, skipping');
+        return null;
+      }
+    })()
   ].filter(Boolean),
   server: {
     port: 8080,
