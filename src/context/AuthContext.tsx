@@ -33,33 +33,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<Error | null>(null);
   const [initialized, setInitialized] = useState(true);
   // Check localStorage for isProvider status - this ensures we maintain state on refreshes
-  const [isProvider, setIsProvider] = useState(() => {
-    const storedValue = localStorage.getItem('isProvider');
-    console.log("Initial provider state from localStorage:", storedValue);
-    return storedValue === 'true';
-  });
+  const [isProvider, setIsProvider] = useState(false);
 
   useEffect(() => {
     console.log("AuthProvider: Initial provider state:", isProvider);
     
-    // Check if we have a stored user in localStorage
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser) as User;
-        console.log("Restored user from localStorage:", parsedUser.email);
-        setCurrentUser(parsedUser);
-        
-        // Ensure isProvider state is sync with localStorage
-        const storedIsProvider = localStorage.getItem('isProvider') === 'true';
-        if (storedIsProvider !== isProvider) {
-          console.log("Syncing isProvider state with localStorage:", storedIsProvider);
-          setIsProvider(storedIsProvider);
+    // We'll only restore user login if explicitly set to do so
+    const shouldRestoreSession = localStorage.getItem('restoreSession') === 'true';
+    
+    if (shouldRestoreSession) {
+      // Check if we have a stored user in localStorage
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser) as User;
+          console.log("Restored user from localStorage:", parsedUser.email);
+          setCurrentUser(parsedUser);
+          
+          // Ensure isProvider state is sync with localStorage
+          const storedIsProvider = localStorage.getItem('isProvider') === 'true';
+          if (storedIsProvider !== isProvider) {
+            console.log("Syncing isProvider state with localStorage:", storedIsProvider);
+            setIsProvider(storedIsProvider);
+          }
+        } catch (err) {
+          console.error("Error parsing stored user:", err);
+          localStorage.removeItem('currentUser');
         }
-      } catch (err) {
-        console.error("Error parsing stored user:", err);
-        localStorage.removeItem('currentUser');
       }
+    } else {
+      // Clear any stored authentication data to ensure fresh start
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('isProvider');
     }
   }, []);
 
@@ -84,6 +89,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Set provider status in both state and localStorage
       setIsProvider(true);
       localStorage.setItem('isProvider', 'true');
+      
+      // Set flag to restore session on next page load
+      localStorage.setItem('restoreSession', 'true');
       
       console.log("Provider login successful:", { email, isProvider: true });
       
@@ -112,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear local storage and state
       localStorage.removeItem('currentUser');
       localStorage.removeItem('isProvider');
+      localStorage.removeItem('restoreSession');
       setCurrentUser(null);
       setIsProvider(false);
       

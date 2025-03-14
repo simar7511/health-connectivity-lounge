@@ -36,6 +36,7 @@ export const navigateAfterLogout = (navigate: any) => {
   clearNavigationState();
   localStorage.removeItem('currentUser');
   localStorage.removeItem('isProvider');
+  localStorage.removeItem('restoreSession');
   
   // Navigate to the home page
   navigate("/");
@@ -49,6 +50,9 @@ export const ensureHomepageStart = () => {
   if (isFirstPageLoad) {
     // Mark that the app has been initialized this session
     sessionStorage.setItem('appInitialized', 'true');
+    
+    // Clear session restoration flag to ensure we start at welcome page
+    localStorage.removeItem('restoreSession');
     
     // If we're not already on the homepage, redirect there
     if (window.location.pathname !== '/' && window.location.pathname !== '/index') {

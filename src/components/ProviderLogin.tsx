@@ -41,6 +41,9 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
       // Simulate a successful login with any OTP
       await loginProvider(email, password);
       
+      // Set flag to restore session on future page loads
+      localStorage.setItem('restoreSession', 'true');
+      
       // Call onLogin callback
       onLogin();
       
