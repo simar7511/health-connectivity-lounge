@@ -267,6 +267,7 @@ Scalability:
 - Register as a 501(c)(3) nonprofit with the IRS to operate as a tax-exempt organization
 - Obtain a business license from the Washington State Department of Revenue (DOR) to legally conduct healthcare operations
 - Verify credentials through the Washington State Department of Health (DOH) to ensure compliance with professional licensing requirements
+- Follow Washington State Telehealth Laws
 - Ensure healthcare providers have valid Washington state medical licenses and DEA registration, meeting all state regulations for telehealth and in-person care
 - Comply with Clinical Laboratory Improvement Amendments (CLIA) regulations for any diagnostic testing services
 - Adhere to HIPAA regulations, ensuring that all patient data is securely handled, stored, and transmitted to protect privacy
