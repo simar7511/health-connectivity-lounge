@@ -33,7 +33,7 @@ export const Hero = () => {
               Ask Our AI Health Assistant
             </Button>
           </div>
-          <div className="mt-4 space-y-2">
+          <div className="mt-8 flex flex-col items-center">
             <Button 
               variant="link"
               onClick={() => navigate("/free-clinic")}
@@ -41,16 +41,14 @@ export const Hero = () => {
             >
               Find Free Clinics Near You
             </Button>
-            <div className="flex justify-center">
-              <Button 
-                variant="link" 
-                onClick={() => navigate("/terms-of-service")}
-                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
-              >
-                <ScrollText className="h-3.5 w-3.5" />
-                Terms of Service
-              </Button>
-            </div>
+            <Button 
+              variant="secondary"
+              onClick={() => navigate("/terms-of-service")}
+              className="mt-4 flex items-center gap-2 text-sm px-6"
+            >
+              <ScrollText className="h-4 w-4" />
+              Terms of Service
+            </Button>
           </div>
         </div>
       </div>
