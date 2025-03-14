@@ -30,8 +30,8 @@ const translations = {
   }
 };
 
-// Create proper Timestamp objects for mock data
-const createMockTimestamp = (offsetDays = 0): Timestamp => {
+// Create proper Timestamp objects for local storage data
+const createTimestamp = (offsetDays = 0): Timestamp => {
   const date = new Date();
   if (offsetDays !== 0) {
     date.setDate(date.getDate() - offsetDays);
@@ -47,53 +47,9 @@ const createMockTimestamp = (offsetDays = 0): Timestamp => {
   } as Timestamp;
 };
 
-// Mock data for when Firebase is unavailable - now includes most recent data
-const mockSubmissions: IntakeFormSubmission[] = [
-  {
-    id: "mock-submission-1",
-    childName: "Emma Rodriguez",
-    parentName: "Maria Rodriguez",
-    contactPhone: "+1234567890",
-    age: 7,
-    chiefComplaint: "Persistent cough and mild fever for 3 days",
-    timestamp: createMockTimestamp(),
-    notificationType: "sms",
-    language: "es",
-    dob: "2017-03-15",
-    phoneNumber: "+1234567890",
-    symptoms: "Persistent cough and mild fever for 3 days",
-    medicalHistory: "Asthma",
-    medicationsAndAllergies: "Inhaler as needed. Allergic to peanuts.",
-    hasRecentHospitalVisits: false,
-    hasInsurance: true,
-    userId: "mock-user-1"
-  },
-  {
-    id: "mock-submission-2",
-    childName: "Aiden Smith",
-    parentName: "John Smith",
-    contactPhone: "+1987654321",
-    age: 4,
-    chiefComplaint: "Ear pain and difficulty sleeping",
-    timestamp: createMockTimestamp(1), // 1 day ago
-    notificationType: "whatsapp",
-    language: "en",
-    dob: "2019-08-22",
-    phoneNumber: "+1987654321",
-    symptoms: "Ear pain and difficulty sleeping",
-    medicalHistory: "Recurring ear infections",
-    medicationsAndAllergies: "No current medications. No known allergies.",
-    hasRecentHospitalVisits: true,
-    hospitalVisitLocation: "Memorial Children's Hospital",
-    hasInsurance: true,
-    userId: "mock-user-2"
-  }
-];
-
 const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
   const [submissions, setSubmissions] = useState<IntakeFormSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingMockData, setUsingMockData] = useState(false);
   const navigate = useNavigate();
 
   // Check for local storage submissions on mount and when new submissions arrive
@@ -104,31 +60,27 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
       
       // Make sure db is properly initialized 
       if (!db || typeof db['collection'] !== 'function') {
-        console.log("Firebase db not properly initialized, using mock data");
+        console.log("Firebase db not properly initialized, checking for local submissions");
         
-        // If there's a recent local submission, add it to mock data
+        // If there's a recent local submission, use it
         if (latestSubmission) {
           try {
             const parsedSubmission = JSON.parse(latestSubmission);
-            // Create a combined array with the local submission first
-            const combinedData = [
+            setSubmissions([
               {
                 ...parsedSubmission,
                 id: parsedSubmission.id || `local-submission-${Date.now()}`,
-                timestamp: createMockTimestamp() // Make sure it's the most recent
-              },
-              ...mockSubmissions
-            ];
-            setSubmissions(combinedData);
+                timestamp: createTimestamp() // Make sure it's the most recent
+              }
+            ]);
           } catch (parseError) {
             console.error("Error parsing local submission:", parseError);
-            setSubmissions(mockSubmissions);
+            setSubmissions([]);
           }
         } else {
-          setSubmissions(mockSubmissions);
+          setSubmissions([]);
         }
         
-        setUsingMockData(true);
         setLoading(false);
         return () => {};
       }
@@ -156,29 +108,23 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
             } as IntakeFormSubmission);
           });
           
-          // If no Firestore data but we have local data, use it with mock data
+          // If no Firestore data but we have local data, use it
           if (submissionsData.length === 0 && latestSubmission) {
             try {
               const parsedSubmission = JSON.parse(latestSubmission);
-              // Create a combined array with the local submission first
-              const combinedData = [
+              setSubmissions([
                 {
                   ...parsedSubmission,
                   id: parsedSubmission.id || `local-submission-${Date.now()}`,
-                  timestamp: createMockTimestamp() // Make sure it's the most recent
-                },
-                ...mockSubmissions
-              ];
-              setSubmissions(combinedData);
-              setUsingMockData(true);
+                  timestamp: createTimestamp() // Make sure it's the most recent
+                }
+              ]);
             } catch (parseError) {
               console.error("Error parsing local submission:", parseError);
-              setSubmissions(mockSubmissions);
-              setUsingMockData(true);
+              setSubmissions([]);
             }
           } else {
-            setSubmissions(submissionsData.length > 0 ? submissionsData : mockSubmissions);
-            setUsingMockData(submissionsData.length === 0);
+            setSubmissions(submissionsData);
           }
           
           setLoading(false);
@@ -187,28 +133,25 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
         (error) => {
           console.error("Error fetching intake submissions:", error);
           
-          // Use mock data on error, incorporating any local submission
+          // Use local submission on error if available
           if (latestSubmission) {
             try {
               const parsedSubmission = JSON.parse(latestSubmission);
-              const combinedData = [
+              setSubmissions([
                 {
                   ...parsedSubmission,
                   id: parsedSubmission.id || `local-submission-${Date.now()}`,
-                  timestamp: createMockTimestamp()
-                },
-                ...mockSubmissions
-              ];
-              setSubmissions(combinedData);
+                  timestamp: createTimestamp()
+                }
+              ]);
             } catch (parseError) {
               console.error("Error parsing local submission:", parseError);
-              setSubmissions(mockSubmissions);
+              setSubmissions([]);
             }
           } else {
-            setSubmissions(mockSubmissions);
+            setSubmissions([]);
           }
           
-          setUsingMockData(true);
           setLoading(false);
         }
       );
@@ -217,29 +160,26 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
     } catch (error) {
       console.error("Error setting up Firestore listener:", error);
       
-      // Use mock data on error, checking for local submission
+      // Use local submission on error if available
       const latestSubmission = localStorage.getItem("latestIntakeSubmission");
       if (latestSubmission) {
         try {
           const parsedSubmission = JSON.parse(latestSubmission);
-          const combinedData = [
+          setSubmissions([
             {
               ...parsedSubmission,
               id: parsedSubmission.id || `local-submission-${Date.now()}`,
-              timestamp: createMockTimestamp()
-            },
-            ...mockSubmissions
-          ];
-          setSubmissions(combinedData);
+              timestamp: createTimestamp()
+            }
+          ]);
         } catch (parseError) {
           console.error("Error parsing local submission:", parseError);
-          setSubmissions(mockSubmissions);
+          setSubmissions([]);
         }
       } else {
-        setSubmissions(mockSubmissions);
+        setSubmissions([]);
       }
       
-      setUsingMockData(true);
       setLoading(false);
       return () => {};
     }
@@ -252,29 +192,26 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
         try {
           const newSubmission = JSON.parse(e.newValue);
           
-          // Only update if we're showing mock data or if the db isn't initialized
-          if (usingMockData || !db || typeof db['collection'] !== 'function') {
-            setSubmissions(prev => {
-              // Check if this submission is already in the list by matching some unique properties
-              const exists = prev.some(sub => 
-                sub.childName === newSubmission.childName && 
-                sub.phoneNumber === newSubmission.phoneNumber &&
-                sub.symptoms === newSubmission.symptoms
-              );
-              
-              if (exists) return prev;
-              
-              // Add the new submission at the top with a timestamp
-              return [
-                {
-                  ...newSubmission,
-                  id: newSubmission.id || `local-submission-${Date.now()}`,
-                  timestamp: createMockTimestamp() // Make sure it's the most recent
-                },
-                ...prev
-              ];
-            });
-          }
+          setSubmissions(prev => {
+            // Check if this submission is already in the list by matching some unique properties
+            const exists = prev.some(sub => 
+              sub.childName === newSubmission.childName && 
+              sub.phoneNumber === newSubmission.phoneNumber &&
+              sub.symptoms === newSubmission.symptoms
+            );
+            
+            if (exists) return prev;
+            
+            // Add the new submission at the top with a timestamp
+            return [
+              {
+                ...newSubmission,
+                id: newSubmission.id || `local-submission-${Date.now()}`,
+                timestamp: createTimestamp() // Make sure it's the most recent
+              },
+              ...prev
+            ];
+          });
         } catch (error) {
           console.error("Error handling storage event:", error);
         }
@@ -287,7 +224,7 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [usingMockData, db]);
+  }, []);
 
   const handleViewDetails = (submission: IntakeFormSubmission) => {
     // Navigate to the patient's intake form
@@ -308,11 +245,6 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
     <Card>
       <CardHeader>
         <CardTitle>{content.title}</CardTitle>
-        {usingMockData && (
-          <div className="text-xs text-amber-600 mt-1">
-            {language === "en" ? "Using demo data" : "Usando datos de demostración"}
-          </div>
-        )}
       </CardHeader>
       <CardContent>
         {loading ? (
