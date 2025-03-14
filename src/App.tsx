@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ import ClinicLocatorPage from "@/pages/ClinicLocatorPage";
 import PatientOverviewPage from "@/pages/PatientOverviewPage";
 import { ChatPage } from "@/pages/ChatPage";
 import ConfirmationPage from "@/pages/ConfirmationPage";
-import AIHealthChatPage from "@/pages/AIHealthChatPage";
 
 // Import Firebase config
 import { auth, db } from "@/lib/firebase";
@@ -190,8 +190,6 @@ const App: React.FC = () => {
           <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:patientName" element={<ChatPage />} />
-          <Route path="/ai-chat" element={<AIHealthChatPage />} />
-          <Route path="/ai-chat/:patientId" element={<AIHealthChatPage />} />
 
           {/* 🚨 404 Error Page */}
           <Route path="*" element={

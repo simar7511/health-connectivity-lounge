@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Circle, Bot, Paperclip } from "lucide-react";
+import { MessageSquare, Circle, Paperclip } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { loadConversations, Conversation, initializeMessageStore } from "@/utils/messageStore";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ const content = {
   en: {
     title: "Secure Messages",
     chat: "Secure Chat",
-    aiChat: "AI Health Assistant (GPT-4)",
     unread: "unread messages",
     noMessages: "No messages",
     attachment: "attachment",
@@ -25,7 +24,6 @@ const content = {
   es: {
     title: "Mensajes Seguros",
     chat: "Chat Seguro",
-    aiChat: "Asistente de Salud IA (GPT-4)",
     unread: "mensajes sin leer",
     noMessages: "No hay mensajes",
     attachment: "archivo adjunto",
@@ -72,7 +70,7 @@ export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) =
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             <Button
               variant="outline"
               className="flex items-center gap-2"
@@ -80,15 +78,6 @@ export const MessagingInbox = ({ language, onStartChat }: MessagingInboxProps) =
             >
               <MessageSquare className="h-4 w-4" />
               {content[language].chat}
-            </Button>
-            
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => navigate("/ai-chat")}
-            >
-              <Bot className="h-4 w-4" />
-              {content[language].aiChat}
             </Button>
           </div>
           
