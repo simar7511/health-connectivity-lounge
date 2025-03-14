@@ -303,4 +303,5 @@ To ensure the effective deployment and sustainability of our virtual pediatric, 
 - Adams County schools, churches, and community centers: teaching patients how to access the virtual clinic. Improving accessibility
 
 ## Contributor
-- Simardeep Kaur - Frontend and Backend Development of prototype, research develpopment. 
+- Simardeep Kaur - Frontend and Backend Development of prototype, research development.
+- Zitian Zeng - Development of the provide side of the prototype, research development.
