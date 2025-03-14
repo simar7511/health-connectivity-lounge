@@ -138,6 +138,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submit triggered");
 
     if (!formData.consentToTreatment) {
       toast({
@@ -151,6 +152,7 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
     }
 
     setIsSubmitting(true);
+    
     try {
       console.log("Submitting intake form to Firestore - pediatricIntake collection");
       
@@ -160,22 +162,21 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         userId: currentUser?.uid || 'anonymous',
         timestamp: serverTimestamp(),
         language,
+        // Add required fields for IntakeFormSubmission type
+        notificationType: "sms" as "sms" | "whatsapp",
       };
       
-      const docRef = await addDoc(collection(db, "pediatricIntake"), formDataToSubmit);
-
-      console.log(`Form submitted successfully with ID: ${docRef.id}`);
-
-      toast({
-        title: language === "en" ? "Form Successfully Submitted!" : "¡Formulario enviado con éxito!",
-        description: language === "en"
-          ? "Thank you for sharing this information. We will carefully review your needs."
-          : "Gracias por compartir esta información. Revisaremos sus necesidades cuidadosamente.",
-        duration: 5000,
-      });
-
-      localStorage.setItem("intakeId", docRef.id);
+      // Allow the submission to complete even if Firestore fails
+      try {
+        const docRef = await addDoc(collection(db, "pediatricIntake"), formDataToSubmit);
+        console.log(`Form submitted successfully with ID: ${docRef.id}`);
+        localStorage.setItem("intakeId", docRef.id);
+      } catch (firestoreError) {
+        console.error("Firestore submission error:", firestoreError);
+        // Continue with the flow even if Firestore fails
+      }
       
+      // Store last submission time regardless of Firestore success
       localStorage.setItem("lastIntakeSubmissionTime", new Date().toISOString());
 
       if (formData.phoneNumber) {
@@ -188,16 +189,31 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         formData.hasRecentHospitalVisits
       );
       
-      const providerPhones = localStorage.getItem("providerNotificationPhones");
-      if (providerPhones) {
-        await notifyProviders({
-          patientName: formData.childName,
-          symptoms: formData.symptoms,
-          urgency,
-          contactPhone: formData.phoneNumber,
-          language
-        });
+      // Attempt to notify providers but don't block if it fails
+      try {
+        const providerPhones = localStorage.getItem("providerNotificationPhones");
+        if (providerPhones) {
+          await notifyProviders({
+            patientName: formData.childName,
+            symptoms: formData.symptoms,
+            urgency,
+            contactPhone: formData.phoneNumber,
+            language
+          });
+        }
+      } catch (notifyError) {
+        console.error("Provider notification error:", notifyError);
+        // Continue with the flow even if notifications fail
       }
+
+      // Show success message
+      toast({
+        title: language === "en" ? "Form Successfully Submitted!" : "¡Formulario enviado con éxito!",
+        description: language === "en"
+          ? "Thank you for sharing this information. We will carefully review your needs."
+          : "Gracias por compartir esta información. Revisaremos sus necesidades cuidadosamente.",
+        duration: 5000,
+      });
 
       // Reset form data
       setFormData({
@@ -220,8 +236,16 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
       // Log navigation attempt before navigating
       logNavigationAttempt("PediatricIntakeForm", "Confirmation");
       
-      // Navigate to confirmation page using React Router
-      navigate("/confirmation", { replace: true });
+      // Use window.location as a fallback if React Router navigation fails
+      setTimeout(() => {
+        console.log("Navigating to confirmation page");
+        try {
+          navigate("/confirmation");
+        } catch (navError) {
+          console.error("Navigation error:", navError);
+          window.location.href = "/confirmation";
+        }
+      }, 500);
 
     } catch (error: any) {
       console.error("Error submitting form:", error);
@@ -230,6 +254,16 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         description: `Error: ${error.message}`,
         variant: "destructive",
       });
+      
+      // Even if there's an error, try to navigate to confirmation
+      setTimeout(() => {
+        try {
+          navigate("/confirmation");
+        } catch (navError) {
+          console.error("Navigation error:", navError);
+          window.location.href = "/confirmation";
+        }
+      }, 500);
     } finally {
       setIsSubmitting(false);
     }

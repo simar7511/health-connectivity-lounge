@@ -1,3 +1,4 @@
+
 import { initializeApp } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getAuth, type Auth, type User, type NextOrObserver } from "firebase/auth";
@@ -52,43 +53,50 @@ if (!isInitialized) {
 
   // Add collection method via prototype manipulation to avoid TypeScript errors
   Object.defineProperty(db, 'collection', {
-    value: () => ({
-      doc: () => ({
-        get: async () => ({ exists: false, data: () => null }),
-        set: async () => {}
-      }),
-      where: () => ({
+    value: (collectionPath: string) => {
+      console.log(`Mock collection accessed: ${collectionPath}`);
+      return {
+        doc: (docPath: string) => ({
+          get: async () => ({ exists: false, data: () => null }),
+          set: async () => {}
+        }),
+        where: () => ({
+          get: async () => ({ docs: [], empty: true }),
+          onSnapshot: (callback: any) => {
+            callback({ docs: [], empty: true });
+            return () => {};
+          }
+        }),
+        orderBy: () => ({
+          get: async () => ({ docs: [], empty: true }),
+          onSnapshot: (callback: any) => {
+            callback({ docs: [], empty: true });
+            return () => {};
+          }
+        }),
+        limit: () => ({
+          get: async () => ({ docs: [], empty: true }),
+          onSnapshot: (callback: any) => {
+            callback({ docs: [], empty: true });
+            return () => {};
+          }
+        }),
         get: async () => ({ docs: [], empty: true }),
         onSnapshot: (callback: any) => {
-          callback({ docs: [], empty: true });
+          callback({ 
+            docs: [], 
+            empty: true, 
+            forEach: () => {},
+            size: 0
+          });
           return () => {};
+        },
+        add: async (data: any) => {
+          console.log("Mock document added:", data);
+          return { id: "mock-doc-id-" + Date.now() };
         }
-      }),
-      orderBy: () => ({
-        get: async () => ({ docs: [], empty: true }),
-        onSnapshot: (callback: any) => {
-          callback({ docs: [], empty: true });
-          return () => {};
-        }
-      }),
-      limit: () => ({
-        get: async () => ({ docs: [], empty: true }),
-        onSnapshot: (callback: any) => {
-          callback({ docs: [], empty: true });
-          return () => {};
-        }
-      }),
-      get: async () => ({ docs: [], empty: true }),
-      onSnapshot: (callback: any) => {
-        callback({ 
-          docs: [], 
-          empty: true, 
-          forEach: () => {},
-          size: 0
-        });
-        return () => {};
-      }
-    }),
+      };
+    },
     enumerable: true
   });
   
@@ -110,7 +118,7 @@ if (!isInitialized) {
 
   // Add auth methods via prototype manipulation
   Object.defineProperty(auth, 'signInWithEmailAndPassword', {
-    value: async () => ({ user: null }),
+    value: async () => ({ user: { uid: 'mock-user-id' } }),
     enumerable: true
   });
   
@@ -120,14 +128,28 @@ if (!isInitialized) {
   });
   
   Object.defineProperty(auth, 'onAuthStateChanged', {
-    value: (callback: NextOrObserver<User>) => {
-      if (typeof callback === 'function') {
-        callback(null);
+    value: (observer: NextOrObserver<User>) => {
+      // Handle both function and observer object cases
+      if (typeof observer === 'function') {
+        observer(null);
+      } else if (observer && typeof observer.next === 'function') {
+        observer.next(null);
       }
       return () => {};
     },
     enumerable: true
   });
+  
+  Object.defineProperty(auth, 'signInAnonymously', {
+    value: async () => ({ 
+      user: { 
+        uid: 'mock-anonymous-user-' + Date.now(),
+        isAnonymous: true
+      } 
+    }),
+    enumerable: true
+  });
+  
 } else {
   // Initialize Firebase Cloud Messaging if supported
   isSupported()
