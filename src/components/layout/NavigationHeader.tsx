@@ -100,7 +100,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => navigate("/ai-chat")}
-            className={location.pathname === "/ai-chat" ? "bg-primary text-primary-foreground" : ""}
+            className={location.pathname.includes("/ai-chat") ? "bg-primary text-primary-foreground" : ""}
           >
             <Bot className="mr-1 h-4 w-4" />
             {t.aiHealth}

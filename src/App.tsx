@@ -1,217 +1,45 @@
 
-import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { toast } from "@/hooks/use-toast";
-
-// Import Authentication Provider
-import { AuthProvider, useAuth } from "./context/AuthContext";
-
-// Import Pages & Components
+import "./App.css";
 import Index from "./pages/Index";
-import ProviderLogin from "@/components/ProviderLogin";
-import ProviderDashboard from "@/components/ProviderDashboard";
-import PatientLogin from "@/components/PatientLogin";
-import PatientDashboard from "@/components/PatientDashboard";
-import PediatricIntakeForm from "@/components/intake/PediatricIntakeForm";
-import AppointmentPage from "@/pages/AppointmentPage";
-import AppointmentConfirmationPage from "@/pages/AppointmentConfirmationPage";
-import TransportationPage from "@/pages/TransportationPage";
-import ClinicLocatorPage from "@/pages/ClinicLocatorPage";
-import PatientOverviewPage from "@/pages/PatientOverviewPage";
-import { ChatPage } from "@/pages/ChatPage";
-import ConfirmationPage from "@/pages/ConfirmationPage";
-import PatientIntakeDetails from "@/pages/PatientIntakeDetails";
+import PatientIntakeDetails from "./pages/PatientIntakeDetails";
+import PatientOverviewPage from "./pages/PatientOverviewPage";
+import SymptomCheckerPage from "./pages/SymptomCheckerPage";
+import AppointmentPage from "./pages/AppointmentPage";
+import AppointmentConfirmationPage from "./pages/AppointmentConfirmationPage";
+import TransportationPage from "./pages/TransportationPage";
+import ConfirmationPage from "./pages/ConfirmationPage";
+import ChatPage from "./pages/ChatPage";
+import AIHealthChatPage from "./pages/AIHealthChatPage";
+import ClinicLocatorPage from "./pages/ClinicLocatorPage";
+import { AuthProvider } from "@/context/AuthContext";
+import { PediatricIntakeForm } from "./components/intake/PediatricIntakeForm";
 
-// Import Firebase config
-import { auth, db } from "@/lib/firebase";
+// Create routes
+const router = createBrowserRouter([
+  { path: "/", element: <Index /> },
+  { path: "/pediatric-intake", element: <PediatricIntakeForm /> },
+  { path: "/patient-intake/:id", element: <PatientIntakeDetails /> },
+  { path: "/provider/dashboard", element: <PatientOverviewPage /> }, 
+  { path: "/symptoms", element: <SymptomCheckerPage /> },
+  { path: "/appointment", element: <AppointmentPage /> },
+  { path: "/appointment-confirmation", element: <AppointmentConfirmationPage /> },
+  { path: "/transportation", element: <TransportationPage /> },
+  { path: "/confirmation", element: <ConfirmationPage /> },
+  { path: "/chat", element: <ChatPage /> },
+  { path: "/ai-chat", element: <AIHealthChatPage /> },
+  { path: "/ai-chat/:patientId", element: <AIHealthChatPage /> },
+  { path: "/free-clinic", element: <ClinicLocatorPage /> },
+]);
 
-// Protected Route component to handle auth checks
-const ProtectedRoute = ({ children, requiredAuth = true, providerOnly = false }) => {
-  const { currentUser, isProvider } = useAuth();
-  const navigate = useNavigate();
-  
-  useEffect(() => {
-    // Check localStorage as a fallback for provider status
-    const isProviderInStorage = localStorage.getItem('isProvider') === 'true';
-    const hasUserInStorage = localStorage.getItem('currentUser') !== null;
-    
-    // For provider dashboard specifically, we'll let the component handle authentication
-    if (window.location.pathname === '/provider/dashboard') {
-      return;
-    }
-    
-    if (requiredAuth && !currentUser && !hasUserInStorage) {
-      // Not logged in, redirect to login
-      console.log("Not authenticated, redirecting to home");
-      navigate('/');
-    } else if (providerOnly && !isProvider && !isProviderInStorage) {
-      // Not a provider, redirect to login
-      console.log("Not a provider, redirecting to provider login");
-      navigate('/provider/login');
-    }
-  }, [currentUser, isProvider, navigate, requiredAuth, providerOnly]);
-  
-  return children;
-};
-
-const App: React.FC = () => {
-  // ✅ Manage Language Selection
-  const [language, setLanguage] = useState<"en" | "es">(() => {
-    return (sessionStorage.getItem("preferredLanguage") as "en" | "es") || "en";
-  });
-
-  const [initializing, setInitializing] = useState(true);
-  const [initError, setInitError] = useState<string | null>(null);
-
-  useEffect(() => {
-    sessionStorage.setItem("preferredLanguage", language);
-    console.log("App initialized, language set to:", language);
-    
-    // Check if Firebase auth is initialized
-    const checkFirebase = async () => {
-      try {
-        console.log("Checking Firebase auth initialization");
-        if (auth) {
-          console.log("Firebase auth object exists");
-          // Try to access a property to verify the object
-          if (typeof auth.app !== 'undefined') {
-            console.log("Firebase auth initialized successfully");
-          } else {
-            console.warn("Firebase auth exists but may not be fully initialized");
-          }
-        } else {
-          console.error("Firebase auth is undefined");
-          setInitError("Firebase authentication failed to initialize");
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to initialize Firebase authentication",
-          });
-        }
-        
-        // Check Firestore
-        if (db) {
-          console.log("Firebase Firestore initialized");
-        } else {
-          console.error("Firebase Firestore not initialized");
-        }
-      } catch (error) {
-        console.error("Error checking Firebase:", error);
-        setInitError(`Firebase initialization error: ${error instanceof Error ? error.message : String(error)}`);
-      } finally {
-        // Set initializing to false after a short delay to ensure other components have time to initialize
-        setTimeout(() => setInitializing(false), 1000);
-      }
-    };
-    
-    checkFirebase();
-  }, [language]);
-
-  // ✅ Handle Progression (Placeholder for Future Actions)
-  const handleProceed = () => {
-    console.log("Proceeding to next step");
-  };
-
-  // Determine if the user is already logged in as a provider
-  const isProviderLoggedIn = () => {
-    return localStorage.getItem('isProvider') === 'true' && localStorage.getItem('currentUser') !== null;
-  };
-
-  // Show a loading state while initializing
-  if (initializing) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h2 className="text-xl font-medium mb-2">Loading Health Connectivity...</h2>
-        <p className="text-sm text-gray-500">Initializing services...</p>
-      </div>
-    );
-  }
-
-  // Error state
-  if (initError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
-        <div className="w-16 h-16 text-red-500 mb-4 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
-          </svg>
-        </div>
-        <h2 className="text-xl font-medium mb-2 text-red-600">Initialization Error</h2>
-        <p className="text-sm text-gray-700 mb-4">{initError}</p>
-        <Button onClick={() => window.location.reload()}>Reload Application</Button>
-      </div>
-    );
-  }
-
+function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        {/* 🌐 Language Toggle Button - Only show on routes other than the home page */}
-        <div className="fixed top-4 right-4 z-50">
-          {window.location.pathname !== "/" && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-white/80 backdrop-blur-sm" 
-              onClick={() => setLanguage((prev) => (prev === "en" ? "es" : "en"))}
-            >
-              {language === "en" ? "Switch to Spanish" : "Cambiar a Inglés"}
-            </Button>
-          )}
-        </div>
-
-        {/* 📌 Application Routes */}
-        <Routes>
-          {/* 🌍 General Pages */}
-          <Route path="/" element={<Index />} />
-          <Route path="/index" element={<Navigate to="/" replace />} />
-          <Route path="/free-clinic" element={<ClinicLocatorPage />} />
-
-          {/* 🔵 Patient Flow */}
-          <Route path="/patient/login" element={<PatientLogin language={language} onBack={() => {}} onLogin={() => {}} />} />
-          <Route path="/pediatric-intake" element={<PediatricIntakeForm language={language} />} />
-          <Route path="/confirmation" element={<ConfirmationPage language={language} />} />
-          <Route path="/patient/dashboard" element={<PatientDashboard language={language} />} />
-          <Route path="/appointment" element={<AppointmentPage language={language} onProceed={handleProceed} />} />
-          <Route path="/appointment-confirmation" element={<AppointmentConfirmationPage language={language} />} />
-          <Route path="/transportation" element={<TransportationPage language={language} onProceed={handleProceed} />} />
-
-          {/* 🏥 Provider Flow */}
-          <Route path="/provider/login" element={
-            isProviderLoggedIn() ? <Navigate to="/provider/dashboard" replace /> : <ProviderLogin language={language} onLogin={() => {}} />
-          } />
-          <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
-          
-          {/* New route for patient intake details */}
-          <Route path="/patient/:patientId/intake" element={<PatientIntakeDetails language={language} />} />
-
-          {/* 📂 Additional Pages */}
-          <Route path="/patient/:patientId" element={<PatientOverviewPage />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/chat/:patientName" element={<ChatPage />} />
-
-          {/* 🚨 404 Error Page */}
-          <Route path="*" element={
-            <div className="flex flex-col items-center justify-center h-screen p-4">
-              <h1 className="text-3xl font-bold text-red-500 mb-4">404 - Page Not Found</h1>
-              <p className="text-gray-600 mb-6">The page you are looking for doesn't exist.</p>
-              <Button onClick={() => window.location.href = "/"}>
-                Return to Home
-              </Button>
-            </div>
-          } />
-        </Routes>
-        
-        {/* Global Toast Notifications */}
-        <Toaster />
-      </BrowserRouter>
+      <RouterProvider router={router} />
+      <Toaster />
     </AuthProvider>
   );
-};
+}
 
 export default App;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -53,11 +52,13 @@ const Index = () => {
       
       toast({
         title: "Welcome to Health Connectivity",
-        description: "Please select a login method to continue.",
-        duration: 3000,
+        description: language === "en" 
+          ? "Try our AI Health Assistant for medical questions or complete an intake form."
+          : "Pruebe nuestro Asistente de Salud con IA para preguntas médicas o complete un formulario de admisión.",
+        duration: 5000,
       });
     }
-  }, [location.pathname, logout]);
+  }, [location.pathname, logout, language]);
 
   // Set language preference from storage
   useEffect(() => {
