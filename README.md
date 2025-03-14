@@ -1,3 +1,4 @@
+
 # Health Connectivity Platform: Safe Haven Virtual Pediatric Clinic
 
 A comprehensive platform designed to connect healthcare providers with underserved communities in rural Washington, with a focus on pediatric care for children and adolescents.
@@ -92,6 +93,99 @@ To ensure the AI Health Assistant effectively supports both patients and provide
 - Pediatric intake form
 - Symptom checker
 
+## Development Setup
+Follow these steps to set up and run the Safe Haven Virtual Pediatric Clinic locally.
+
+### Prerequisites
+Ensure you have the following installed before proceeding:
+
+- Node.js (version 18 or higher recommended)
+- npm (comes with Node.js)
+- Git
+
+### Step 1: Clone the Repository
+```bash
+git clone <repository-url>
+cd health-connectivity-platform
+```
+
+### Step 2: Install Dependencies
+```bash
+npm install
+```
+
+### Step 3: Configure Firebase
+To use Firebase services (authentication, database, storage, etc.), you must set up your own Firebase project.
+
+1. **Create a Firebase Project**
+   - Go to Firebase Console and create a new project.
+   - Set up Firestore Database, Authentication, and Storage as needed.
+
+2. **Get Firebase Configuration**
+   - In the Firebase Console, navigate to Project Settings > General > Your Apps.
+   - Copy the Firebase SDK configuration and replace the placeholders in your .env file:
+
+```plaintext
+# Replace with your own Firebase project credentials
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+**Important:**
+- Do not share or commit API keys publicly.
+- Add .env to your .gitignore file to keep it private.
+
+### Step 4: Start the Development Server
+```bash
+npm run dev
+```
+
+Once the server is running, the application will be accessible at http://localhost:8080.
+
+## API Key Configuration (For AI Features)
+If you want to enable AI-powered features like the AI Health Assistant, configure API keys:
+
+1. Navigate to the functions directory and create a .env file:
+```bash
+cd functions
+cp .env.example .env
+```
+
+2. Add your AI API keys to .env:
+```plaintext
+OPENAI_API_KEY=your_openai_api_key
+HUGGING_FACE_TOKEN=your_huggingface_token
+```
+
+3. Deploy Firebase Cloud Functions:
+```bash
+npm install -g firebase-tools
+firebase login
+firebase deploy --only functions
+```
+
+## Production Deployment
+
+1. Build the project:
+```bash
+npm run build
+```
+
+2. Deploy to Firebase:
+```bash
+firebase deploy
+```
+This will deploy the application to Firebase Hosting and update Firebase functions.
+
+## Additional Notes
+- If using AI capabilities, confirm that the AI API keys are properly configured.
+- For local testing of Firebase Cloud Functions, consider using Firebase Emulators before deployment.
+
 ## User Testing Summary
 
 ### Patient-Side Onboarding:
@@ -108,27 +202,6 @@ To ensure the AI Health Assistant effectively supports both patients and provide
 - Added Spanish translation for accessibility.
 - AI defers to providers for complex questions.
 
-## Development Setup
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Start the development server: `npm run dev`
-
-## API Key Configuration
-
-This application uses server-side API keys for AI services. To configure:
-
-1. Edit the `functions/.env` file with your actual API keys:
-   - `OPENAI_API_KEY` for OpenAI services
-   - `HUGGING_FACE_TOKEN` for Hugging Face / Llama services
-
-2. Deploy the updated Firebase Functions:
-   ```
-   cd functions
-   npm install
-   firebase deploy --only functions
-   ```
-
 ## Firebase Configuration
 
 The application is configured using the following Firebase settings:
@@ -142,11 +215,6 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=429069343294
 VITE_FIREBASE_APP_ID=1:429069343294:web:943a1998a83e63353c0f6f
 VITE_FIREBASE_MEASUREMENT_ID=G-3BVWXWV69Q
 ```
-
-## Production Deployment
-
-1. Build the project: `npm run build`
-2. Deploy to Firebase: `firebase deploy`
 
 ## Target Audience
 Marginalized groups, including those who are undocumented, uninsured, and have limited English proficiency, face significant barriers to accessing healthcare. This platform aims to address these challenges.
