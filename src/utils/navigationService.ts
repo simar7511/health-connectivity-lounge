@@ -30,3 +30,14 @@ export const clearNavigationState = () => {
   
   navigationStateKeys.forEach(key => sessionStorage.removeItem(key));
 };
+
+export const navigateAfterLogout = (navigate: any) => {
+  // Clear any session/local storage items that should be removed on logout
+  clearNavigationState();
+  
+  // Navigate to the home page
+  navigate("/");
+  
+  // Optionally force a page refresh to ensure clean state
+  // window.location.href = "/";
+};

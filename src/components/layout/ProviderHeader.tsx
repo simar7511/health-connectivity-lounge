@@ -16,7 +16,8 @@ export const ProviderHeader = ({ language, onLanguageChange }: ProviderHeaderPro
   const handleLogout = async () => {
     console.log("Logging out user:", currentUser?.email);
     await logout();
-    navigate("/provider/login");
+    // After logout, navigate to the home page
+    navigate("/");
   };
 
   return (
