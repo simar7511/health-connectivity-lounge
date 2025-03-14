@@ -22,6 +22,7 @@ import ClinicLocatorPage from "@/pages/ClinicLocatorPage";
 import PatientOverviewPage from "@/pages/PatientOverviewPage";
 import { ChatPage } from "@/pages/ChatPage";
 import ConfirmationPage from "@/pages/ConfirmationPage";
+import PatientIntakeDetails from "@/pages/PatientIntakeDetails";
 
 // Import Firebase config
 import { auth, db } from "@/lib/firebase";
@@ -185,6 +186,9 @@ const App: React.FC = () => {
             isProviderLoggedIn() ? <Navigate to="/provider/dashboard" replace /> : <ProviderLogin language={language} onLogin={() => {}} />
           } />
           <Route path="/provider/dashboard" element={<ProviderDashboard language={language} />} />
+          
+          {/* New route for patient intake details */}
+          <Route path="/patient/:patientId/intake" element={<PatientIntakeDetails language={language} />} />
 
           {/* 📂 Additional Pages */}
           <Route path="/patient/:patientId" element={<PatientOverviewPage />} />

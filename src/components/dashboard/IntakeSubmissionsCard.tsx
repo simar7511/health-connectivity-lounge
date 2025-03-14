@@ -1,6 +1,6 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DialogTrigger } from "@/components/ui/dialog";
 import { Calendar, Clock3, MessageSquare, UserCircle } from "lucide-react";
 import { IntakeFormSubmission } from "./IntakeSubmissionsTypes";
 import { Timestamp as FirestoreTimestamp } from "firebase/firestore";
@@ -101,11 +101,9 @@ export const IntakeSubmissionsCard = ({
 
         <div className="flex items-center gap-2">
           {renderUrgencyBadge(urgency, language)}
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" onClick={() => handleViewDetails(submission)}>
-              {content.viewDetails}
-            </Button>
-          </DialogTrigger>
+          <Button variant="outline" size="sm" onClick={() => handleViewDetails(submission)}>
+            {content.viewDetails}
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => handleContactPatient(submission)}>
             <MessageSquare className="h-4 w-4" />
           </Button>

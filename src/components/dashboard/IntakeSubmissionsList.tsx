@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { db } from "@/lib/firebase";
 import { 
   collection, 
@@ -11,10 +12,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog } from "@/components/ui/dialog";
 import { IntakeFormSubmission, IntakeSubmissionsListProps } from "./IntakeSubmissionsTypes";
 import { IntakeSubmissionsCard } from "./IntakeSubmissionsCard";
-import { IntakeSubmissionsDetails } from "./IntakeSubmissionsDetails";
 import { getUrgencyLevel } from "./IntakeSubmissionUtils";
 
 const translations = {
@@ -33,8 +32,7 @@ const translations = {
 const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
   const [submissions, setSubmissions] = useState<IntakeFormSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSubmission, setSelectedSubmission] = useState<IntakeFormSubmission | null>(null);
-  const [openDetails, setOpenDetails] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Set up real-time listener for intake form submissions
@@ -69,8 +67,10 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
   }, []);
 
   const handleViewDetails = (submission: IntakeFormSubmission) => {
-    setSelectedSubmission(submission);
-    setOpenDetails(true);
+    // Navigate to the patient's intake form
+    navigate(`/patient/${submission.id}/intake`, { 
+      state: { submission }
+    });
   };
 
   const handleContactPatient = (submission: IntakeFormSubmission) => {
@@ -103,32 +103,20 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
         ) : (
           <ScrollArea className="h-[400px]">
             <div className="space-y-4">
-              <Dialog open={openDetails} onOpenChange={setOpenDetails}>
-                {submissions.map((submission) => {
-                  const urgency = getUrgencyLevel(submission);
-                  
-                  return (
-                    <IntakeSubmissionsCard
-                      key={submission.id}
-                      submission={submission}
-                      urgency={urgency}
-                      handleViewDetails={handleViewDetails}
-                      handleContactPatient={handleContactPatient}
-                      language={language}
-                    />
-                  );
-                })}
+              {submissions.map((submission) => {
+                const urgency = getUrgencyLevel(submission);
                 
-                {selectedSubmission && (
-                  <IntakeSubmissionsDetails
-                    submission={selectedSubmission}
-                    urgency={getUrgencyLevel(selectedSubmission)}
+                return (
+                  <IntakeSubmissionsCard
+                    key={submission.id}
+                    submission={submission}
+                    urgency={urgency}
+                    handleViewDetails={handleViewDetails}
                     handleContactPatient={handleContactPatient}
-                    closeDetails={() => setOpenDetails(false)}
                     language={language}
                   />
-                )}
-              </Dialog>
+                );
+              })}
             </div>
           </ScrollArea>
         )}
