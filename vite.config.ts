@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// Improved configuration for better stability and Lovable compatibility
+// Improved configuration for better stability
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
@@ -35,11 +35,11 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     sourcemap: true,
-    minify: false,  // Disable minification for more stable builds
-    target: "es2018"  // Use a more compatible target
+    minify: false,
+    target: "es2018"
   },
   optimizeDeps: {
-    force: true,  // Force dependency pre-bundling
+    force: true,
     esbuildOptions: {
       target: "es2018",
       supported: { 
