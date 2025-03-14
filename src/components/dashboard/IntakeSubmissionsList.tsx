@@ -13,8 +13,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog } from "@/components/ui/dialog";
 import { IntakeFormSubmission, IntakeSubmissionsListProps } from "./IntakeSubmissionsTypes";
 import { IntakeSubmissionsCard } from "./IntakeSubmissionsCard";
+import { IntakeSubmissionsDetails } from "./IntakeSubmissionsDetails";
 import { getUrgencyLevel } from "./IntakeSubmissionUtils";
 
 const translations = {
@@ -51,6 +53,8 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
   const [submissions, setSubmissions] = useState<IntakeFormSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [selectedSubmission, setSelectedSubmission] = useState<IntakeFormSubmission | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // Check for local storage submissions on mount and when new submissions arrive
   useEffect(() => {
@@ -227,16 +231,23 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
   }, []);
 
   const handleViewDetails = (submission: IntakeFormSubmission) => {
-    // Navigate to the patient's intake form
-    navigate(`/patient/${submission.id}/intake`, { 
-      state: { submission }
-    });
+    // Set the selected submission and open the details dialog
+    setSelectedSubmission(submission);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false);
   };
 
   const handleContactPatient = (submission: IntakeFormSubmission) => {
     // Open messaging interface or initiate contact
     console.log(`Contacting patient: ${submission.childName} via ${submission.notificationType}`);
     // This would connect to a messaging component in a real implementation
+    setIsDetailsOpen(false); // Close the details dialog
+    navigate(`/chat/${submission.id}`, { 
+      state: { patientInfo: submission }
+    });
   };
 
   const content = translations[language];
@@ -258,24 +269,39 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
             <p className="text-center py-8 text-muted-foreground">{content.noSubmissions}</p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px]">
-            <div className="space-y-4">
-              {submissions.map((submission) => {
-                const urgency = getUrgencyLevel(submission);
-                
-                return (
-                  <IntakeSubmissionsCard
-                    key={submission.id}
-                    submission={submission}
-                    urgency={urgency}
-                    handleViewDetails={handleViewDetails}
-                    handleContactPatient={handleContactPatient}
-                    language={language}
-                  />
-                );
-              })}
-            </div>
-          </ScrollArea>
+          <>
+            <ScrollArea className="h-[400px]">
+              <div className="space-y-4">
+                {submissions.map((submission) => {
+                  const urgency = getUrgencyLevel(submission);
+                  
+                  return (
+                    <IntakeSubmissionsCard
+                      key={submission.id}
+                      submission={submission}
+                      urgency={urgency}
+                      handleViewDetails={handleViewDetails}
+                      handleContactPatient={handleContactPatient}
+                      language={language}
+                    />
+                  );
+                })}
+              </div>
+            </ScrollArea>
+
+            {/* Details Dialog */}
+            {selectedSubmission && (
+              <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+                <IntakeSubmissionsDetails
+                  submission={selectedSubmission}
+                  urgency={getUrgencyLevel(selectedSubmission)}
+                  handleContactPatient={handleContactPatient}
+                  closeDetails={handleCloseDetails}
+                  language={language}
+                />
+              </Dialog>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

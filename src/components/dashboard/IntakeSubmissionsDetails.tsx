@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MessageSquare, Phone, UserCircle, FileText } from "lucide-react";
+import { MessageSquare, Phone, UserCircle, FileText, X, Calendar } from "lucide-react";
 import { IntakeFormSubmission } from "./IntakeSubmissionsTypes";
 import { renderUrgencyBadge } from "./IntakeSubmissionsCard";
 import { useState } from "react";
@@ -33,7 +34,10 @@ const translations = {
     location: "Location",
     viewDocument: "View Document",
     documentPreview: "Document Preview",
-    closePreview: "Close Preview"
+    closePreview: "Close Preview",
+    patientName: "Patient Name",
+    dateOfBirth: "Date of Birth",
+    formDetails: "Form Details"
   },
   es: {
     contactInfo: "Información de Contacto",
@@ -54,7 +58,10 @@ const translations = {
     location: "Ubicación",
     viewDocument: "Ver Documento",
     documentPreview: "Vista Previa del Documento",
-    closePreview: "Cerrar Vista Previa"
+    closePreview: "Cerrar Vista Previa",
+    patientName: "Nombre del Paciente",
+    dateOfBirth: "Fecha de Nacimiento",
+    formDetails: "Detalles del Formulario"
   },
 };
 
@@ -113,8 +120,15 @@ ${submission.otherConcerns || "None reported"}
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            {/* Contact Information */}
+            {/* Patient Information */}
             <div className="space-y-4">
+              <h3 className="font-semibold text-lg">{content.patientName}: {submission.childName}</h3>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span>
+                  {content.dateOfBirth}: {new Date(submission.dob).toLocaleDateString()}
+                </span>
+              </div>
               <h3 className="font-semibold text-lg">{content.contactInfo}</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
