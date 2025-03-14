@@ -1,4 +1,3 @@
-
 # Health Connectivity Platform: Safe Haven Virtual Pediatric Clinic
 
 A comprehensive platform designed to connect healthcare providers with underserved communities in rural Washington, with a focus on pediatric care for children and adolescents.
@@ -42,6 +41,47 @@ By integrating AI-driven intake systems, bilingual virtual consultations, and co
 - **Build Tool:** Vite
 - **Package Manager:** npm
 - **Linting & Formatting:** ESLint
+
+## LLM Prompt Library
+This project utilized Large Language Models (LLMs) and AI-generated prompts for user research, prototype development, and hypothesis validation. Below is a library of key prompts used:
+
+### User Research Prompts
+To understand user needs, we conducted research using our patient persona, María González, and provider, Dr. Smith:
+
+**Patient Prompt (María González):** How easy is it to navigate the website and find the care you need?
+
+**Provider Prompt (Dr. Smith):** What common patient inquiries would you prefer an AI assistant to handle?
+
+Led to the development of an AI Health Assistant to manage routine pediatric questions and reduce the provider's messaging burden.
+
+### Prototype Development Prompts
+We developed key features based on AI-driven insights and user needs:
+
+**AI Health Assistant Prompt:**
+
+I am addressing these concerns by developing an AI Health Assistant that answers common pediatric questions and supports Spanish translation. The assistant is designed to defer complex questions to providers, ensuring that patients receive accurate and appropriate care.
+
+**Pediatric Intake Form Prompt:**
+
+I need to create a pediatric intake form that collects essential medical information while ensuring privacy for undocumented families. The form should include sections for basic patient details (name, date of birth, preferred language), medical history (symptoms, medications, allergies), and social information (insurance status). It must have a clear confidentiality statement reassuring families that their data will not be shared with law enforcement or immigration authorities.
+
+Additionally, the form should support English and Spanish, include voice input capabilities for accessibility, and have an automatic notification system to alert providers when urgent symptoms are detected. A confidentiality notice should be prominently displayed at the beginning of the form.
+
+### Hypothesis Validation Prompts
+To assess the effectiveness of AI-powered virtual clinics, we used the following prompts:
+
+"Given user research findings, what additional data is needed to validate the hypothesis that AI-powered clinics improve patient retention?"
+
+"How can I compare patient engagement between AI-assisted virtual clinics and traditional in-person visits?"
+
+"Summarize key statistical methods to analyze the effectiveness of AI-based virtual clinics in rural areas."
+
+### AI Health Assistant Development Prompts
+To ensure the AI Health Assistant effectively supports both patients and providers, we used these guiding prompts:
+
+"What are the most frequently asked questions in pediatric healthcare that an AI Health Assistant should address?"
+
+"How can the AI Health Assistant reduce messaging burden on providers while still keeping patients engaged?"
 
 ## Features
 
