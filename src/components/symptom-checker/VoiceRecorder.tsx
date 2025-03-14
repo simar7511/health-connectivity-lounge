@@ -65,27 +65,32 @@ export const VoiceRecorder = ({ language, fieldName, onVoiceInput }: VoiceRecord
 
   const handleStopListening = () => {
     console.log("Stopping voice recording...");
+    // Ensure that recording is stopped immediately
     stopListening();
+    setIsRecording(false);
 
-    // ✅ Ensure transcript is not empty
-    if (transcript && transcript.trim()) {
-      console.log(`Recorded transcript: ${transcript}`);
-      onVoiceInput(fieldName, transcript);
-      toast({
-        title: language === "en" ? "Voice Input Recorded" : "Entrada de Voz Registrada",
-        description: transcript,
-        variant: "default",
-      });
-    } else {
-      console.log("No transcript detected");
-      toast({
-        title: language === "en" ? "No Input Detected" : "No se detectó entrada",
-        description: language === "en"
-          ? "Please speak clearly and try again."
-          : "Por favor, hable claramente e intente de nuevo.",
-        variant: "destructive",
-      });
-    }
+    // Process the transcript only after confirming recording has stopped
+    setTimeout(() => {
+      // ✅ Ensure transcript is not empty
+      if (transcript && transcript.trim()) {
+        console.log(`Recorded transcript: ${transcript}`);
+        onVoiceInput(fieldName, transcript);
+        toast({
+          title: language === "en" ? "Voice Input Recorded" : "Entrada de Voz Registrada",
+          description: transcript,
+          variant: "default",
+        });
+      } else {
+        console.log("No transcript detected");
+        toast({
+          title: language === "en" ? "No Input Detected" : "No se detectó entrada",
+          description: language === "en"
+            ? "Please speak clearly and try again."
+            : "Por favor, hable claramente e intente de nuevo.",
+          variant: "destructive",
+        });
+      }
+    }, 100); // Small delay to ensure recording has properly stopped
   };
 
   return (
