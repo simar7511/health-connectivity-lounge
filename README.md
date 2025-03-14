@@ -23,6 +23,22 @@ By integrating AI-driven intake systems, bilingual virtual consultations, and co
 - Pediatric intake form
 - Symptom checker
 
+## User Testing Summary
+
+### Patient-Side Onboarding:
+- Users found the website simple, accessible, and intuitive, with effective color guidance.
+- Anonymity was well handled.
+- Patients raised concerns about tracking their medical history for future visits, highlighting the absence of a patient portal.
+
+### Provider-Side Onboarding:
+- The messaging system may become overwhelming if patients frequently ask minor health-related questions.
+- Suggested AI integration to handle routine inquiries.
+
+### Action Taken:
+- Developed an AI Health Assistant to address common pediatric questions (e.g., colds, vaccines, development).
+- Added Spanish translation for accessibility.
+- AI defers to providers for complex questions.
+
 ## Development Setup
 
 1. Clone the repository
