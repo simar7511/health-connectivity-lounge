@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { LoginSelector } from "@/components/LoginSelector";
 import PatientLogin from "@/components/PatientLogin";
@@ -35,38 +34,43 @@ const Index = () => {
   const location = useLocation();
   const { isProvider, currentUser, logout } = useAuth();
 
-  // On first page load, ensure we're on the welcome page
+  // Check for query parameters and sessionStorage on initial render
   useEffect(() => {
-    // Clear any previous session data to ensure welcome page is shown
+    // Check for query parameters to set initial state
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode');
+    
+    if (mode === 'provider-login') {
+      console.log("Mode detected as provider-login, setting provider login state");
+      setLoginState("provider");
+      return;
+    }
+    
+    // Check for showProviderLogin in sessionStorage
+    const showProviderLogin = sessionStorage.getItem("showProviderLogin");
+    if (showProviderLogin === "true") {
+      console.log("ShowProviderLogin flag detected, setting provider login state");
+      setLoginState("provider");
+      sessionStorage.removeItem("showProviderLogin");
+      return;
+    }
+    
+    // If no special conditions, show selector by default when on homepage
     if (location.pathname === "/" || location.pathname === "") {
-      // Check for query parameters to set initial state
+      setLoginState("select");
+    }
+  }, [location.search, location.pathname]);
+
+  // On first page load for homepage, ensure welcome page shown
+  useEffect(() => {
+    if (location.pathname === "/" || location.pathname === "") {
+      // Don't reset if we're trying to show the provider login
       const params = new URLSearchParams(location.search);
       const mode = params.get('mode');
       
       if (mode === 'provider-login') {
-        setLoginState("provider");
         return;
       }
-      
-      localStorage.removeItem('restoreSession');
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('isProvider');
-      
-      // Log out any current user to ensure clean state
-      logout().catch(err => {
-        console.error("Error logging out:", err);
-      });
-      
-      // Reset to welcome page
-      setLoginState("select");
-      
-      toast({
-        title: "Welcome to Health Connectivity",
-        description: language === "en" 
-          ? "Try our AI Health Assistant for medical questions or complete an intake form."
-          : "Pruebe nuestro Asistente de Salud con IA para preguntas médicas o complete un formulario de admisión.",
-        duration: 5000,
-      });
     }
   }, [location.pathname, location.search, logout, language]);
 
@@ -75,15 +79,6 @@ const Index = () => {
     const savedLanguage = sessionStorage.getItem("preferredLanguage") as "en" | "es" | null;
     if (savedLanguage) {
       setLanguage(savedLanguage);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Show provider login if the button was clicked
-    const showProviderLogin = sessionStorage.getItem("showProviderLogin");
-    if (showProviderLogin === "true") {
-      setLoginState("provider");
-      sessionStorage.removeItem("showProviderLogin");
     }
   }, []);
 

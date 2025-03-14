@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Globe, Heart, MapPin, ArrowRight, Baby, VideoIcon, Calendar, UserCog, Bot, ShieldCheck, Phone, Scroll } from "lucide-react";
@@ -72,9 +73,11 @@ export const LoginSelector = ({ language, onLanguageChange }: LoginSelectorProps
   // Function to handle provider login navigation
   const handleProviderLogin = (e: React.MouseEvent) => {
     e.preventDefault();
-    console.log("Setting provider login state");
+    console.log("Setting provider login state and navigating");
+    // Set the flag and navigate in one step
     sessionStorage.setItem("showProviderLogin", "true");
-    navigate("/?mode=provider-login");
+    // Navigate directly to the provider login route for better clarity
+    navigate("/provider/login");
   };
 
   return (
