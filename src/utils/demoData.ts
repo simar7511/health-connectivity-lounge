@@ -13,7 +13,10 @@ export const DEMO_CONVERSATIONS = [
         sender: "patient",
         content: "Hello Dr. Johnson, I have a question about my medication.",
         timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        attachments: []
+        attachments: [],
+        metadata: {
+          title: "Medication Question"
+        }
       },
       {
         id: "msg2",
@@ -39,7 +42,10 @@ export const DEMO_CONVERSATIONS = [
         sender: "patient",
         content: "Dr. Johnson, my appointment is tomorrow at 2pm, correct?",
         timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        attachments: []
+        attachments: [],
+        metadata: {
+          title: "Appointment Question"
+        }
       },
       {
         id: "msg4",
@@ -72,7 +78,10 @@ export const DEMO_CONVERSATIONS = [
             type: "application/pdf",
             size: 1240000
           }
-        ]
+        ],
+        metadata: {
+          title: "Lab Results"
+        }
       }
     ]
   }

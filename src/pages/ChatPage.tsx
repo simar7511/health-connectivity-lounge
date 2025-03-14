@@ -97,7 +97,6 @@ const ChatPage = () => {
       <NavigationHeader 
         title={patientName || "Secure Chat"} 
         showBackButton
-        onBack={() => navigate("/provider/dashboard")}
         language="en"
       />
       
