@@ -29,16 +29,45 @@ const translations = {
   }
 };
 
+// Mock data for when Firebase is unavailable
+const mockSubmissions: IntakeFormSubmission[] = [
+  {
+    id: "mock-submission-1",
+    childName: "Emma Rodriguez",
+    parentName: "Maria Rodriguez",
+    contactPhone: "+1234567890",
+    age: 7,
+    chiefComplaint: "Persistent cough and mild fever for 3 days",
+    timestamp: { toDate: () => new Date() },
+    notificationType: "sms",
+    language: "es"
+  },
+  {
+    id: "mock-submission-2",
+    childName: "Aiden Smith",
+    parentName: "John Smith",
+    contactPhone: "+1987654321",
+    age: 4,
+    chiefComplaint: "Ear pain and difficulty sleeping",
+    timestamp: { toDate: () => new Date(Date.now() - 86400000) }, // 1 day ago
+    notificationType: "email",
+    language: "en"
+  }
+];
+
 const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
   const [submissions, setSubmissions] = useState<IntakeFormSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usingMockData, setUsingMockData] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     try {
       // Make sure db is properly initialized before accessing
       if (!db || typeof db.collection !== 'function') {
-        console.log("Firebase db not properly initialized", db);
+        console.log("Firebase db not properly initialized, using mock data");
+        setSubmissions(mockSubmissions);
+        setUsingMockData(true);
         setLoading(false);
         return () => {};
       }
@@ -49,32 +78,42 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
       
       console.log("Setting up Firestore listener for pediatricIntake collection");
       
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        console.log(`Received ${querySnapshot.size} documents from Firestore`);
-        
-        const submissionsData: IntakeFormSubmission[] = [];
-        querySnapshot.forEach((doc) => {
-          console.log(`Processing document: ${doc.id}`);
-          const data = doc.data() as DocumentData;
-          submissionsData.push({
-            id: doc.id,
-            ...data,
-            timestamp: data.timestamp
-          } as IntakeFormSubmission);
-        });
-        
-        setSubmissions(submissionsData);
-        setLoading(false);
-        
-        console.log(`Processed ${submissionsData.length} intake submissions`);
-      }, (error) => {
-        console.error("Error fetching intake submissions:", error);
-        setLoading(false);
-      });
+      const unsubscribe = onSnapshot(q, 
+        (querySnapshot) => {
+          console.log(`Received ${querySnapshot.size} documents from Firestore`);
+          
+          const submissionsData: IntakeFormSubmission[] = [];
+          querySnapshot.forEach((doc) => {
+            console.log(`Processing document: ${doc.id}`);
+            const data = doc.data() as DocumentData;
+            submissionsData.push({
+              id: doc.id,
+              ...data,
+              timestamp: data.timestamp
+            } as IntakeFormSubmission);
+          });
+          
+          setSubmissions(submissionsData.length > 0 ? submissionsData : mockSubmissions);
+          setUsingMockData(submissionsData.length === 0);
+          setLoading(false);
+          
+          console.log(`Processed ${submissionsData.length} intake submissions`);
+        }, 
+        (error) => {
+          console.error("Error fetching intake submissions:", error);
+          // Use mock data on error
+          setSubmissions(mockSubmissions);
+          setUsingMockData(true);
+          setLoading(false);
+        }
+      );
 
       return () => unsubscribe();
     } catch (error) {
       console.error("Error setting up Firestore listener:", error);
+      // Use mock data on error
+      setSubmissions(mockSubmissions);
+      setUsingMockData(true);
       setLoading(false);
       return () => {};
     }
@@ -99,6 +138,11 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
     <Card>
       <CardHeader>
         <CardTitle>{content.title}</CardTitle>
+        {usingMockData && (
+          <div className="text-xs text-amber-600 mt-1">
+            {language === "en" ? "Using demo data" : "Usando datos de demostración"}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {loading ? (

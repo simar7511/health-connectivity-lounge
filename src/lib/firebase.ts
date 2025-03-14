@@ -4,78 +4,32 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 import { getMessaging, isSupported } from "firebase/messaging";
+import { initializeFirebase } from "./initFirebase";
 
-// Firebase configuration - Use environment variables
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
+// Initialize Firebase using our utility function
+const {
+  initialized: isInitialized,
+  app,
+  db: firestoreDb,
+  auth: firebaseAuth,
+  error: initError
+} = initializeFirebase();
 
-// Log a redacted version of the config for troubleshooting
-console.log("Firebase Config Status:", {
-  apiKey: !!firebaseConfig.apiKey ? "Present" : "Missing",
-  authDomain: !!firebaseConfig.authDomain ? "Present" : "Missing",
-  projectId: !!firebaseConfig.projectId ? "Present" : "Missing",
-  storageBucket: !!firebaseConfig.storageBucket ? "Present" : "Missing",
-  messagingSenderId: !!firebaseConfig.messagingSenderId ? "Present" : "Missing",
-  appId: !!firebaseConfig.appId ? "Present" : "Missing",
-  measurementId: !!firebaseConfig.measurementId ? "Present" : "Missing"
+// Log initialization status
+console.log("Firebase initialization status:", {
+  isInitialized,
+  projectId: isInitialized ? app.options.projectId : null,
+  error: initError || null
 });
 
-// Add flag to prevent multiple initialization attempts
-let isInitializing = false;
-let isInitialized = false;
-
-// Declare Firebase services
-let app;
-let db;
-let auth;
+// If initialization failed, create mock implementations
+let db = firestoreDb;
+let auth = firebaseAuth;
 let messaging = null;
 
-try {
-  if (!isInitialized && !isInitializing) {
-    isInitializing = true;
-    console.log("Initializing Firebase with config:", firebaseConfig.projectId);
-    
-    // Ensure all required config values are present
-    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-      throw new Error("Missing required Firebase configuration values");
-    }
-    
-    // Initialize Firebase
-    app = initializeApp(firebaseConfig);
-    console.log("✅ Firebase app initialized with project:", firebaseConfig.projectId);
-    
-    // Initialize services
-    db = getFirestore(app);
-    auth = getAuth(app);
-    
-    console.log("✅ Firebase Firestore and Auth services initialized");
-    isInitialized = true;
-    isInitializing = false;
-
-    // Initialize Firebase Cloud Messaging if supported
-    isSupported()
-      .then(supported => {
-        if (supported) {
-          messaging = getMessaging(app);
-          console.log("✅ Firebase Cloud Messaging initialized");
-        } else {
-          console.log("ℹ️ Firebase Cloud Messaging not supported in this environment");
-        }
-      })
-      .catch(error => {
-        console.error("Error checking FCM support:", error);
-      });
-  }
-} catch (error) {
-  isInitializing = false;
-  console.error("❌ Firebase initialization error:", error);
+// If Firebase failed to initialize, create mock implementations
+if (!isInitialized) {
+  console.error("❌ Firebase initialization error:", initError);
   
   // Show error toast
   toast({
@@ -88,9 +42,31 @@ try {
   db = {
     collection: () => ({
       // Fake collection reference that won't throw errors
-      where: () => ({}),
-      orderBy: () => ({}),
-      limit: () => ({}),
+      doc: () => ({
+        get: async () => ({ exists: false, data: () => null }),
+        set: async () => {}
+      }),
+      where: () => ({
+        get: async () => ({ docs: [], empty: true }),
+        onSnapshot: (callback) => {
+          callback({ docs: [], empty: true });
+          return () => {};
+        }
+      }),
+      orderBy: () => ({
+        get: async () => ({ docs: [], empty: true }),
+        onSnapshot: (callback) => {
+          callback({ docs: [], empty: true });
+          return () => {};
+        }
+      }),
+      limit: () => ({
+        get: async () => ({ docs: [], empty: true }),
+        onSnapshot: (callback) => {
+          callback({ docs: [], empty: true });
+          return () => {};
+        }
+      }),
       get: async () => ({ docs: [], empty: true }),
       onSnapshot: (callback) => {
         // Call callback with empty data
@@ -108,10 +84,25 @@ try {
   auth = {
     signInWithEmailAndPassword: async () => ({ user: null }),
     signOut: async () => {},
-    onAuthStateChanged: () => (() => {})
+    onAuthStateChanged: (callback) => {
+      callback(null);
+      return () => {};
+    }
   };
-  
-  app = {};
+} else {
+  // Initialize Firebase Cloud Messaging if supported
+  isSupported()
+    .then(supported => {
+      if (supported) {
+        messaging = getMessaging(app);
+        console.log("✅ Firebase Cloud Messaging initialized");
+      } else {
+        console.log("ℹ️ Firebase Cloud Messaging not supported in this environment");
+      }
+    })
+    .catch(error => {
+      console.error("Error checking FCM support:", error);
+    });
 }
 
 // Export the initialized services
