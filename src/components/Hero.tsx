@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { ScrollText } from "lucide-react";
 
 export const Hero = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export const Hero = () => {
               Ask Our AI Health Assistant
             </Button>
           </div>
-          <div className="mt-4">
+          <div className="mt-4 space-y-2">
             <Button 
               variant="link"
               onClick={() => navigate("/free-clinic")}
@@ -40,6 +41,16 @@ export const Hero = () => {
             >
               Find Free Clinics Near You
             </Button>
+            <div className="flex justify-center">
+              <Button 
+                variant="link" 
+                onClick={() => navigate("/terms-of-service")}
+                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+              >
+                <ScrollText className="h-3.5 w-3.5" />
+                Terms of Service
+              </Button>
+            </div>
           </div>
         </div>
       </div>

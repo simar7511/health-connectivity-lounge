@@ -13,6 +13,7 @@ import ConfirmationPage from "./pages/ConfirmationPage";
 import ChatPage from "./pages/ChatPage";
 import AIHealthChatPage from "./pages/AIHealthChatPage";
 import ClinicLocatorPage from "./pages/ClinicLocatorPage";
+import TermsOfService from "./pages/TermsOfService";
 import { AuthProvider } from "@/context/AuthContext";
 import PediatricIntakeForm from "./components/intake/PediatricIntakeForm";
 
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
   { path: "/ai-chat", element: <AIHealthChatPage /> },
   { path: "/ai-chat/:patientId", element: <AIHealthChatPage /> },
   { path: "/free-clinic", element: <ClinicLocatorPage /> },
+  { path: "/terms-of-service", element: <TermsOfService /> },
 ]);
 
 function App() {
