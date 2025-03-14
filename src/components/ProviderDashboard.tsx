@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -117,6 +118,47 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       window.location.reload();
     }
   }, [currentUser, isProvider, loading, currentLanguage, toast]);
+
+  // Listen for new form submissions from localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "latestIntakeSubmission" && e.newValue) {
+        console.log("New intake submission detected via localStorage");
+        setHasNewSubmissions(true);
+        setLastUpdated(new Date());
+        
+        // Show toast notification
+        toast({
+          title: translations[currentLanguage].newSubmissionsAlert,
+          description: translations[currentLanguage].newSubmissionsMessage,
+          duration: 10000,
+        });
+      }
+    };
+    
+    // Initial check for submissions
+    const checkForNewSubmissions = () => {
+      const lastSubmissionTime = localStorage.getItem("lastIntakeSubmissionTime");
+      const lastChecked = localStorage.getItem("lastCheckedIntakeTimestamp");
+      
+      if (lastSubmissionTime && lastChecked) {
+        const submissionDate = new Date(lastSubmissionTime);
+        const checkedDate = new Date(parseInt(lastChecked));
+        
+        if (submissionDate > checkedDate) {
+          console.log("Found new submission since last check");
+          setHasNewSubmissions(true);
+        }
+      }
+    };
+    
+    checkForNewSubmissions();
+    window.addEventListener("storage", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [currentLanguage, toast]);
 
   useEffect(() => {
     try {

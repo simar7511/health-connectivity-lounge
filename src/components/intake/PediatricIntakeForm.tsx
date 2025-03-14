@@ -166,22 +166,40 @@ const PediatricIntakeForm = ({ language: propLanguage }: PediatricIntakeFormProp
         notificationType: "sms" as "sms" | "whatsapp",
       };
       
+      let submissionId = `local-submission-${Date.now()}`;
+      
       // Allow the submission to complete even if Firestore fails
       try {
         const docRef = await addDoc(collection(db, "pediatricIntake"), formDataToSubmit);
         console.log(`Form submitted successfully with ID: ${docRef.id}`);
         localStorage.setItem("intakeId", docRef.id);
+        submissionId = docRef.id;
       } catch (firestoreError) {
         console.error("Firestore submission error:", firestoreError);
         // Continue with the flow even if Firestore fails
       }
       
-      // Store last submission time regardless of Firestore success
+      // Store submission in localStorage for immediate display in provider dashboard
+      const localSubmissionData = {
+        ...formDataToSubmit,
+        id: submissionId,
+        // Include a simple timestamp for local storage
+        submittedAt: new Date().toISOString()
+      };
+      
+      // Save to localStorage for cross-tab communication
+      localStorage.setItem("latestIntakeSubmission", JSON.stringify(localSubmissionData));
       localStorage.setItem("lastIntakeSubmissionTime", new Date().toISOString());
 
       if (formData.phoneNumber) {
         localStorage.setItem("patientPhone", formData.phoneNumber);
       }
+      
+      // Trigger a storage event to notify other tabs
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'latestIntakeSubmission',
+        newValue: JSON.stringify(localSubmissionData)
+      }));
       
       const urgency = estimateUrgency(
         formData.symptoms, 

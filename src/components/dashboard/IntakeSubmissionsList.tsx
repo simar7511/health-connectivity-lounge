@@ -47,7 +47,7 @@ const createMockTimestamp = (offsetDays = 0): Timestamp => {
   } as Timestamp;
 };
 
-// Mock data for when Firebase is unavailable
+// Mock data for when Firebase is unavailable - now includes most recent data
 const mockSubmissions: IntakeFormSubmission[] = [
   {
     id: "mock-submission-1",
@@ -96,12 +96,38 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
   const [usingMockData, setUsingMockData] = useState(false);
   const navigate = useNavigate();
 
+  // Check for local storage submissions on mount and when new submissions arrive
   useEffect(() => {
     try {
+      // First check if there's a recent submission in localStorage
+      const latestSubmission = localStorage.getItem("latestIntakeSubmission");
+      
       // Make sure db is properly initialized 
       if (!db || typeof db['collection'] !== 'function') {
         console.log("Firebase db not properly initialized, using mock data");
-        setSubmissions(mockSubmissions);
+        
+        // If there's a recent local submission, add it to mock data
+        if (latestSubmission) {
+          try {
+            const parsedSubmission = JSON.parse(latestSubmission);
+            // Create a combined array with the local submission first
+            const combinedData = [
+              {
+                ...parsedSubmission,
+                id: parsedSubmission.id || `local-submission-${Date.now()}`,
+                timestamp: createMockTimestamp() // Make sure it's the most recent
+              },
+              ...mockSubmissions
+            ];
+            setSubmissions(combinedData);
+          } catch (parseError) {
+            console.error("Error parsing local submission:", parseError);
+            setSubmissions(mockSubmissions);
+          }
+        } else {
+          setSubmissions(mockSubmissions);
+        }
+        
         setUsingMockData(true);
         setLoading(false);
         return () => {};
@@ -130,16 +156,58 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
             } as IntakeFormSubmission);
           });
           
-          setSubmissions(submissionsData.length > 0 ? submissionsData : mockSubmissions);
-          setUsingMockData(submissionsData.length === 0);
-          setLoading(false);
+          // If no Firestore data but we have local data, use it with mock data
+          if (submissionsData.length === 0 && latestSubmission) {
+            try {
+              const parsedSubmission = JSON.parse(latestSubmission);
+              // Create a combined array with the local submission first
+              const combinedData = [
+                {
+                  ...parsedSubmission,
+                  id: parsedSubmission.id || `local-submission-${Date.now()}`,
+                  timestamp: createMockTimestamp() // Make sure it's the most recent
+                },
+                ...mockSubmissions
+              ];
+              setSubmissions(combinedData);
+              setUsingMockData(true);
+            } catch (parseError) {
+              console.error("Error parsing local submission:", parseError);
+              setSubmissions(mockSubmissions);
+              setUsingMockData(true);
+            }
+          } else {
+            setSubmissions(submissionsData.length > 0 ? submissionsData : mockSubmissions);
+            setUsingMockData(submissionsData.length === 0);
+          }
           
+          setLoading(false);
           console.log(`Processed ${submissionsData.length} intake submissions`);
         }, 
         (error) => {
           console.error("Error fetching intake submissions:", error);
-          // Use mock data on error
-          setSubmissions(mockSubmissions);
+          
+          // Use mock data on error, incorporating any local submission
+          if (latestSubmission) {
+            try {
+              const parsedSubmission = JSON.parse(latestSubmission);
+              const combinedData = [
+                {
+                  ...parsedSubmission,
+                  id: parsedSubmission.id || `local-submission-${Date.now()}`,
+                  timestamp: createMockTimestamp()
+                },
+                ...mockSubmissions
+              ];
+              setSubmissions(combinedData);
+            } catch (parseError) {
+              console.error("Error parsing local submission:", parseError);
+              setSubmissions(mockSubmissions);
+            }
+          } else {
+            setSubmissions(mockSubmissions);
+          }
+          
           setUsingMockData(true);
           setLoading(false);
         }
@@ -148,13 +216,78 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
       return () => unsubscribe();
     } catch (error) {
       console.error("Error setting up Firestore listener:", error);
-      // Use mock data on error
-      setSubmissions(mockSubmissions);
+      
+      // Use mock data on error, checking for local submission
+      const latestSubmission = localStorage.getItem("latestIntakeSubmission");
+      if (latestSubmission) {
+        try {
+          const parsedSubmission = JSON.parse(latestSubmission);
+          const combinedData = [
+            {
+              ...parsedSubmission,
+              id: parsedSubmission.id || `local-submission-${Date.now()}`,
+              timestamp: createMockTimestamp()
+            },
+            ...mockSubmissions
+          ];
+          setSubmissions(combinedData);
+        } catch (parseError) {
+          console.error("Error parsing local submission:", parseError);
+          setSubmissions(mockSubmissions);
+        }
+      } else {
+        setSubmissions(mockSubmissions);
+      }
+      
       setUsingMockData(true);
       setLoading(false);
       return () => {};
     }
   }, []);
+
+  // Handle new submissions coming from local storage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "latestIntakeSubmission" && e.newValue) {
+        try {
+          const newSubmission = JSON.parse(e.newValue);
+          
+          // Only update if we're showing mock data or if the db isn't initialized
+          if (usingMockData || !db || typeof db['collection'] !== 'function') {
+            setSubmissions(prev => {
+              // Check if this submission is already in the list by matching some unique properties
+              const exists = prev.some(sub => 
+                sub.childName === newSubmission.childName && 
+                sub.phoneNumber === newSubmission.phoneNumber &&
+                sub.symptoms === newSubmission.symptoms
+              );
+              
+              if (exists) return prev;
+              
+              // Add the new submission at the top with a timestamp
+              return [
+                {
+                  ...newSubmission,
+                  id: newSubmission.id || `local-submission-${Date.now()}`,
+                  timestamp: createMockTimestamp() // Make sure it's the most recent
+                },
+                ...prev
+              ];
+            });
+          }
+        } catch (error) {
+          console.error("Error handling storage event:", error);
+        }
+      }
+    };
+    
+    // Listen for storage events (works across tabs)
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [usingMockData, db]);
 
   const handleViewDetails = (submission: IntakeFormSubmission) => {
     // Navigate to the patient's intake form
