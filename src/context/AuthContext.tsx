@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 // Create auth context
 type AuthContextType = {
@@ -33,7 +32,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<Error | null>(null);
   const [initialized, setInitialized] = useState(true);
   // Check localStorage for isProvider status - this ensures we maintain state on refreshes
-  const [isProvider, setIsProvider] = useState(false);
+  const [isProvider, setIsProvider] = useState(() => {
+    // Initialize from localStorage on component mount
+    return localStorage.getItem('isProvider') === 'true';
+  });
 
   useEffect(() => {
     console.log("AuthProvider: Initial provider state:", isProvider);
@@ -61,10 +63,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.removeItem('currentUser');
         }
       }
-    } else {
-      // Clear any stored authentication data to ensure fresh start
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('isProvider');
     }
   }, []);
 

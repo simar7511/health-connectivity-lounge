@@ -94,7 +94,9 @@ const Index = () => {
   };
 
   const handleProviderLoginSubmit = () => {
-    navigate("/provider/dashboard");
+    // Navigate directly to provider dashboard using the React Router navigate function
+    console.log("Provider login successful, navigating to dashboard");
+    navigate("/provider/dashboard", { replace: true });
   };
 
   // Get the title based on current state

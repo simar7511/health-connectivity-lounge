@@ -16,6 +16,7 @@ import ClinicLocatorPage from "./pages/ClinicLocatorPage";
 import TermsOfService from "./pages/TermsOfService";
 import { AuthProvider } from "@/context/AuthContext";
 import PediatricIntakeForm from "./components/intake/PediatricIntakeForm";
+import ProviderDashboard from "./components/ProviderDashboard";
 
 // Create routes
 const router = createBrowserRouter([
@@ -23,7 +24,8 @@ const router = createBrowserRouter([
   { path: "/provider/login", element: <Index /> },
   { path: "/pediatric-intake", element: <PediatricIntakeForm language="en" /> },
   { path: "/patient-intake/:id", element: <PatientIntakeDetails language="en" /> },
-  { path: "/provider/dashboard", element: <PatientOverviewPage /> }, 
+  // Explicitly define the provider dashboard route to render the ProviderDashboard component directly
+  { path: "/provider/dashboard", element: <ProviderDashboard language="en" /> },
   { path: "/symptoms", element: <SymptomCheckerPage language="en" onProceed={() => {}} appointmentDetails={{type: "", date: new Date(), time: "", provider: {id: "", name: "", specialty: "", availability: []}}} /> },
   { path: "/appointment", element: <AppointmentPage language="en" /> },
   { path: "/appointment-confirmation", element: <AppointmentConfirmationPage language="en" /> },

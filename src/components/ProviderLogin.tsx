@@ -41,19 +41,15 @@ const ProviderLogin = ({ language, onBack, onLogin }: ProviderLoginProps) => {
       // Simulate a successful login with any OTP
       await loginProvider(email, password);
       
-      // Set flag to restore session on future page loads
-      localStorage.setItem('restoreSession', 'true');
-      
-      // Call onLogin callback
-      onLogin();
-      
-      // Use React Router navigation instead of window.location for proper SPA behavior
+      // Show success toast
       toast({ 
         title: "Login successful!", 
         description: "Redirecting to dashboard..." 
       });
       
       console.log("Navigating to provider dashboard");
+      
+      // IMPORTANT: Using replace:true to prevent back navigation issues
       navigate("/provider/dashboard", { replace: true });
       
     } catch (error) {
