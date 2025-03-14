@@ -4,6 +4,10 @@ import { type Timestamp } from "@/types/firebase";
 export interface IntakeFormSubmission {
   id: string;
   childName: string;
+  parentName?: string;
+  contactPhone?: string;
+  age?: number;
+  chiefComplaint?: string;
   dob: string;
   phoneNumber: string;
   symptoms: string;

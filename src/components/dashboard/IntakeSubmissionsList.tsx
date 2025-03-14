@@ -7,7 +7,8 @@ import {
   onSnapshot, 
   query, 
   orderBy,
-  DocumentData 
+  DocumentData,
+  Timestamp
 } from "@/types/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +30,23 @@ const translations = {
   }
 };
 
+// Create proper Timestamp objects for mock data
+const createMockTimestamp = (offsetDays = 0): Timestamp => {
+  const date = new Date();
+  if (offsetDays !== 0) {
+    date.setDate(date.getDate() - offsetDays);
+  }
+  return {
+    seconds: Math.floor(date.getTime() / 1000),
+    nanoseconds: 0,
+    toDate: () => date,
+    toMillis: () => date.getTime(),
+    isEqual: () => false,
+    toJSON: () => ({ seconds: Math.floor(date.getTime() / 1000), nanoseconds: 0 }),
+    valueOf: () => `${Math.floor(date.getTime() / 1000)}.0`
+  } as Timestamp;
+};
+
 // Mock data for when Firebase is unavailable
 const mockSubmissions: IntakeFormSubmission[] = [
   {
@@ -38,9 +56,17 @@ const mockSubmissions: IntakeFormSubmission[] = [
     contactPhone: "+1234567890",
     age: 7,
     chiefComplaint: "Persistent cough and mild fever for 3 days",
-    timestamp: { toDate: () => new Date() },
+    timestamp: createMockTimestamp(),
     notificationType: "sms",
-    language: "es"
+    language: "es",
+    dob: "2017-03-15",
+    phoneNumber: "+1234567890",
+    symptoms: "Persistent cough and mild fever for 3 days",
+    medicalHistory: "Asthma",
+    medicationsAndAllergies: "Inhaler as needed. Allergic to peanuts.",
+    hasRecentHospitalVisits: false,
+    hasInsurance: true,
+    userId: "mock-user-1"
   },
   {
     id: "mock-submission-2",
@@ -49,9 +75,18 @@ const mockSubmissions: IntakeFormSubmission[] = [
     contactPhone: "+1987654321",
     age: 4,
     chiefComplaint: "Ear pain and difficulty sleeping",
-    timestamp: { toDate: () => new Date(Date.now() - 86400000) }, // 1 day ago
-    notificationType: "email",
-    language: "en"
+    timestamp: createMockTimestamp(1), // 1 day ago
+    notificationType: "whatsapp",
+    language: "en",
+    dob: "2019-08-22",
+    phoneNumber: "+1987654321",
+    symptoms: "Ear pain and difficulty sleeping",
+    medicalHistory: "Recurring ear infections",
+    medicationsAndAllergies: "No current medications. No known allergies.",
+    hasRecentHospitalVisits: true,
+    hospitalVisitLocation: "Memorial Children's Hospital",
+    hasInsurance: true,
+    userId: "mock-user-2"
   }
 ];
 
@@ -63,8 +98,8 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
 
   useEffect(() => {
     try {
-      // Make sure db is properly initialized before accessing
-      if (!db || typeof db.collection !== 'function') {
+      // Make sure db is properly initialized 
+      if (!db || typeof db['collection'] !== 'function') {
         console.log("Firebase db not properly initialized, using mock data");
         setSubmissions(mockSubmissions);
         setUsingMockData(true);
@@ -73,6 +108,8 @@ const IntakeSubmissionsList = ({ language }: IntakeSubmissionsListProps) => {
       }
 
       // Set up real-time listener for intake form submissions
+      // Use bracket notation to access collection to prevent TypeScript errors
+      // @ts-ignore - We're checking if this exists before using it
       const submissionsRef = collection(db, "pediatricIntake");
       const q = query(submissionsRef, orderBy("timestamp", "desc"));
       

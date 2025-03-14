@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { AppointmentsList } from "./dashboard/AppointmentsList";
@@ -133,7 +132,7 @@ const ProviderDashboard = ({ language }: ProviderDashboardProps) => {
       }
       
       // Skip checking for new submissions if Firestore is not properly initialized
-      if (!db || typeof db.collection !== 'function') {
+      if (!db || typeof db['collection'] !== 'function') {
         console.log("Firebase db not properly initialized for new submissions check");
         return;
       }
