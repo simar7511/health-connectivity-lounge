@@ -17,15 +17,37 @@ import TermsOfService from "./pages/TermsOfService";
 import { AuthProvider } from "@/context/AuthContext";
 import PediatricIntakeForm from "./components/intake/PediatricIntakeForm";
 import ProviderDashboard from "./components/ProviderDashboard";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Create routes
 const router = createBrowserRouter([
-  { path: "/", element: <Index /> },
+  {
+    path: "/",
+    element: <Index />,
+    errorElement: <ErrorBoundary />
+  },
   { path: "/provider/login", element: <Index /> },
   { path: "/pediatric-intake", element: <PediatricIntakeForm language="en" /> },
   { path: "/patient/:patientId/intake", element: <PatientIntakeDetails language="en" /> },
+  { path: "/patient/:patientId", element: <PatientOverviewPage /> },
   { path: "/provider/dashboard", element: <ProviderDashboard language="en" /> },
-  { path: "/symptoms", element: <SymptomCheckerPage language="en" appointmentDetails={{type: "", date: new Date(), time: "", provider: {id: "", name: "", specialty: "", availability: []}}} /> },
+  { 
+    path: "/symptoms", 
+    element: <SymptomCheckerPage 
+      language="en" 
+      appointmentDetails={{
+        type: "", 
+        date: new Date(), 
+        time: "", 
+        provider: {
+          id: "", 
+          name: "", 
+          specialty: "", 
+          availability: []
+        }
+      }} 
+    /> 
+  },
   { path: "/appointment", element: <AppointmentPage language="en" /> },
   { path: "/appointment-confirmation", element: <AppointmentConfirmationPage language="en" /> },
   { path: "/transportation", element: <TransportationPage language="en" /> },
